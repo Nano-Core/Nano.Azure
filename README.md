@@ -1,2 +1,37 @@
 # Nano.Azure
-Azure  services, infrastructure components, and deployment scripts.
+
+> _Cloud-native Azure services, infrastructure components, and deployment assets for Nano applications._
+
+***
+
+## Table of Contents
+&nbsp;&nbsp;&nbsp;&nbsp;📌 [Summary](#-summary)  
+&nbsp;&nbsp;&nbsp;&nbsp;⚙️ [Setup Requirements](#-setup-requirements)  
+
+## 📌 Summary
+Nano.Azure provides a curated set of Azure services, infrastructure components, and deployment scripts designed to support 
+**[Nano Applications](https://github.com/Nano-Core/Nano.Library/blob/master/README.md#nanolibrary)**. The goal is to standardize how Nano applications are hosted and operated 
+in Azure by providing:
+
+- Pre-configured infrastructure patterns
+- Managed service-first architecture
+- Reusable deployment components
+- Opinionated but flexible cloud setup
+
+This repository focuses on leveraging _Azure managed services_ to reduce operational overhead, improve scalability, and simplify maintenance across environments. The key principles
+in the Nano infrastructure are:
+
+- Managed-first architecture – prefer Azure-managed services over self-hosted infrastructure  
+- Consistency over configuration – standardized setups across all Nano applications  
+- Infrastructure as code – everything is reproducible and versioned  
+- Minimal operational overhead – reduce maintenance burden in production systems  
+- Composable architecture – services can be combined or used independently  
+
+## ⚙️ Setup Requirements
+Before continuing, make sure you have the following tools installed and configured.
+
+| Tool                                                                       | Description                                                     |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| **[Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli)**    | Azure CLI is a command-line tool for managing Azure resources.  |
+
+> ⚠️ If Azure CLI is already installed, make sure it is updated to the latest version: `az upgrade`.
