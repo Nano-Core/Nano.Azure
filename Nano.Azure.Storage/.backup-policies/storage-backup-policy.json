@@ -1,0 +1,47 @@
+{
+  "properties": {
+    "backupManagementType": "AzureStorage",
+    "protectedItemsCount": 0,
+    "resourceGuardOperationRequests": null,
+    "retentionPolicy": {
+      "dailySchedule": {
+        "retentionDuration": {
+          "count": 30,
+          "durationType": "Days"
+        },
+        "retentionTimes": [
+          "2024-08-25T04:30:00Z"
+        ]
+      },
+      "monthlySchedule": null,
+      "retentionPolicyType": "LongTermRetentionPolicy",
+      "weeklySchedule": {
+        "daysOfTheWeek": [
+          "Sunday"
+        ],
+        "retentionDuration": {
+          "count": 24,
+          "durationType": "Weeks"
+        },
+        "retentionTimes": [
+          "2024-08-25T04:30:00Z"
+        ]
+      },
+      "yearlySchedule": null
+    },
+    "schedulePolicy": {
+      "hourlySchedule": null,
+      "schedulePolicyType": "SimpleSchedulePolicy",
+      "scheduleRunDays": null,
+      "scheduleRunFrequency": "Daily",
+      "scheduleRunTimes": [
+        "2024-08-25T04:30:00Z"
+      ],
+      "scheduleWeeklyFrequency": 0
+    },
+    "timeZone": "UTC",
+    "vaultRetentionPolicy": null,
+    "workLoadType": "AzureFileShare"
+  },
+  "type": "Microsoft.RecoveryServices/vaults/backupPolicies"
+}
