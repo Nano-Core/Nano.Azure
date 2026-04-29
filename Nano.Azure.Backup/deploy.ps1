@@ -16,7 +16,10 @@ az group create `
 az backup vault create `
     -n $env:APP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `
-    -l $env:AZURE_LOCATION;
+    -l $env:AZURE_LOCATION `
+    --cross-subscription-restore-state Disable `
+    --immutability-state Unlocked ` 
+    --job-failure-alerts Enable;
 
 az backup vault backup-properties set `
     -n $env:APP_NAME `

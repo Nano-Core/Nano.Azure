@@ -19,6 +19,8 @@ redundancy, and advanced security, Azure Storage ensures that data is protected 
 ## Registration
 Execute the `deploy.ps1` to create the storage account on Azure.  
 
+> ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
+
 Other available Storage SKUs.  
 
 | SKU              | Description                       | Data redundancy & availability                                     | Typical use case                                       |
@@ -28,6 +30,24 @@ Other available Storage SKUs.
 | Standard_GRS     | Geo-Redundant Storage             | LRS in primary region + async replication to a secondary region.   | Disaster recovery, read/write in primary only.         |
 | Standard_RAGRS   | Read-Access Geo-Redundant Storage | GRS + read access to secondary region.                             | Disaster recovery with read-only secondary access.     |
 
+To retrieve a clean and relevant list of available Storage SKUs for a specific region, use the following command.  
+
+```powershell
+az storage sku list --query "[?kind=='StorageV2' && contains(locations, '$env:AZURE_LOCATION')].[name, tier]" -o table
+```
+
+Next, create the secrets on GitHub for the storage account, which will be used later to map storage account file shares into applications. Invoke the command below to retrieve the 
+storage account key for the newly created storage account. 
+
+```powershell
+az storage account keys list --account-name $env:APP_NAME --resource-group $env:AZURE_RESOURCE_GROUP --query "[].value" -o tsv;
+```
+
+| Secret                                  | Type   | Description                                                      |
+| --------------------------------------- | ------ | ---------------------------------------------------------------- |
+| `{{environment}}_STORAGE_ACCOUNT_NAME`  | Secret | The name of the storage account.                                 |
+| `{{environment}}_STORAGE_ACCOUNT_KEY`   | Secret | The account key used to authenticate with the storage account.   |
+
 The network rule is optional and is used to define a whitelist of IP addresses (e.g., home or office IPs) that are allowed to access the storage account file shares. All other 
 traffic is denied by default.  
 
@@ -36,7 +56,7 @@ to store file share backups. Daily backups are retained for 30 days, while weekl
 requirements. The policy can be configured either through the Azure portal or by using a JSON definition similar to the one provided here.  
 
 The diagnostic settings for storage includes both `Capacity` and `Transaction`, and the time-grain is set tot 1-minute aggregation interval. This value can be adjusted if needed. 
-You can retrieve the full list of supported metric categories for the backup resource using the following command.  
+You can retrieve the full list of supported metric categories for the storage resource using the following command.  
 
 ```powershell
 az monitor diagnostic-settings categories list --resource $env:STORAGE_ACCOUNT_ID;

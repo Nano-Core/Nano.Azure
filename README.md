@@ -6,7 +6,7 @@
 
 ## Table of Contents
 &nbsp;&nbsp;&nbsp;&nbsp;📌 [Summary](#-summary)  
-&nbsp;&nbsp;&nbsp;&nbsp;⚙️ [Setup Requirements](#-setup-requirements)  
+&nbsp;&nbsp;&nbsp;&nbsp;⚙️ [Required Tools](#-required-tools)  
 
 ### Documentaion
 &nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**    
@@ -36,7 +36,7 @@ in the Nano infrastructure are:
 - Minimal operational overhead – reduce maintenance burden in production systems  
 - Composable architecture – services can be combined or used independently  
 
-## ⚙️ Setup Requirements
+## ⚙️ Required Tools
 Before continuing, make sure you have the following tools installed and configured.
 
 | Tool                                                                       | Description                                                     |

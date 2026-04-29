@@ -1,6 +1,6 @@
 # Nano.Azure.Monitoring
 
-> __Centralized monitoring and logging for Nano infrastructure and applications._
+> _Centralized monitoring and logging for Nano infrastructure and applications._
 
 ***
 
@@ -18,6 +18,8 @@ other Azure services for comprehensive monitoring and troubleshooting.
 
 ## Registration
 Execute the `deploy.ps1` to create the log-analytics workspace and monitor group on Azure.  
+
+> ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
 
 This configuration routes all alerts to the `monitor-action-group` and sends notifications to members of the following roles.  
 

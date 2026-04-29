@@ -22,37 +22,48 @@ This component must be deployed first, as all other **[Nano.Azure](https://githu
 > 📖 Learn more about **[Microsoft Azure](https://azure.microsoft.com)**.
 
 ## Registration
-First, create an **[Azure Account](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account)** if you do not already have one. Then create a _Pay-As-You-Go_ 
-**[Subscription](https://portal.azure.com/#view/Microsoft_Azure_Billing/CatalogBlade/appId/AddSubscriptionButton)** (or another offer) for both Staging and Production directly from 
-the Azure portal. This can not be done through the Azure CLI, and must be done in the Azure Protal.
+First, create an **[Azure account](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account)** if you do not already have one. Next, create a _Pay-As-You-Go_ 
+(or another suitable offer) subscription for each required environment, such as **Staging** and **Production**, as well as any additional environments you may need. This must 
+be done directly in the Azure Portal using the **[Create Subscription](https://portal.azure.com/#view/Microsoft_Azure_Billing/CatalogBlade/appId/AddSubscriptionButton)** page.  
+
+> ⚠️ Subscription creation is not supported via Azure CLI and must be completed in the Azure Portal.
 
 Next, to enable automated deployments, store the tenant id of the Azure account and the subscription ids, as GitHub organization secrets.  
 
-| Secret                              | Description                                     |
-| ----------------------------------- | ----------------------------------------------- |
-| `AZURE_TENANT_ID`                   | The account identifier of the Azure account.    |
-| `STAGING_AZURE_SUBSCRIPTION_ID`     | The identifier of the staging subscription.     |
-| `PRODUCTION_AZURE_SUBSCRIPTION_ID`  | The identifier of the production subscription.  |
+| Secret                                    | Type   | Description                                               |
+| ----------------------------------------- | ------ |---------------------------------------------------------- |
+| `AZURE_TENANT_ID`                         | Secret | The account identifier of the Azure account.              |
+| `{{environment}}__AZURE_SUBSCRIPTION_ID`  | Secret | The identifier of the subscription of the environment.    |
 
-Open PowerShell and sign in to your Azure account. Select the appropriate subscription (Staging or Production) depending on the environment you are setting up.  
+Open PowerShell and sign in to your Azure account. Select the appropriate subscription depending on the environment you are setting up.  
 
 ```powershell
-az login
+az login;
 ``` 
 
 You can also set the subscription using.  
 
 ```powershell
-az account set -s {{subscription-id}}
+az account set -s {{subscription-id}};
+```
+
+To verify that you are signed in and connected to the correct subscription, use the following command. It should then show you the tenant and subscription id.  
+
+```powershell
+az account show;
 ```
 
 Last, execute `deploy.ps1` to create the `nano-deploy-service-principal`. This service principal is used for deploying additional resources to the subscriptions. From the output, 
-note down the `appId` and `password`, then create the GitHub secrets as shown below.
+note down the `appId` and `password`.
 
-| Secret                 | Description                                                                |
-| ---------------------- | -------------------------------------------------------------------------- |
-| `AZURE_CLIENT_ID`      | The app id of the service principal for use with deployments.              |
-| `AZURE_CLIENT_SECRET`  | The secret (password) used for authentication for the service-principal.   |
+> ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
+
+Then create the GitHub secrets as shown below.  
+
+| Secret                 | Type   | Description                                                                |
+| ---------------------- | ------ | -------------------------------------------------------------------------- |
+| `AZURE_CLIENT_ID`      | Secret | The app id of the service principal for use with deployments.              |
+| `AZURE_CLIENT_SECRET`  | Secret | The secret (password) used for authentication for the service-principal.   |
 
 > 💡 If you later need to retrieve information about the created service principal, you can find it in **[Azure App Registrations](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)**.
 
