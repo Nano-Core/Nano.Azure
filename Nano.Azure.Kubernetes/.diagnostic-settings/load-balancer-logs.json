@@ -1,0 +1,6 @@
+[
+  {
+    "category": "LoadBalancerHealthEvent",
+    "enabled": true
+  }
+]

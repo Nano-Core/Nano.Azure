@@ -7,10 +7,12 @@
 ## Table of Contents
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
+  * **[Account And Subscription](#account-and-subscription)**  
+  * **[Service Principal](#service-principal)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
-This is the foundation of the Nano Azure infrastructure. It prepares the Azure environment required to host Nano applications, including:
+This is the foundation of the Nano Azure infrastructure. It prepares the Azure environment required to host Nano applications, including.  
 
 - Azure tenant access
 - Subscription setup for environments
@@ -22,18 +24,26 @@ This component must be deployed first, as all other **[Nano.Azure](https://githu
 > 📖 Learn more about **[Microsoft Azure](https://azure.microsoft.com)**.
 
 ## Registration
-First, create an **[Azure account](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account)** if you do not already have one. Next, create a _Pay-As-You-Go_ 
-(or another suitable offer) subscription for each required environment, such as **Staging** and **Production**, as well as any additional environments you may need. This must 
-be done directly in the Azure Portal using the **[Create Subscription](https://portal.azure.com/#view/Microsoft_Azure_Billing/CatalogBlade/appId/AddSubscriptionButton)** page.  
+There are no prerequisites for registering Azure providers when setting up the Azure account.
+
+> ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
+
+### Account
+First, create an **[Azure account](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account)** if you do not already have one.  
+
+### Subscription
+Next, create a _Pay-As-You-Go_ (or another suitable offer) subscription for each required environment, such as **Staging** and **Production**, as well as any additional 
+environments you may need. This must be done directly in the Azure Portal using the 
+**[Create Subscription](https://portal.azure.com/#view/Microsoft_Azure_Billing/CatalogBlade/appId/AddSubscriptionButton)** page.  
 
 > ⚠️ Subscription creation is not supported via Azure CLI and must be completed in the Azure Portal.
 
 Next, to enable automated deployments, store the tenant id of the Azure account and the subscription ids, as GitHub organization secrets.  
 
-| Secret                                    | Type   | Description                                               |
-| ----------------------------------------- | ------ |---------------------------------------------------------- |
-| `AZURE_TENANT_ID`                         | Secret | The account identifier of the Azure account.              |
-| `{{environment}}__AZURE_SUBSCRIPTION_ID`  | Secret | The identifier of the subscription of the environment.    |
+| Secret                                    | Type     | Description                                               |
+| ----------------------------------------- | -------- |---------------------------------------------------------- |
+| `AZURE_TENANT_ID`                         | Secrets  | The account identifier of the Azure account.              |
+| `{{environment}}__AZURE_SUBSCRIPTION_ID`  | Secrets  | The identifier of the subscription of the environment.    |
 
 Open PowerShell and sign in to your Azure account. Select the appropriate subscription depending on the environment you are setting up.  
 
@@ -53,6 +63,7 @@ To verify that you are signed in and connected to the correct subscription, use 
 az account show;
 ```
 
+### Service Principal
 Last, execute `deploy.ps1` to create the `nano-deploy-service-principal`. This service principal is used for deploying additional resources to the subscriptions. From the output, 
 note down the `appId` and `password`.
 

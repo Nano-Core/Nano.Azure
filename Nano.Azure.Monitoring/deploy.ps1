@@ -1,7 +1,8 @@
 $env:ENVIRONMENT = "";
 $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Logs";
-$env:APP_NAME = "nano-log-analytics-workspace-" + $env:ENVIRONMENT.ToLower();
+$env:APP_NAME_LOG_ANALYTCS = "nano-log-analytics-workspace-" + $env:ENVIRONMENT.ToLower();
+$env:APP_NAME_MONITOR = "nano-monitor-workspace-" + $env:ENVIRONMENT.ToLower();
 $env:WORKSPACE_SKU = "PerGB2018";
 $env:ACTION_GROUP_NAME = "nano-monitor-action-group";
 
@@ -16,10 +17,16 @@ az group create `
 
 # Log Analytics Workspace
 az monitor log-analytics workspace create `
-    -n $env:APP_NAME `
+    -n $env:APP_NAME_LOG_ANALYTCS `
     -g $env:AZURE_RESOURCE_GROUP `
     -l $env:AZURE_LOCATION `
     --sku $env:WORKSPACE_SKU;
+
+# Monitor Workspace
+az monitor account create `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -l $env:AZURE_LOCATION `
+    -n $env:APP_NAME_MONITOR;
 
 # Monitor Group
 az monitor action-group create  `

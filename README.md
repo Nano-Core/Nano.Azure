@@ -5,8 +5,8 @@
 ***
 
 ## Table of Contents
-&nbsp;&nbsp;&nbsp;&nbsp;📌 [Summary](#-summary)  
-&nbsp;&nbsp;&nbsp;&nbsp;⚙️ [Required Tools](#-required-tools)  
+&nbsp;&nbsp;&nbsp;&nbsp;📌 **[Summary](#-summary)**  
+&nbsp;&nbsp;&nbsp;&nbsp;⚙️ **[Required Tools](#-required-tools)**  
 
 ### Documentaion
 &nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**    

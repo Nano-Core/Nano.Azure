@@ -1,4 +1,4 @@
-# Nano.Azure.Sql.MySql
+# Nano.Azure.MySql
 
 > _Azure flexible MySQL database server for Nano applications._
 
@@ -7,6 +7,15 @@
 ## Table of Contents
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
+  * **[MySQL Flexble Server](#mysql-flexble-server)**  
+  * **[Database Backup](#database-backup)**
+  * **[IOPS Auto Scaling](#iops-auto-scaling)**
+  * **[High Availability](#high-availability)**
+  * **[Maintenance](#maintenance)**  
+  * **[Transaction Isolation Level](#transaction-isolation-level)**  
+  * **[Alerts](#alerts)**  
+  * **[Diagnostic Settings](#diagnostic-settings)**  
+  * **[Network Rules](#network-rules)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -15,24 +24,32 @@ for web applications and is a key component of the LAMP stack (Linux, Apache, My
 replication, partitioning, and full-text search. It is highly scalable, making it suitable for both small-scale projects and large, high-traffic websites. MySQL’s strong community 
 support and wide range of tools make it a preferred choice for developers and businesses around the world.  
 
+Create a MySQL Flexible Server to host databases used by Nano applications.  
+
 > 📖 Learn more about **[Azure MySql](https://learn.microsoft.com/azure/mysql)**.
 
 ## Registration
-Execute the `deploy.ps1` to create a flexible MySQL database server on Azure.  
+Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
 
 > ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
 
-The default SKU is set to: **`Standard_D2ads_v5`**, but other SKUs can also be used depending on workload requirements.  
-Azure virtual machine SKUs follow this general format: `[Family][Size][Features][Generation]`
+After successful registration, enable Defender directly on the MySQL resource in the Azure Portal. This setting is not currently configurable via the Azure CLI.  
+
+### MySQL Flexble Server
+Execute the next part of the `deploy.ps1` to create a managed flexible MySQL database server on Azure.  
+
+The default SKU is set to: `Standard_D2ads_v5`, but other SKUs can also be used depending on workload requirements and the availability in Azure regions.  
+
+Azure virtual machine SKUs follow this general format: `[Family][Size][Features][Generation]`.  
 
 The virtual machine familiy types is listed below.  
 
-| Family | Meaning            | Typical use                       |
-| ------ | ------------------ | --------------------------------- |
-| B      | Burstable          | Dev, low-cost, light workloads    |
-| D      | General purpose    | Most apps, balanced CPU/memory    |
-| E      | Memory optimized   | Databases, in-memory workloads    |
-| F      | Compute optimized  | High CPU workloads                |
+| Family | Meaning            | Typical use                                                                                             |
+| ------ | ------------------ | ------------------------------------------------------------------------------------------------------- |
+| B      | Burstable          | Dev, low-cost, light workloads. ⚠️ Be aware that you cannot later upgrade to a different family type.   |
+| D      | General Purpose    | Most apps, balanced CPU/memory                                                                          |
+| E      | Memory Optimized   | Databases, in-memory workloads                                                                          |
+| F      | Compute Optimized  | High CPU workloads                                                                                      |
 
 And the SKU feature letters.  
 
@@ -56,24 +73,14 @@ az mysql flexible-server list-skus -l $env:AZURE_LOCATION -o table;
 
 You can also check out the official list of available SKUs on the **[MySQL Service Tiers](https://learn.microsoft.com/en-us/azure/mysql/flexible-server/concepts-service-tiers-storage)** page.
 
-Optionally, you can enable high availability for the MySQL server. In Azure Database for MySQL Flexible Server, high availability provides automatic failover between zones to 
-improve resilience and reduce downtime in case of infrastructure or zone-level failures. To enable it, simply uncomment the `--high-availability`, `--zone`, and `--standby-zone` 
-parameters in the `deploy.ps1` script’s create command.  
+Create the required secrets in GitHub for the MySQL server. These secrets will be used later to securely connect your applications to the database.  
 
-Database backups have also been configured to run every 24 hours, with a maximum retention period of 35 days. To enable geo-redundant backups, uncomment the `--geo-redundant-backup` 
-parameter in the create command.  
-
-> ⚠️ MySQL database backups is not integrated with **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)**, 
-but has its own integrated configurable service.  
-
-Next, create the required secrets in GitHub for the MySQL server. These secrets will be used later to securely connect your applications to the database.  
-
-| Secret                                    | Type      | Description                                                                    |
-| ----------------------------------------- | --------- | ------------------------------------------------------------------------------ |
-| `MYSQL_PORT`                              | Variable  | The MySQL port. The is a cross environment variable.                           |
-| `{{environment}}_MYSQL_HOST`              | Secret    | The MySQL host.                                                                |
-| `{{environment}}_MYSQL_ADMIN_USER `       | Secret    | The MySQL admin username, used when applying EF migrations during deployment.  |
-| `{{environment}}_MYSQL_ADMIN_PASSWORD `   | Secret    | The MySQL admin password, used when applying EF migrations during deployment.  |
+| Secret                                   | Type     | Description                                                                    |
+| ---------------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `DATA_PORT`                              | vars     | The MySQL port. The is a cross environment variable.                           |
+| `{{environment}}_DATA_HOST`              | Secret   | The MySQL host.                                                                |
+| `{{environment}}_DATA_ADMIN_USER `       | Secret   | The MySQL admin username, used when applying EF migrations during deployment.  |
+| `{{environment}}_DATA_ADMIN_PASSWORD `   | Secret   | The MySQL admin password, used when applying EF migrations during deployment.  |
 
 The MySQL connection string has this format.  
 
@@ -81,11 +88,34 @@ The MySQL connection string has this format.
 Server={server};Port={{port}};Database={database};Uid={username};Pwd={password};SslMode=Preferred;  
 ```
 
+### Database Backup
+Database backups have also been configured to run every 24 hours, with a maximum retention period of 35 days. To enable geo-redundant backups, uncomment the `--geo-redundant-backup` 
+parameter in the create command.  
+
+> ⚠️ MySQL database backups is not integrated with **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)**, 
+but has its own integrated configurable service.  
+
+### IOPS Auto Scaling
+Furthermoe, IOPS is set to auto-grow, allowing flexible a scaled database server.  
+
+### High Availability
+Optionally, you can enable high availability for the MySQL server. In Azure Database for MySQL Flexible Server, high availability provides automatic failover between zones to 
+improve resilience and reduce downtime in case of infrastructure or zone-level failures. To enable it, simply uncomment the `--high-availability`, `--zone`, and `--standby-zone` 
+parameters in the `deploy.ps1` script’s create command.  
+
+### Maintenance
 The Azure maintainance window is set to sunday at 04:00.
 
+### Transaction Isolation Level
 The default transaction isolation level can optionally be changed to `READ-UNCOMMITTED` for improved performance. However, this should be used with caution, as it may lead to dirty 
 reads and less consistent query results in some applications.  
 
+### Alerts
+Last, a couple of default alerts have been configured for the MySQL server and are associated with the action group created in 
+**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**. These alerts monitor High CPU Usage, 
+High Memory Usage, High Number Of Connections, High Storage IO, and High Storage Percent.
+
+### Diagnostics Settings
 The diagnostic settings for MySQL includes both `AllMetrics` for metrics, and `MySqlSlowLogs` and `MySqlAuditLogs`, and the time-grain is set tot 1-minute aggregation interval. This 
 value can be adjusted if needed. You can retrieve the full list of supported metric categories for the MySQL resource using the following command.  
 
@@ -93,9 +123,25 @@ value can be adjusted if needed. You can retrieve the full list of supported met
 az monitor diagnostic-settings categories list --resource $env:MYSQL_ID;
 ```
 
-Last, a couple of default alerts have been configured for the MySQL server and are associated with the action group created in 
-**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**. These alerts monitor High CPU Usage, 
-High Memory Usage, High Number Of Connections, High Storage IO, and High Storage Percent.
+### Network Rules
+The MySQL flexible server has no public access by default. 
+
+Optionally, IP address whitelisting can be configured to allow access to the MySQL server. By default, access is fully restricted, and no external connections are permitted. The 
+Nano system does not depend on IP whitelisting for connectivity, and using it is generally discouraged as it can negatively impact the overall cloud security score. If IP 
+whitelisting is required, it can be configured using the following command.  
+
+```powershell
+$env:NETWORK_RULE_NAME = "";
+$env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_START = "0.0.0.0";
+$env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_END = "255.255.255.255";
+
+az mysql flexible-server firewall-rule create `
+    -n $env:APP_NAME `
+    -g $env:AZURE_RESOURCE_GROUP `
+    --rule-name $env:NETWORK_RULE_NAME `
+    --start-ip-address $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_START `
+    --end-ip-address $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_END;
+```
 
 ## Dependencies
 MySQL has the following dependencies that must be deployed or otherwise satisfied prior to setup.  

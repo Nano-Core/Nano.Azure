@@ -26,18 +26,18 @@ az mysql flexible-server create `
     -n $env:APP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `
     -l $env:AZURE_LOCATION `
+    --sku-name $env:MYSQL_SKU `
+    --tier $env:MYSQL_TIER `
+    --version $env:MYSQL_VERSION `
+    --storage-auto-grow Enabled `
+    --storage-size $env:MYSQL_STORAGE_SIZE `
+    --database-port $env:MYSQL_PORT `
     --auto-scale-iops Enabled `
     --backup-retention $env:MYSQL_BACKUP_RETENTION `
     --backup-interval $env:MYSQL_BACKUP_INTERVAL `
-    --database-port $env:MYSQL_PORT `
-    --public-access Disabled `
-    --sku-name $env:MYSQL_SKU `
-    --storage-auto-grow Enabled `
-    --storage-size $env:MYSQL_STORAGE_SIZE `
-    --tier $env:MYSQL_TIER `
-    --version $env:MYSQL_VERSION `
     --admin-user $env:MYSQL_ADMIN_USERNAME `
     --admin-password $env:MYSQL_ADMIN_PASSWORD `
+    --public-access Disabled `
     -y;
     #--high-availability ZoneRedundant `
     #--zone 1 `

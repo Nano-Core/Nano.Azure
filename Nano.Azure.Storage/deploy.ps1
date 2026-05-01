@@ -5,7 +5,6 @@ $env:AZURE_RESOURCE_GROUP_BACKUP = "Nano-Backup";
 $env:AZURE_LOCATION = "North Europe";
 $env:STORAGE_SKU = "Standard_LRS";
 $env:APP_NAME = "nanostorage" + $env:ENVIRONMENT.ToLower();
-$env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS = "";
 
 # Register Providers
 az provider register -n Microsoft.Storage;
@@ -30,11 +29,6 @@ az storage account create `
     --allow-blob-public-access false `
     --min-tls-version TLS1_2 `
     --require-infrastructure-encryption;
-
-# Network Rules (Optional)
-az storage account network-rule add `
-    -n $env:APP_NAME `
-    --ip-address $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS;
 
 # Backup Policy
 $env:STORAGE_ACCOUNT_BACKUP_POLICY_NAME = $env:APP_NAME + "-backup-policy";
