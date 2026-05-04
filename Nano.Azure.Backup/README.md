@@ -8,7 +8,9 @@
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
   * **[Backup Vault](#backup-vault)**  
+  * **[Immutability State](#immutability-state)**  
   * **[Diagnostics Settings](#diagnostics-settings)**  
+  * **[Alerts](#alerts)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -31,6 +33,11 @@ Execute the next part of the `deploy.ps1` to create the backup vault on Azure.
 The default value is `LocallyRedundant`, where data is replicated within the same Azure region to protect against hardware failures. Other supported values are `GeoRedundant` and 
 `ZoneRedundant`.
 
+### Immutability State
+By default, immutability is set to `Unlocked`. In this state, immutability is enabled but can still be disabled or modified later. It is recommended to set the value to `Locked`. 
+In `Locked` mode, immutability is permanently enforced and cannot be reversed, ensuring that backup data is protected against deletion or modification for the configured 
+retention period.  
+
 ### Diagnostics Settings
 Last, execute the final part of the script to configure diagnostics settings for the backup vault.  
 
@@ -40,6 +47,12 @@ retrieve the full list of supported metric categories for the backup resource us
 ```powershell
 az monitor diagnostic-settings categories list --resource $env:BACKUP_ID;
 ```
+
+# Alerts
+The alerts are the default Azure Backup alerts.  
+
+An Alert Processing Rule is configured to route these alert notifications through the Action Group created as part of
+**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**.
 
 ## Dependencies
 Backup has the following dependencies that must be deployed or otherwise satisfied prior to setup.  

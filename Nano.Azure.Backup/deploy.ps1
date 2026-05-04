@@ -17,22 +17,44 @@ az backup vault create `
     -n $env:APP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `
     -l $env:AZURE_LOCATION `
+    --immutability-state Unlocked `
+    --job-failure-alerts Enable `
     --cross-subscription-restore-state Disable `
-    --immutability-state Unlocked ` 
-    --job-failure-alerts Enable;
+    --classic-alerts Disable `
+    --public-network-access Disable;
 
 az backup vault backup-properties set `
     -n $env:APP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `
     --backup-storage-redundancy LocallyRedundant;
 
+az backup vault update `
+    -n $env:APP_NAME `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -l $env:AZURE_LOCATION `
+    --immutability-state Locked;
+
 # Diagnostics Settings
 $env:DIAGNOSTIC_SETTINGS_NAME = "diagnostics-" + $env:APP_NAME;
-$env:WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query "[0].[id]" -o tsv;
-$env:BACKUP_ID = az backup vault list --query "[?name == '$env:APP_NAME'].id" -o tsv;
+$env:WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:BACKUP_ID = az backup vault list -g $env:AZURE_RESOURCE_GROUP --query "[?name == '$env:APP_NAME'].id" -o tsv;
 
 az monitor diagnostic-settings create `
     --name $env:DIAGNOSTIC_SETTINGS_NAME `
     --workspace $env:WORKSPACE_ID `
     --resource $env:BACKUP_ID `
+    --logs '@.diagnostic-settings/logs.json' `
     --metrics '@.diagnostic-settings/metrics.json';
+
+# alerts
+$env:AZURE_RESOURCE_GROUP_ID = az group show -n $env:AZURE_RESOURCE_GROUP --query id -o tsv;
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+
+az monitor alert-processing-rule create `
+  --name 'Backup Alert Processing Rule ' `
+  --resource-group $env:AZURE_RESOURCE_GROUP `
+  --scope $env:BACKUP_ID `
+  --rule-type AddActionGroups `
+  --action-groups $env:ACTION_GROUP `
+  --enabled true;

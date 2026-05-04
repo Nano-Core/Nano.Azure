@@ -1,0 +1,53 @@
+[
+  {
+    "alert": "KubeContainerCPURising",
+    "expression": "sum(rate(container_cpu_usage_seconds_total{image!=\"\", container!=\"POD\"}[5m])) by (pod, namespace) / sum(kube_pod_container_resource_limits{resource=\"cpu\"}) by (pod, namespace) > 0.6",
+    "severity": 3,
+    "for": "PT10M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeContainerCPUHigh",
+    "expression": "sum(rate(container_cpu_usage_seconds_total{image!=\"\", container!=\"POD\"}[5m])) by (pod, namespace) / sum(kube_pod_container_resource_limits{resource=\"cpu\"}) by (pod, namespace) > 0.8",
+    "severity": 2,
+    "for": "PT10M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeContainerCPUCritical",
+    "expression": "sum(rate(container_cpu_usage_seconds_total{image!=\"\", container!=\"POD\"}[5m])) by (pod, namespace) / sum(kube_pod_container_resource_limits{resource=\"cpu\"}) by (pod, namespace) > 0.95",
+    "severity": 1,
+    "for": "PT5M",
+    "enabled": true
+  },
+
+  {
+    "alert": "KubeContainerMemoryRising",
+    "expression": "sum(container_memory_working_set_bytes{container!=\"POD\", image!=\"\"}) by (pod, namespace) / sum(kube_pod_container_resource_limits{resource=\"memory\"}) by (pod, namespace) > 0.6",
+    "severity": 3,
+    "for": "PT10M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeContainerMemoryHigh",
+    "expression": "sum(container_memory_working_set_bytes{container!=\"POD\", image!=\"\"}) by (pod, namespace) / sum(kube_pod_container_resource_limits{resource=\"memory\"}) by (pod, namespace) > 0.8",
+    "severity": 2,
+    "for": "PT10M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeContainerMemoryCritical",
+    "expression": "sum(container_memory_working_set_bytes{container!=\"POD\", image!=\"\"}) by (pod, namespace) / sum(kube_pod_container_resource_limits{resource=\"memory\"}) by (pod, namespace) > 0.95",
+    "severity": 1,
+    "for": "PT5M",
+    "enabled": true
+  },
+
+  {
+    "alert": "KubePVUsageHigh",
+    "expression": "max(kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes) by (persistentvolumeclaim, namespace) > 0.8",
+    "severity": 2,
+    "for": "PT30M",
+    "enabled": true
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "category": "AzureBackupReport",
+    "enabled": true
+  },
+  {
+    "category": "CoreAzureBackup",
+    "enabled": true
+  },
+  {
+    "category": "AddonAzureBackupJobs",
+    "enabled": true
+  },
+  {
+    "category": "AddonAzureBackupAlerts",
+    "enabled": true
+  },
+  {
+    "category": "AddonAzureBackupPolicy",
+    "enabled": true
+  },
+  {
+    "category": "AddonAzureBackupStorage",
+    "enabled": true
+  },
+  {
+    "category": "ASRReplicatedItems",
+    "enabled": true
+  },
+  {
+    "category": "AzureBackupOperations",
+    "enabled": true
+  }
+]

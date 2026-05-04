@@ -1,0 +1,14 @@
+[
+  {
+    "category": "StorageRead",
+    "enabled": true
+  },
+  {
+    "category": "StorageWrite",
+    "enabled": true
+  },
+  {
+    "category": "StorageDelete",
+    "enabled": true
+  }
+]

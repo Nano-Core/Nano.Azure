@@ -2,6 +2,7 @@ $env:ENVIRONMENT = "";
 $env:AZURE_RESOURCE_GROUP = "Nano-Storage";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_BACKUP = "Nano-Backup";
+$env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
 $env:AZURE_LOCATION = "North Europe";
 $env:STORAGE_SKU = "Standard_LRS";
 $env:APP_NAME = "nanostorage" + $env:ENVIRONMENT.ToLower();
@@ -53,6 +54,13 @@ az monitor diagnostic-settings create `
     --resource $env:STORAGE_ACCOUNT_ID `
     --metrics '@.diagnostic-settings/metrics.json';
 
+az monitor diagnostic-settings create `
+    -n $env:DIAGNOSTIC_SETTINGS_NAME `
+    --workspace $env:WORKSPACE_ID `
+    --resource $env:STORAGE_ACCOUNT_ID/fileServices/default `
+    --logs '@.diagnostic-settings/file/logs.json' `
+    --metrics '@.diagnostic-settings/file/metrics2.json';
+
 # Alert Rules
 $env:STORAGE_ACCOUNT_ID = az storage account list -g $env:AZURE_RESOURCE_GROUP --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
 $env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query "[0].[id]" -o tsv;
@@ -100,3 +108,37 @@ az monitor metrics alert create `
   --action $env:ACTION_GROUP `
   --severity 2 `
   --description "Alert when egress exceeds 1000MB for 5 minutes.";
+
+# Network Rules.
+$env:PRIVATE_LINK = "privatelink.file.core.windows.net";
+$env:PRIVATE_ENDPOINT_NAME = $env:APP_NAME + "-private-endpoint";
+$env:STORAGE_ACCOUNT_ID = az storage account list -g $env:AZURE_RESOURCE_GROUP --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
+$env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].id -o tsv;
+$env:SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query [0].id -o tsv;
+
+az network private-dns zone create `
+  -g $env:AZURE_RESOURCE_GROUP `
+  -n $env:PRIVATE_LINK;
+
+az network private-dns link vnet create `
+  -g $env:AZURE_RESOURCE_GROUP `
+  -n $env:PRIVATE_ENDPOINT_NAME-dns-link `
+  -z $env:PRIVATE_LINK `
+  -v $env:VNET_ID `
+  -e false;
+
+az network private-endpoint create `
+  --name $env:PRIVATE_ENDPOINT_NAME `
+  --connection-name $env:PRIVATE_ENDPOINT_NAME-connection `
+  --nic-name $env:PRIVATE_ENDPOINT_NAME-nic `
+  --resource-group $env:AZURE_RESOURCE_GROUP `
+  --group-id file `
+  --subnet $env:SUBNET_ID `
+  --private-connection-resource-id $env:STORAGE_ACCOUNT_ID;
+
+az network private-endpoint dns-zone-group create `
+  -g $env:AZURE_RESOURCE_GROUP `
+  -n $env:PRIVATE_ENDPOINT_NAME-dns-zone-group `
+  --endpoint-name $env:PRIVATE_ENDPOINT_NAME `
+  --private-dns-zone $env:PRIVATE_LINK `
+  --zone-name file;

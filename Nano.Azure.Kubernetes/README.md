@@ -15,12 +15,14 @@
   * **[Monitoring](#monitoring)**  
   * **[Alerts](#alerts)**  
   * **[Policy](#policy)**  
-  * **[Defender](#defender)**  
+  * **[Microsoft Defender](#defender)**  
   * **[Image Cleaner](#image-cleaner)**  
   * **[Diagnostic Settings](#diagnostic-settings)**  
   * **[Network Rules](#network-rules)**  
+  * **[VPN Gateway](#vpn-gateway)**  
   * **[System Nodepool](#system-nodepool)**  
   * **[GPU Nodepool](#gpu-Nodepool)**  
+  * **[Backup](#backup)**  
 * **[Kubernetes Container Registry Access](#kubernetes-container-registry-access)**  
 * **[Scaling Formula](#scaling-formula)**  
 * **[Dependencies](#dependencies)**  
@@ -91,6 +93,8 @@ Keda Scaling, more advanced and configurable scaling options.
 ### Maintenance
 Is set to sunday at 04:00 UTC, but can be any time a week.
 
+> ⚠️ Be aware that the portal doesn't show the default schedule but only if the different update controls schedules are setup separately.
+
 ### Monitoring
 Enable monitoring using either Azure or Prometheus with Grafana. 
 
@@ -98,18 +102,25 @@ Container insights collects stdout/stderr logs, performance metrics, and Kuberne
 
 The data collection rule for collection logs and metrics is a pretty decent production-grade configuration. For dev/test environments, this can be modified to save costs.
 The argument may also be omitted to use Azure default configuration. This can be modified later on if needs changes.
+Use Log Analytics Workspace
 
 Enable Prometheus on your cluster with Azure Monitor managed service for Prometheus if you don't already have a Prometheus environment. Use Azure Managed Grafana to analyze the collected Prometheus data. See Customize scraping of Prometheus metrics in Azure Monitor managed service for Prometheus to collect additional metrics beyond the default configuration.
+Azure will create a bunch of collection rules, which takes care of ingrsting the Kubernetes metrics and logs into the Monitor Workspace.
+Uses Monitor Workspace.
 
 > 📖 Learn more about **[Azure Monitoring](https://learn.microsoft.com/en-us/azure/azure-monitor/containers/kubernetes-monitoring-enable)**.
 
 ### Alerts
+Legacy alerts are not as precise. for example we can't measure that a pod exceeds 80% of its limit. Only container 80% which is fixed 800 mCPU.
+Prometheus can detect real 80% of a pod
+
+TABLE over alerts for both Prometheus and Container insight
 
 ### Policy
 Adds the default azure compliance policy. 
 [Azure Policy](https://portal.azure.com/#view/Microsoft_Azure_Policy/PolicyMenuBlade.MenuView/~/Overview)
 
-### Defender
+### Microsoft Defender
 The log-analytics workspace created with [Nano.Azure.Monitoring]() is connected to the Kubernetes cluster as well as the Defender configuration.
     --enable-defender `
     --defender-config=$env:DEFENDER_CONFIG_FILE_PATH `
@@ -151,18 +162,44 @@ az aks updaate `
     --api-server-authorized-ip-ranges $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS;
 ```
 
+### VPN Gateway
+VNET_ADDRESS_PREFIXES should be a ip-range space outside of already allocated ranges from other subnets.
+
+Download Azure VPN Client from the Microsoft Store or similar if not using Windows. https://apps.microsoft.com/detail/9np355qt2sqb
+Run the following command to get a donwload link for the VPN client configuration. 
+
+```powershell
+az network vnet-gateway vpn-client generate `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n $env:VNET_GATEWAY_NAME;
+```
+
+To find available IP ranges in the VNET of the Kubernetes cluster, use the following commands:
+
+```powershell
+az network vnet show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:VNET_NAME --query addressSpace.addressPrefixes;
+
+az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query "[].{Name:name,Prefix:addressPrefix}" -o table
+```
+
 ### System Nodepool
 
 ### GPU Nodepool
+
+### Backup
+Backup has not been configured for the AKS Kubernetes cluster. THe whole setup reiles on empheral setup, and critical data is stored in managed services outside Kubernetes.
+Enabling Kubernetes backup requires a private endpoints setup between Kubernetes VNET and the Backup Vault.
+
 
 ## Kubernetes Container Registry Access
 Last, excute the `cr-pull-secret.ps1`, needed for Kubernetes to have permission to pull images from the container registry.  
 
 ## Scaling Formula
-When defining the scaling for _Horizontal Pod Auto-scaler (HPA)_, Kubernetes uses the _Resource Request_ as the base for calculating when to scale. Since what we actually want is to scale when we are reaching the _Resource Limit_. The formula below calculates the resource utilization in percentage, that should be used when defining the HPA.
+When defining the scaling for _Horizontal Pod Auto-scaler (HPA)_, Kubernetes uses the _Resource Request_ as the base for calculating when to scale. Since what we actually want 
+is to scale when we are reaching the _Resource Limit_. The formula below calculates the resource utilization in percentage, that should be used when defining the HPA.
 
-The formula: ```Pod Resource Limit(L) x Desired Scale percentage(P) / Pod Resource Request(R) * 100 = HPA Average Utilization```  
-Example: ```2.100 * 80% / 700 * 100 = 240```
+The formula: `Pod Resource Limit(L) x Desired Scale percentage(P) / Pod Resource Request(R) * 100 = HPA Average Utilization`  
+Example: `2.100 * 80% / 700 * 100 = 240`
 
 ## Dependencies
 Kubernetes has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
@@ -172,11 +209,10 @@ Kubernetes has the following dependencies that must be deployed or otherwise sat
 | **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**                   | The is the foundation or prerequites of the Nano Azure infrastructure.  |
 | **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
 | **[Nano.Azure.Storage](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Storage/README.md#nanoazurestorage)**           | Storage account and fileshares.                                         |
-| **[Nano.Azure.MySql](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Storage/README.md#nanoazurestorage)**             | MySQL Server for application databases.                                 |
-| **[Nano.Azure.PostgreSql](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Storage/README.md#nanoazurestorage)**        | PostgreSQL for application databases.                                   |
-| **[Nano.Azure.SqlServer](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Storage/README.md#nanoazurestorage)**         | SQL Server for application databases.                                   |
 
 ## `Kubectl` commands
+az aks get-credentials -g Nano-Kubernetes -n live-cluster
+
 kubectl top nodes
 kubectl events --namespace={{namespace}} --field-selector InvolvedObject.Name={{pod-name}}
 kubectl logs -l app={{app}} --tail=-1 | findstr -i '{{search}}'

@@ -12,6 +12,7 @@
   * **[Alerts](#alerts)**  
   * **[Diagnostic Settings](#diagnostic-settings)**  
   * **[Network Rules](#network-rules)**  
+  * **[Microsoft Defender](#network-rules)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -27,8 +28,6 @@ Create a Storage Account used to provision file shares for Nano applications.
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
 
 > ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
-
-After successful registration, enable Defender directly on the Storage Account in the Azure Portal. This setting is not currently configurable via the Azure CLI.  
 
 ### Storage Account
 Execute the next part of the `deploy.ps1` to create the storage account on Azure.  
@@ -87,6 +86,15 @@ az monitor diagnostic-settings categories list --resource $env:STORAGE_ACCOUNT_I
 ## Network Rules
 The storage account has no public access by default. 
 
+A Private Endpoint is created for the Kubernetes virtual network, enabling applications running in Kubernetes to securely access the Storage Account file shares over a 
+private connection.
+
+To get the avaiable `group-id`, run the following command.  
+
+```powershell
+az network private-link-resource list --id $env:STORAGE_ACCOUNT_ID;
+```
+
 Optionally, IP address whitelisting can be configured to allow access to the storage file shares. By default, access is fully restricted, and no external connections are permitted. 
 The Nano system does not depend on IP whitelisting for connectivity, and using it is generally discouraged as it can negatively impact the overall cloud security score. If IP 
 whitelisting is required, it can be configured using the following command.  
@@ -99,6 +107,11 @@ az storage account network-rule add `
     --ip-address $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS;
 ```
 
+### Microsoft Defender
+After successful registration, enable Defender directly on the storage resource in the Azure Portal. 
+
+> ⚠️ This setting is not currently configurable via the Azure CLI.  
+
 ## Dependencies
 Storage has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
 
@@ -107,3 +120,4 @@ Storage has the following dependencies that must be deployed or otherwise satisf
 | **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**                   | The is the foundation or prerequites of the Nano Azure infrastructure.  |
 | **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
 | **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)**              | Backup and recovery services.                                           |
+| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                           |
