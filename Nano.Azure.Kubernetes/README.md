@@ -27,7 +27,6 @@
 * **[Image Pull Secret](#image-pull-secret)**  
 * **[Configure kubectl Access](#configure-kubectl-access)**  
 * **[Dependencies](#dependencies)**  
-* **[`kubectl` Commands](#kubectl-commands)**  
 
 ## Summary
 Azure Kubernetes Service (AKS) is a managed Kubernetes service that simplifies the deployment and operation of Kubernetes clusters. AKS automates tasks such as provisioning, 
@@ -42,6 +41,13 @@ Create an Azure Kubernetes Service (AKS) cluster to orchestrate Nano infrastruct
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
 
 > ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
+
+Add the following GitHub organization variables.  
+
+| Secret                                | Type    | Description                                                |
+| ------------------------------------- | ------- |----------------------------------------------------------- |
+| `AZURE_STORAGE_RESOURCE_GROUP`        | vars    | The Azure resource group of the Kubernetes cluster (AKS).  |
+| `{{environment}}_KUBERNETES_CLUSTER`  | vars    | The name of the Kubernetes cluster.                        |
 
 ### Kubernetes Cluster
 Execute the next part of the `deploy.ps1` to create a managed Kubernetes cluster (AKS) on Azure.  
@@ -320,6 +326,8 @@ az aks get-credentials -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --public-fq
 ```
 
 You can now use `kubectl` to manage the cluster.  
+
+> ⚠️ Make sure you are connected the the VPn Gateway, if the Kubernetes cluster is set up with private access.  
 
 ## Dependencies
 Kubernetes has the following dependencies that must be deployed or otherwise satisfied prior to setup.  

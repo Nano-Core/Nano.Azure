@@ -43,7 +43,7 @@ Next, to enable automated deployments, store the tenant id of the Azure account 
 | Secret                                    | Type     | Description                                               |
 | ----------------------------------------- | -------- |---------------------------------------------------------- |
 | `AZURE_TENANT_ID`                         | Secrets  | The account identifier of the Azure account.              |
-| `{{environment}}__AZURE_SUBSCRIPTION_ID`  | Secrets  | The identifier of the subscription of the environment.    |
+| `{{environment}}_AZURE_SUBSCRIPTION_ID`   | Secrets  | The identifier of the subscription of the environment.    |
 
 Open PowerShell and sign in to your Azure account. Select the appropriate subscription depending on the environment you are setting up.  
 
@@ -67,14 +67,14 @@ az account show;
 Last, execute `deploy.ps1` to create the `nano-deploy-service-principal`. This service principal is used for deploying additional resources to the subscriptions. From the output, 
 note down the `appId` and `password`.
 
-> ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
-
 Then create the GitHub secrets as shown below.  
 
-| Secret                 | Type   | Description                                                                |
-| ---------------------- | ------ | -------------------------------------------------------------------------- |
-| `AZURE_CLIENT_ID`      | Secret | The app id of the service principal for use with deployments.              |
-| `AZURE_CLIENT_SECRET`  | Secret | The secret (password) used for authentication for the service-principal.   |
+To ge the values to set for the variables use this command.  
+
+| Secret                 | Type     | Description                                                                |
+| ---------------------- | -------- | -------------------------------------------------------------------------- |
+| `AZURE_CLIENT_ID`      | Secrets  | The app id of the service principal for use with deployments.              |
+| `AZURE_CLIENT_SECRET`  | Secrets  | The secret (password) used for authentication for the service-principal.   |
 
 > 💡 If you later need to retrieve information about the created service principal, you can find it in **[Azure App Registrations](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)**.
 

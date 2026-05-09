@@ -143,7 +143,7 @@ az network private-endpoint create `
   --subnet $env:SUBNET_ID `
   --private-connection-resource-id $env:STORAGE_ACCOUNT_ID;
 
-az network private-endpoint dns-zone-group create `
+ dns-zone-group create `
   -g $env:AZURE_RESOURCE_GROUP `
   -n $env:PRIVATE_ENDPOINT_NAME-dns-zone-group `
   --endpoint-name $env:PRIVATE_ENDPOINT_NAME `
