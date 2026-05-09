@@ -16,7 +16,7 @@
   * **[Alerts](#alerts)**  
   * **[Diagnostic Settings](#diagnostic-settings)**  
   * **[Network Rules](#network-rules)**  
-  * **[Microsoft Defender](#network-rules)**  
+  * **[Microsoft Defender](#microsoft-defender)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -116,7 +116,7 @@ High Memory Usage, High Number Of Connections, High Storage IO, and High Storage
 
 ### Diagnostics Settings
 The diagnostic settings for MySQL includes both `AllMetrics` for metrics, and `MySqlSlowLogs` and `MySqlAuditLogs`, and the time-grain is set tot 1-minute aggregation interval. This 
-value can be adjusted if needed. You can retrieve the full list of supported metric categories for the MySQL resource using the following command.  
+value can be adjusted if needed. You can retrieve the full list of supported metric and log categories for the MySQL resource using the following command.  
 
 ```powershell
 az monitor diagnostic-settings categories list --resource $env:MYSQL_ID;
@@ -149,6 +149,8 @@ az mysql flexible-server firewall-rule create `
     --start-ip-address $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_START `
     --end-ip-address $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_END;
 ```
+
+> ⚠️ Whitelisting IP addresses can reduce the overall security posture and negatively impact the security score.  
 
 ### Microsoft Defender
 After successful registration, enable Defender directly on the MySQL resource in the Azure Portal. 

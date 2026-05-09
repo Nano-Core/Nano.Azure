@@ -8,23 +8,24 @@
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
   * **[Kubernetes Cluster](#kubernetes-cluster)**  
-  * **[Auto Upgrade](#auto-upgrade)**  
+  * **[Automatic Upgrades](#automatic-upgrades)**  
   * **[Auto Scaling](#auto-scaling)**  
   * **[Network Policy](#network-policy)**  
-  * **[Maintenance](#maintenance)**  
-  * **[Monitoring](#monitoring)**  
-  * **[Alerts](#alerts)**  
-  * **[Policy](#policy)**  
-  * **[Microsoft Defender](#defender)**  
-  * **[Image Cleaner](#image-cleaner)**  
-  * **[Diagnostic Settings](#diagnostic-settings)**  
-  * **[Network Rules](#network-rules)**  
+  * **[Private API Server](#private-api-server)**  
   * **[VPN Gateway](#vpn-gateway)**  
   * **[System Nodepool](#system-nodepool)**  
   * **[GPU Nodepool](#gpu-Nodepool)**  
+  * **[Maintenance Window](#maintenance-window)**  
+  * **[Monitoring](#monitoring)**  
+  * **[Alerts](#alerts)**  
   * **[Backup](#backup)**  
-* **[Kubernetes Container Registry Access](#kubernetes-container-registry-access)**  
-* **[Scaling Formula](#scaling-formula)**  
+  * **[Image Cleaner](#image-cleaner)**  
+  * **[Diagnostic Settings](#diagnostic-settings)**  
+  * **[Network Rules](#network-rules)**  
+  * **[Microsoft Defender](#m,icrosoft-defender)**  
+  * **[Policy](#policy)**  
+* **[Image Pull Secret](#image-pull-secret)**  
+* **[Configure kubectl Access](#configure-kubectl-access)**  
 * **[Dependencies](#dependencies)**  
 * **[`kubectl` Commands](#kubectl-commands)**  
 
@@ -33,7 +34,7 @@ Azure Kubernetes Service (AKS) is a managed Kubernetes service that simplifies t
 scaling, and upgrading clusters, reducing the operational burden on teams. It supports both Linux and Windows containers and provides built-in monitoring and security features. 
 AKS allows for easy scaling of applications and ensures high availability, making it ideal for running containerized workloads in production environments.  
 
-Create a Kubernetes Cluster (AKS) to orchestrate Nano infrastructure components and applications.    
+Create an Azure Kubernetes Service (AKS) cluster to orchestrate Nano infrastructure components and deploy applications.  
 
 > 📖 Learn more about **[Azure Kubernetes (AKS)](https://learn.microsoft.com/en-us/azure/aks)**.
 
@@ -41,12 +42,6 @@ Create a Kubernetes Cluster (AKS) to orchestrate Nano infrastructure components 
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
 
 > ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
-
-When done registering the cluster, sign in using the following command.  
-
-```powershell
-az aks get-credentials -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME
-```
 
 ### Kubernetes Cluster
 Execute the next part of the `deploy.ps1` to create a managed Kubernetes cluster (AKS) on Azure.  
@@ -59,11 +54,11 @@ The available Kubernetes versions in a specific region can also be queried, by t
 az aks get-versions -l $env:AZURE_LOCATION --output table;
 ```
 
-The default nodepool SKU is set to: `standard_d4as_v7`, but other SKUs can also be used depending on workload requirements and the Azure region. To see all available SKUs for 
-a specific region use the command below.  
+Other node pool SKUs are available and can be selected based on workload requirements and regional availability in Azure. To view all supported SKUs for a specific region, use the 
+following command.  
 
 ```powershell
-az vm list-skus -l $env:AZURE_LOCATION --query "[?resourceType=='virtualMachines'].[name, tier]" -o table     # commmand is a bit slow have patience.
+az vm list-skus -l $env:AZURE_LOCATION --query "[?resourceType=='virtualMachines'].[name, tier]" -o table;
 ```
 
 > ⚠️ For production-grade Azure Kubernetes Service (AKS) clusters, a minimum of three nodes is recommended, each with at least four vCPUs.
@@ -75,78 +70,206 @@ Create the required secrets in GitHub for the Kubernetes cluster.
 | `AZURE_KUBERNETES_RESOURCE_GROUP`        | vars     | The Azure resource group of the Kubernetes cluster.   |
 | `{{environment}}_KUBERNETES_CLUSTER`     | vars     | The name of the Kubernets cluster.                    |
 
-### Auto Upgrade
-    --node-os-upgrade-channel NodeImage `
-    --auto-upgrade-channel patch `
+### Automatic Upgrades
+Automatic upgrades ensure that the AKS cluster remains up to date with the latest security patches and node image updates. The `--auto-upgrade-channel patch` setting enables automatic 
+Kubernetes patch version updates, helping keep the cluster secure with minimal manual intervention. In addition, `--node-os-upgrade-channel NodeImage` ensures that the underlying node 
+operating system images are automatically updated, providing the latest fixes and improvements for the cluster nodes.  
 
 ### Auto Scaling 
-    --enable-cluster-autoscaler `
-    --max-count $env:KUBERNETES_NODES_MAX `
-    --min-count $env:KUBERNETES_NODES_MIN `
-Keda Scaling, more advanced and configurable scaling options.
+Cluster autoscaling automatically adjusts the number of nodes in the AKS cluster based on workload demand. By enabling `--enable-cluster-autoscaler`, the cluster can scale up when 
+resource demand increases and scale down during periods of low utilization, improving both performance and cost efficiency. The `--min-count` and `--max-count` argumets define the scaling 
+boundaries, ensuring the cluster remains within a controlled range of nodes.  
+
+For more advanced and event-driven scaling scenarios, KEDA can be used to provide more fine-grained and configurable scaling options at the application level.  
+
+When configuring the Horizontal Pod Autoscaler (HPA), Kubernetes uses resource requests as the baseline for scaling decisions. However, scaling is often intended to react closer to 
+resource limits to better reflect actual capacity pressure. To achieve this, the target utilization can be derived using the formula below, which converts a desired scale percentage into 
+the HPA average utilization value:
+
+Formula: `Pod Resource Limit(L) x Desired Scale percentage(P) / Pod Resource Request(R) * 100 = HPA Average Utilization`  
+Example: `2.100 * 80% / 700 * 100 = 240`  
 
 ### Network Policy
-    --network-plugin azure `
-    --network-plugin-mode=overlay `
-    --network-policy azure `
+The AKS cluster is configured with the Azure CNI network plugin in overlay mode to enable scalable pod networking while conserving virtual network IP space. By using `--network-plugin azure` 
+with `--network-plugin-mode=overlay`, pods receive IPs from an overlay network instead of the underlying VNet. The `--network-policy azure` setting enforces Azure Network Policies, 
+allowing fine-grained control over traffic flow between pods and services to improve cluster security and isolation.  
 
-### Maintenance
-Is set to sunday at 04:00 UTC, but can be any time a week.
+### Private API Server
+The AKS cluster is configured to use a private API server by integrating the control plane with the existing virtual network. By enabling private cluster mode and API server VNet integration, 
+access to the Kubernetes control plane is restricted to the private network, eliminating any public endpoint exposure. The API server is hosted within the same virtual network infrastructure 
+without requiring a separate dedicated subnet, ensuring that all communication with the control plane remains private and accessible only through connected network resources.  
 
-> ⚠️ Be aware that the portal doesn't show the default schedule but only if the different update controls schedules are setup separately.
+This also means that interacting with the Kubernetes cluster using `kubectl` is restricted and requires a VPN connection to the Kubernetes virtual network. See [VPN Gateway](#vpn-gateway).
+
+### VPN Gateway
+The VPN Gateway provides secure remote access to the Kubernetes virtual network, enabling private connectivity to cluster resources such as the AKS API server and internal services. It is 
+deployed using a route-based VPN gateway with a zone-redundant SKU to ensure high availability.  
+
+A dedicated `GatewaySubnet` is created within the virtual network, and a public IP is assigned to the gateway for client connectivity. Azure automatically uses this subnet during gateway 
+deployment. When selecting the `--address-prefix` for the subnet, ensure it does not overlap with existing subnet ranges and is fully contained within the VNet address space.  
+
+To retrieve the address range of the VNet, run the following command.  
+
+```powershell
+az network vnet show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:VNET_NAME --query addressSpace.addressPrefixes -o tsv;
+```
+
+To identify the IP ranges already in use by existing subnets in the Kubernetes virtual network, use the following commands.  
+
+```powershell
+az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query "[].{Name:name,Prefix:addressPrefix}" -o table
+```
+
+Point-to-site VPN configuration is enabled using Azure AD authentication, allowing users to securely connect using OpenVPN. A dedicated client address pool is allocated for 
+VPN clients, ensuring isolated IP assignment within the network.
+
+This setup ensures secure, identity-based access to the private Kubernetes environment without exposing internal resources publicly.
+
+Download and install the Azure VPN Client for your operating system.  
+
+| OS       | Link                                                                                 |
+| -------- | ------------------------------------------------------------------------------------ |
+| Linux    | https://apps.microsoft.com/detail/9np355qt2sqb                                       |
+| Mac      | https://apps.apple.com/app/azure-vpn-client/id1557555267                             |
+| Windows  | https://learn.microsoft.com/azure/vpn-gateway/point-to-site-vpn-client-cert-linux    |
+
+Finally, run the following command to retrieve the VPN client configuration download link. Use this file to import the configuration into the Azure VPN Client.  
+
+```powershell
+az network vnet-gateway vpn-client generate `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n $env:VNET_GATEWAY_NAME;
+```
+
+### System Nodepool
+The system nodepool is used to host critical Kubernetes system components such as DNS, metrics, and core add-ons. It is deployed in `System` mode and configured with dedicated compute 
+resources to ensure stable and reliable cluster operations. To isolate system workloads from application workloads, the nodepool is tainted with `CriticalAddonsOnly=true:NoSchedule`, 
+ensuring only system pods are scheduled on these nodes.  
+
+Auto-scaling is enabled with a fixed range (min/max), allowing controlled scaling behavior while maintaining a minimum number of nodes for cluster stability. Host-level encryption is 
+also enabled to improve security of data at rest on the nodes.  
+
+After provisioning, the default nodepool is updated to run in `User` mode, ensuring a clear separation between system and application workloads.  
+
+The system node pool is deployed across three availability zones to improve resiliency, fault tolerance, and workload availability within the cluster.  
+
+### GPU Nodepool
+The GPU nodepool is an optional dedicated nodepool designed to run workloads that require GPU acceleration, such as machine learning, AI inference, or compute-intensive processing tasks. It 
+is configured in `User` mode and isolated from system workloads using a custom label (`nodepool.compute=gpu`) to allow targeted scheduling of GPU-enabled pods.  
+
+Cluster autoscaling is enabled to dynamically adjust capacity based on demand, with a defined minimum and maximum node range to balance availability and cost. Host-level encryption is 
+enabled to secure data at rest on GPU nodes, and GPU instance profiling is configured to support optimized GPU resource allocation.  
+
+The GPU node pool is deployed across three availability zones to improve resiliency, fault tolerance, and workload availability within the cluster.  
+
+### Maintenance Window
+The maintenance window is configured to run on Sunday at 04:00 UTC, but can be adjusted to any time during the week based on operational requirements. This is done by modifying the 
+`--weekday` and `--start-hour` parameters in the `deploy.ps1` script. The `--duration` parameter should be set to a minimum of 4 hours.
+
+> ⚠️ Note that the Azure Portal does not display the default maintenance schedule unless custom update schedules are explicitly configured for the different maintenance controls.
 
 ### Monitoring
-Enable monitoring using either Azure or Prometheus with Grafana. 
+Enable monitoring using either Container Insight or Prometheus with optional Grafana. 
 
-Container insights collects stdout/stderr logs, performance metrics, and Kubernetes events from each node in your cluster. It provides dashboards and reports for analyzing this data, including the availability of your nodes and other components. Use Log Analytics to identify any availability errors in your collected logs.
+Container insights collects stdout/stderr logs, performance metrics, and Kubernetes events from each node in your cluster. It provides dashboards and reports for analyzing this data, 
+including the availability of your nodes and other components. Use Log Analytics to identify any availability errors in your collected logs. The data collection rule for collection logs 
+and metrics is a pretty decent production-grade configuration. For dev/test environments, this can be modified to save costs. The `--data-collection-settings ` parameter may also be 
+omitted to use Azure default configuration. This can be modified later on if needs changes.
 
-The data collection rule for collection logs and metrics is a pretty decent production-grade configuration. For dev/test environments, this can be modified to save costs.
-The argument may also be omitted to use Azure default configuration. This can be modified later on if needs changes.
-Use Log Analytics Workspace
+Enable Prometheus on your cluster with Azure Monitor managed workspace for Prometheus if you don't already have a Prometheus environment. Use Azure Managed Grafana to analyze the collected 
+Prometheus data. See Customize scraping of Prometheus metrics in Azure Monitor managed service for Prometheus to collect additional metrics beyond the default configuration. Azure will 
+create a bunch of collection rules, which takes care of ingrsting the Kubernetes metrics and logs into the Monitor Workspace.
 
-Enable Prometheus on your cluster with Azure Monitor managed service for Prometheus if you don't already have a Prometheus environment. Use Azure Managed Grafana to analyze the collected Prometheus data. See Customize scraping of Prometheus metrics in Azure Monitor managed service for Prometheus to collect additional metrics beyond the default configuration.
-Azure will create a bunch of collection rules, which takes care of ingrsting the Kubernetes metrics and logs into the Monitor Workspace.
-Uses Monitor Workspace.
-
-> 📖 Learn more about **[Azure Monitoring](https://learn.microsoft.com/en-us/azure/azure-monitor/containers/kubernetes-monitoring-enable)**.
+> 📖 Learn more about **[Azure Kubernetes Monitoring](https://learn.microsoft.com/en-us/azure/azure-monitor/containers/kubernetes-monitoring-tutorial)**.
 
 ### Alerts
-Legacy alerts are not as precise. for example we can't measure that a pod exceeds 80% of its limit. Only container 80% which is fixed 800 mCPU.
-Prometheus can detect real 80% of a pod
+Enabling alerts differs between using Container Insight or Prometheus monitoring. 
 
-TABLE over alerts for both Prometheus and Container insight
+For Container Insight the following alerts are supplied.
 
-### Policy
-Adds the default azure compliance policy. 
-[Azure Policy](https://portal.azure.com/#view/Microsoft_Azure_Policy/PolicyMenuBlade.MenuView/~/Overview)
+| Name                                     | Description                                         | Severity | Window Size |
+| ---------------------------------------- | --------------------------------------------------- | -------- | ----------- |
+| Node CPU Rising (60)                     | Node CPU sustained pressure above 60%               | Warn     | PT5M        |
+| Node CPU High (80)                       | Node CPU usage above 80%                            | Severe   | PT5M        |
+| Node CPU Critical (95)                   | Node CPU usage above 95%                            | Critical | PT5M        |
+| Node Memory Rising (60)                  | Node memory sustained pressure above 60%            | Warn     | PT5M        |
+| Node Memory High (80)                    | Node memory usage above 80%                         | Severe   | PT5M        |
+| Node Memory Critical (95)                | Node memory usage above 95%                         | Critical | PT5M        |
+| Node Disk High (80)                      | Node disk usage above 80%                           | Severe   | PT5M        |
+| Container CPU High (Absolute NanoCores)  | Container CPU high usage (requires limits set)      | Severe   | PT5M        |
+| Container Memory High (Absolute Bytes)   | Container memory high usage (absolute threshold)    | Severe   | PT5M        |
+| Node Not Ready                           | Node is not in Ready state                          | Critical | PT5M        |
+| Pod CrashLoopBackOff                     | Pods in CrashLoopBackOff state                      | Critical | PT5M        |
+| Image Pull Failures                      | Image pull failures detected                        | Severe   | PT5M        |
+| OOM Killed Containers                    | Containers terminated due to OOM                    | Critical | PT5M        |
+| Pod Restart Rate High                    | High restart rate in last 5 minutes                 | Severe   | PT5M        |
+| Pods Pending                             | Pods stuck in Pending state                         | Warn     | PT5M        |
 
-### Microsoft Defender
-The log-analytics workspace created with [Nano.Azure.Monitoring]() is connected to the Kubernetes cluster as well as the Defender configuration.
-    --enable-defender `
-    --defender-config=$env:DEFENDER_CONFIG_FILE_PATH `
+> ⚠️ Legacy alerts are less precise and rely on fixed container thresholds (e.g. 800 mCPU) rather than percentage-based utilization of resource limits.
+
+Prometheus-based alerts provide higher accuracy and more detailed insights. The full set of Prometheus alerts is listed below.  
+
+| Name                           | Description                                                   | Severity | Window Size |
+| ------------------------------ | ------------------------------------------------------------- | -------- | ----------- |
+| Node Not Ready                 | Node Ready condition is false                                 | Critical | PT5M        |
+| Node Unreachable               | Node is marked with unreachable taint                         | Severe   | PT10M       |
+| Node Readiness Flapping        | Frequent changes in Node Ready status                         | Warn     | PT10M       |
+| Node Memory Pressure           | Node is under MemoryPressure condition                        | Severe   | PT5M        |
+| Node CPU Pressure              | Node CPU usage is above 85%                                   | Severe   | PT5M        |
+| Container CPU Rising           | Container CPU usage exceeds 60% of resource limits            | Warn     | PT10M       |
+| Container CPU High             | Container CPU usage exceeds 80% of resource limits            | Severe   | PT10M       |
+| Container CPU Critical         | Container CPU usage exceeds 95% of resource limits            | Critical | PT5M        |
+| Container Memory Rising        | Container memory usage exceeds 60% of resource limits         | Warn     | PT10M       |
+| Container Memory High          | Container memory usage exceeds 80% of resource limits         | Severe   | PT10M       |
+| Container Memory Critical      | Container memory usage exceeds 95% of resource limits         | Critical | PT5M        |
+| PV Usage High                  | PersistentVolume usage exceeds 80% capacity                   | Severe   | PT30M       |
+| Hpa Maxed Out                  | HPA is at maximum replicas and cannot scale further           | Warn     | PT10M       |
+| Hpa Replicas Mismatch          | Desired replicas differ from current replicas                 | Warn     | PT10M       |
+| Daemon Set Not Scheduled       | Desired DaemonSet pods are not fully scheduled                | Warn     | PT10M       |
+| Pod Scheduling Pressure        | Pods are stuck in Pending state                               | Warn     | PT10M       |
+| Pod No tReady                  | Pods are in Pending, Unknown, or Failed state                 | Warn     | PT10M       |
+| Pod Crash Looping              | Pods are in CrashLoopBackOff state                            | Info     | PT5M        |
+| Pod Image Pull Failure         | Pods failing due to ImagePullBackOff or ErrImagePull          | Warn     | PT5M        |
+| Container OOM Killed           | Containers terminated due to OOMKilled                        | Info     | PT5M        |
+| PodRestart Rate High           | Pods with more than 3 restarts in 5 minutes                   | Warn     | PT5M        |
+| Deployment Replicas Mismatch   | Available replicas do not match desired deployment replicas   | Info     | PT10M       |
+
+### Backup
+Backup and site recovery are not configured for the AKS cluster. The deployment follows an ephemeral infrastructure model, where workloads can be recreated at any time, and all critical 
+data is stored in external managed services rather than within the cluster.
+
+Enabling Kubernetes backup requires Private Endpoints between the AKS virtual network and the Backup Vault to ensure secure and private connectivity.  
 
 ### Image Cleaner
-    --enable-image-cleaner `
-    --image-cleaner-interval-hours 24 `
+The Image Cleaner feature is optional and helps reduce disk usage on cluster nodes by automatically removing unused container images. When enabled, it periodically cleans up images that 
+are no longer referenced by running workloads.
+
+The cleanup interval is configured using `--image-cleaner-interval-hours`, which defines how frequently the process runs (e.g. every 72 hours). The value can be adjusted based on 
+operational requirements.  
 
 ### Diagnostic Settings
-Next, create the diagnostic settings for the Kuberentes cluster.  
+Next, create the diagnostic settings for the Kubernetes (AKS) cluster.
 
-The diagnostic settings for MySQL includes both `AllMetrics` for metrics, and `MySqlSlowLogs` and `MySqlAuditLogs`, and the time-grain is set tot 1-minute aggregation interval. This 
-value can be adjusted if needed. You can retrieve the full list of supported metric categories for the MySQL resource using the following command.  
+The diagnostic configuration includes `AllMetrics` for metric collection, with the time grain set to a 1-minute aggregation interval. This value can be adjusted if required. The diagnostic 
+logs configuration includes a comprehensive set of log categories emitted by Kubernetes. Refer to the JSON file used by the script for detailed configuration.  
+
+You can retrieve the full list of supported metric and log categories for the AKS resource using the following command.
 
 ```powershell
 az monitor diagnostic-settings categories list --resource $env:KUBERNETES_ID;
 ```
 
-and for the load balancer. 
+Continue creating the load-balancer diagnostic settings. The configuration includes `AllMetrics` for metric collection, with the time grain set to a 1-minute aggregation interval. The logs
+configuration is limited to `LoadBalancerHealthEvent`. 
+
+You can retrieve the full list of supported metric and log categories for the load-balancer resource using the following command.
 
 ```powershell
 az monitor diagnostic-settings categories list --resource $env:LOAD_BALANCER_ID;
 ```
 
 ### Network Rules
-The Kubernetes Cluster has no public access by default. 
+The Kubernetes Cluster has no public access by default.
 
 Optionally, IP address whitelisting can be configured to allow access to the storage file shares. By default, access is fully restricted, and no external connections are permitted. 
 The Nano system does not depend on IP whitelisting for connectivity, and using it is generally discouraged as it can negatively impact the overall cloud security score. If IP 
@@ -162,44 +285,38 @@ az aks updaate `
     --api-server-authorized-ip-ranges $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS;
 ```
 
-### VPN Gateway
-VNET_ADDRESS_PREFIXES should be a ip-range space outside of already allocated ranges from other subnets.
+> ⚠️ Whitelisting IP addresses can reduce the overall security posture and negatively impact the security score.  
 
-Download Azure VPN Client from the Microsoft Store or similar if not using Windows. https://apps.microsoft.com/detail/9np355qt2sqb
-Run the following command to get a donwload link for the VPN client configuration. 
+### Policy
+Adds the default Azure Policy assignment to the cluster, enabling built-in compliance monitoring and governance enforcement. This provides visibility into configuration drift, 
+security posture, and best-practice adherence, while continuously evaluating the cluster against Azure Policy definitions and initiatives.  
+
+> 📖 Learn more about [Azure Policy](https://portal.azure.com/#view/Microsoft_Azure_Policy/PolicyMenuBlade.MenuView/~/Overview).
+
+### Microsoft Defender
+Microsoft Defender for Containers is used to enhance security monitoring and threat detection for the AKS cluster. It integrates with the Log Analytics workspace created via 
+**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)** to centralize security telemetry and enable 
+vulnerability and runtime threat detection for container workloads.  
+
+The Defender configuration is minimal and primarily used to link the cluster to the Log Analytics workspace through a generated configuration file. This file contains the workspace 
+resource ID and is required during setup.
+
+However, Microsoft Defender for AKS must still be explicitly enabled in the Azure Portal after deployment to fully activate security protections for the cluster.
+
+## Image Pull Secret
+This step creates a Kubernetes image pull secret that allows the cluster to authenticate against the container registry and pull private images.  
+
+Execute the `cr-pull-secret.ps1` script to create the required Docker registry secret in the cluster. The script provisions a `docker-registry` type secret that Kubernetes uses 
+when pulling container images. This secret is referenced by workloads that require access to images stored in the container registry.  
+
+## Connecting to the cluster
+Once the cluster has been registered, retrieve the credentials using the following command.  
 
 ```powershell
-az network vnet-gateway vpn-client generate `
-    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
-    -n $env:VNET_GATEWAY_NAME;
+az aks get-credentials -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME
 ```
 
-To find available IP ranges in the VNET of the Kubernetes cluster, use the following commands:
-
-```powershell
-az network vnet show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:VNET_NAME --query addressSpace.addressPrefixes;
-
-az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query "[].{Name:name,Prefix:addressPrefix}" -o table
-```
-
-### System Nodepool
-
-### GPU Nodepool
-
-### Backup
-Backup has not been configured for the AKS Kubernetes cluster. THe whole setup reiles on empheral setup, and critical data is stored in managed services outside Kubernetes.
-Enabling Kubernetes backup requires a private endpoints setup between Kubernetes VNET and the Backup Vault.
-
-
-## Kubernetes Container Registry Access
-Last, excute the `cr-pull-secret.ps1`, needed for Kubernetes to have permission to pull images from the container registry.  
-
-## Scaling Formula
-When defining the scaling for _Horizontal Pod Auto-scaler (HPA)_, Kubernetes uses the _Resource Request_ as the base for calculating when to scale. Since what we actually want 
-is to scale when we are reaching the _Resource Limit_. The formula below calculates the resource utilization in percentage, that should be used when defining the HPA.
-
-The formula: `Pod Resource Limit(L) x Desired Scale percentage(P) / Pod Resource Request(R) * 100 = HPA Average Utilization`  
-Example: `2.100 * 80% / 700 * 100 = 240`
+You can now use `kubectl` to manage the cluster.  
 
 ## Dependencies
 Kubernetes has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
@@ -208,13 +325,3 @@ Kubernetes has the following dependencies that must be deployed or otherwise sat
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
 | **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**                   | The is the foundation or prerequites of the Nano Azure infrastructure.  |
 | **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
-| **[Nano.Azure.Storage](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Storage/README.md#nanoazurestorage)**           | Storage account and fileshares.                                         |
-
-## `Kubectl` commands
-az aks get-credentials -g Nano-Kubernetes -n live-cluster
-
-kubectl top nodes
-kubectl events --namespace={{namespace}} --field-selector InvolvedObject.Name={{pod-name}}
-kubectl logs -l app={{app}} --tail=-1 | findstr -i '{{search}}'
-kubectl patch cronjob {{cronjob-name}} -p '{"spec": {"suspend": true}}'
-kubectl create job --from=cronjob/{{cronjob-name}} {{job-name}}

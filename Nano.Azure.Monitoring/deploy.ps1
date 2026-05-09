@@ -1,5 +1,5 @@
 $env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "North Europe";
+$env:AZURE_LOCATION = "Sweden Central";
 $env:AZURE_RESOURCE_GROUP = "Nano-Logs";
 $env:APP_NAME_LOG_ANALYTCS = "nano-log-analytics-workspace-" + $env:ENVIRONMENT.ToLower();
 $env:APP_NAME_MONITOR = "nano-monitor-workspace-" + $env:ENVIRONMENT.ToLower();
@@ -20,7 +20,9 @@ az monitor log-analytics workspace create `
     -n $env:APP_NAME_LOG_ANALYTCS `
     -g $env:AZURE_RESOURCE_GROUP `
     -l $env:AZURE_LOCATION `
-    --sku $env:WORKSPACE_SKU;
+    --sku $env:WORKSPACE_SKU `
+    --identity-type SystemAssigned `
+    --retention-time 30;
 
 # Monitor Workspace
 az monitor account create `
@@ -34,13 +36,13 @@ az monitor action-group create  `
     -g $env:AZURE_RESOURCE_GROUP `
     --short-name monitor;
 
-$env:MONITORING_READER_ROLE_ID = az role definition list --name "Monitoring Reader" --query "[0].[name]" -o tsv;
+$env:MONITORING_READER_ROLE_ID = az role definition list --name "Monitoring Reader" --query [0].[name] -o tsv;
 az monitor action-group update `
     -n $env:ACTION_GROUP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `
     --add-action armrole "Monitoring Reader" $env:MONITORING_READER_ROLE_ID;
 
-$env:MONITORING_CONTRIBUTOR_ROLE_ID = az role definition list --name "Monitoring Contributor" --query "[0].[name]" -o tsv;
+$env:MONITORING_CONTRIBUTOR_ROLE_ID = az role definition list --name "Monitoring Contributor" --query [0].[name] -o tsv;
 az monitor action-group update `
     -n $env:ACTION_GROUP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `

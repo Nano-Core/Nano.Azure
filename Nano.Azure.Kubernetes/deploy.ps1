@@ -1,5 +1,5 @@
-$env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "North Europe";
+$env:ENVIRONMENT = "Staging";
+$env:AZURE_LOCATION = "Sweden Central";
 $env:AZURE_RESOURCE_GROUP = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_ASSETS = "Nano-Kubernetes-Assets";
@@ -7,7 +7,7 @@ $env:KUBERNETES_VERSION = "1.35.0";
 $env:KUBERNETES_TIER = "standard";
 $env:KUBERNETES_NODEPOOL_NAME = "default";
 $env:KUBERNETES_NODEPOOL_LABEL_COMPUTE = "cpu"
-$env:KUBERNETES_NODE_SIZE = "standard_d4as_v7"; 
+$env:KUBERNETES_NODE_SIZE = "standard_d2as_v6"; 
 $env:KUBERNETES_NODE_COUNT = 3;
 $env:KUBERNETES_NODES_MIN = 3;
 $env:KUBERNETES_NODES_MAX = 6;
@@ -40,32 +40,118 @@ az aks create `
     --max-count $env:KUBERNETES_NODES_MAX `
     --min-count $env:KUBERNETES_NODES_MIN `
     --network-plugin azure `
-    --network-plugin-mode=overlay `
+    --network-plugin-mode overlay `
     --network-policy azure `
     --generate-ssh-keys `
-    --enable-private-cluster `
     --enable-encryption-at-host `
-    --enable-managed-identity;
+    --enable-managed-identity `
+    --enable-private-cluster `
+    --enable-workload-identity `
+    --enable-oidc-issuer `
+    --zones 1 2 3;
 
-# Private cluster
-$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].name -o tsv;
-$env:VNET_ADDRESS_PREFIXES = "10.226.0.0/27";
+# VPN Gateway
+$env:TENANT_ID = "";
+$env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].id -o tsv;
+$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
+$env:VNET_ADDRESS_PREFIXES = "10.231.0.0/24";
+$env:VNET_GATEWAY_NAME = $env:APP_NAME + "-vnet-gateway";
+$env:VNET_GATEWAY_IP_NAME = $env:APP_NAME + "-vnet-gateway-ip";
+$env:VNET_GATEWAY_VPN_CLIENT_ADDRESS_POOL = "['172.16.201.0/24']";
+$env:VNET_GATEWAY_ADD_TENANT = "https://login.microsoftonline.com/" + $env:TENANT_ID;
+$env:VNET_GATEWAY_ADD_AUDIENCE = "41b23e61-6c1e-4545-b367-cd054e0ed4b4";
+$env:VNET_GATEWAY_ADD_ISSUER = "https://sts.windows.net/" + $env:TENANT_ID + "/";
+
+az network public-ip create `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n $env:VNET_GATEWAY_IP_NAME `
+    -z 1 2 3 `
+    --sku Standard `
+    --allocation-method Static;
 
 az network vnet subnet create `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n GatewaySubnet `
+    --vnet-name $env:VNET_NAME `
+    --address-prefix $env:VNET_ADDRESS_PREFIXES;
+
+az network vnet-gateway create `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n $env:VNET_GATEWAY_NAME `
+    --public-ip-address  $env:VNET_GATEWAY_IP_NAME `
+    --vnet $env:VNET_ID `
+    --gateway-type Vpn `
+    --vpn-type RouteBased `
+    --sku VpnGw1AZ `
+    --vpn-gateway-generation Generation2;
+
+az network vnet-gateway update `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n $env:VNET_GATEWAY_NAME `
+    --set "vpnClientConfiguration.vpnClientAddressPool.addressPrefixes=$env:VNET_GATEWAY_VPN_CLIENT_ADDRESS_POOL" `
+    --set "vpnClientConfiguration.vpnClientProtocols=['OpenVPN']" `
+    --set "vpnClientConfiguration.vpnAuthenticationTypes=['Aad']" `
+    --set vpnClientConfiguration.aadTenant=$env:VNET_GATEWAY_ADD_TENANT `
+    --set vpnClientConfiguration.aadAudience=$env:VNET_GATEWAY_ADD_AUDIENCE `
+    --set vpnClientConfiguration.aadIssuer=$env:VNET_GATEWAY_ADD_ISSUER;
+
+az network vnet-gateway vpn-client generate `
   -g $env:AZURE_RESOURCE_GROUP_ASSETS `
-  -n aks-apiserver-subnet2 `
-  --vnet-name $env:VNET_NAME `
-  --address-prefix $env:VNET_ADDRESS_PREFIXES `
-  --private-endpoint-network-policies Disabled;
+  -n $env:VNET_GATEWAY_NAME;
 
-$env:API_SERVER_SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query "[?name =='aks-apiserver-subnet'].[id]" -o tsv;
+# System Nodepool (Optional)
+$env:KUBERNETES_NODEPOOL_SYSTEM_NAME = "system";
+$env:KUBERNETES_SYSTEM_NODE_SIZE = "standard_d2as_v6"; 
+$env:KUBERNETES_SYSTEM_NODE_COUNT=3;
+$env:KUBERNETES_SYSTEM_NODES_MIN=3;
+$env:KUBERNETES_SYSTEM_NODES_MAX=3;
 
-az aks update `
+az aks nodepool add `
     -g $env:AZURE_RESOURCE_GROUP `
-    -n $env:APP_NAME `
-    --enable-private-cluster `
-    --enable-apiserver-vnet-integration `
-    --apiserver-subnet-id $env:API_SERVER_SUBNET_ID;
+    -n $env:KUBERNETES_NODEPOOL_SYSTEM_NAME `
+    --cluster-name $env:APP_NAME `
+    --kubernetes-version $env:KUBERNETES_VERSION `
+    --mode System `
+    --os-type Linux `
+    --node-taints CriticalAddonsOnly=true:NoSchedule `
+    --node-vm-size $env:KUBERNETES_SYSTEM_NODE_SIZE `
+    --node-count $env:KUBERNETES_SYSTEM_NODE_COUNT `
+    --min-count $env:KUBERNETES_SYSTEM_NODES_MIN `
+    --max-count $env:KUBERNETES_SYSTEM_NODES_MAX `
+    --enable-encryption-at-host `
+    --enable-cluster-autoscaler `
+    --zones 1 2 3;
+
+az aks nodepool update `
+    -g $env:AZURE_RESOURCE_GROUP `
+    --cluster-name $env:APP_NAME `
+    --name $env:KUBERNETES_NODEPOOL_NAME `
+    --mode user;
+
+# GPU Nodepool (Optional)
+$env:KUBERNETES_NODEPOOL_GPU_NAME = "gpu";
+$env:KUBERNETES_GPU_NODE_SIZE = ""; 
+$env:KUBERNETES_GPU_NODE_COUNT=1;
+$env:KUBERNETES_GPU_NODES_MIN=1;
+$env:KUBERNETES_GPU_NODES_MAX=3;
+
+az aks nodepool add `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:KUBERNETES_NODEPOOL_GPU_NAME `
+    --cluster-name $env:APP_NAME `
+    --kubernetes-version $env:KUBERNETES_VERSION `
+    --mode User `
+    --os-type Linux `
+    --node-vm-size $env:KUBERNETES_GPU_NODE_SIZE `
+    --node-count $env:KUBERNETES_GPU_NODE_COUNT `
+    --min-count $env:KUBERNETES_GPU_NODES_MIN `
+    --max-count $env:KUBERNETES_GPU_NODES_MAX `
+    --labels nodepool.compute=gpu `
+    --enable-cluster-autoscaler `
+    --enable-encryption-at-host `
+    --gpu-driver Install `
+    --gpu-instance-profile MIG1g `
+    --zones 1 2 3;
 
 # Maintenance
 az aks maintenanceconfiguration add `
@@ -73,7 +159,7 @@ az aks maintenanceconfiguration add `
     --cluster-name $env:APP_NAME `
     --name default `
     --weekday Sunday `
-    --start-hour 3 `
+    --start-hour 4 `
     --duration 4;
 
 # Monitoring (Container Insights - Legacy)
@@ -89,8 +175,8 @@ az aks enable-addons `
 # Alerts (Container insights - Legacy)
 az extension add --name scheduled-query;
 
-$env:KUBERNETES_ID = az aks list --query "[?name == '$env:APP_NAME'].[id]" -o tsv;
-$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query "[0].[id]" -o tsv;
+$env:KUBERNETES_ID = az aks show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
 
 az monitor metrics alert create `
   --name "Node CPU Rising (60)" `
@@ -286,7 +372,8 @@ az aks update `
 
 # Alerts (Prometheus)
 az extension add -n alertsmanagement;
-$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query "[0].[id]" -o tsv;
+
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
 
 az alerts-management prometheus-rule-group create `
   --name 'Prometheus Alerts - Resource Saturation' `
@@ -331,14 +418,37 @@ az alerts-management prometheus-rule-group create `
   --interval PT5M `
   --scopes $env:MONITOR_WORKSPACE_ID `
   --rules '.alerts/node-health.json';
-
-# Policy (Optional)
-az aks enable-addons `
-    -n $env:APP_NAME `
+  
+# Image Cleaner (Optional)
+az aks update `
     -g $env:AZURE_RESOURCE_GROUP `
-    --addons azure-policy;
+    -n $env:APP_NAME `
+    --enable-image-cleaner `
+    --image-cleaner-interval-hours 72;
 
-# Defender
+# Diagnostic Settings
+$env:KUBERNETES_ID = az aks show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
+$env:DIAGNOSTIC_SETTINGS_NAME = "diagnostics-" + $env:APP_NAME;
+$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+
+az monitor diagnostic-settings create `
+    --name $env:DIAGNOSTIC_SETTINGS_NAME `
+    --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
+    --resource $env:KUBERNETES_ID `
+    --logs '@.diagnostic-settings/logs.json' `
+    --metrics '@.diagnostic-settings/metrics.json';
+
+$env:LOAD_BALANCER_ID = az network lb show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n kubernetes --query id -o tsv;
+$env:DIAGNOSTIC_SETTINGS_LOAD_BALANCER_NAME = $env:DIAGNOSTIC_SETTINGS_NAME + "-load-balancer";
+
+az monitor diagnostic-settings create `
+    --name $env:DIAGNOSTIC_SETTINGS_LOAD_BALANCER_NAME `
+    --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
+    --resource $env:LOAD_BALANCER_ID `
+    --logs '@.diagnostic-settings/load-balancer/logs.json' `
+    --metrics '@.diagnostic-settings/load-balancer/metrics.json';
+
+# Microsoft Defender
 $env:DEFENDER_CONFIG = @{logAnalyticsWorkspaceResourceId = $env:LOG_ANALYTICS_WORKSPACE_ID} | ConvertTo-Json -Compress
 $env:DEFENDER_CONFIG_FILE_PATH = Join-Path $env:USERPROFILE "nano.azure.kuberentes.defender-config.json"
 
@@ -350,134 +460,8 @@ az aks update `
     --enable-defender `
     --defender-config=$env:DEFENDER_CONFIG_FILE_PATH;
 
-# Image Cleaner (Optional)
-az aks update `
-    -g $env:AZURE_RESOURCE_GROUP `
+# Policy (Optional)
+az aks enable-addons `
     -n $env:APP_NAME `
-    --enable-image-cleaner `
-    --image-cleaner-interval-hours 72;
-
-# Diagnostic Settings
-$env:DIAGNOSTIC_SETTINGS_NAME = "diagnostics-" + $env:APP_NAME;
-$env:KUBERNETES_ID = az aks list --query "[?name == '$env:APP_NAME'].[id]" -o tsv;
-
-az monitor diagnostic-settings create `
-    --name $env:DIAGNOSTIC_SETTINGS_NAME `
-    --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
-    --resource $env:KUBERNETES_ID `
-    --logs '@.diagnostic-settings/logs.json' `
-    --metrics '@.diagnostic-settings/metrics.json';
-
-$env:DIAGNOSTIC_SETTINGS_LOAD_BALANCER_NAME = $env:DIAGNOSTIC_SETTINGS_NAME + "-load-balancer";
-$env:LOAD_BALANCER_ID = az network lb list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query "[0].[id]" -o tsv;
-
-az monitor diagnostic-settings create `
-    --name $env:DIAGNOSTIC_SETTINGS_LOAD_BALANCER_NAME `
-    --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
-    --resource $env:LOAD_BALANCER_ID `
-    --logs '@.diagnostic-settings/load-balancer/logs.json' `
-    --metrics '@.diagnostic-settings/load-balancer/metrics.json';
-
-# VPN Gateway
-$env:TENANT_ID = "9071a89e-4c58-4163-9bb4-f87488ff1427";
-$env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].id -o tsv;
-$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].name -o tsv;
-$env:VNET_ADDRESS_PREFIXES = "";
-$env:VNET_GATEWAY_NAME = $env:APP_NAME + "-vnet-gateway";
-$env:VNET_GATEWAY_VPN_CLIENT_ADDRESS_POOL = "['172.16.201.0/24']";
-$env:VNET_GATEWAY_ADD_TENANT = "https://login.microsoftonline.com/" + $env:TENANT_ID;
-$env:VNET_GATEWAY_ADD_AUDIENCE = "41b23e61-6c1e-4545-b367-cd054e0ed4b4";
-$env:VNET_GATEWAY_ADD_ISSUER = "https://sts.windows.net/" + $env:TENANT_ID + "/";
-
-az network public-ip create `
-    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
-    -n $env:VNET_GATEWAY_NAME-ip `
-    -z 1 `
-    --sku Standard `
-    --allocation-method Static;
-
-az network vnet subnet create `
-    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
-    -n GatewaySubnet `
-    --vnet-name $env:VNET_NAME `
-    --address-prefix $env:VNET_ADDRESS_PREFIXES;
-
-az network vnet-gateway create `
-    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
-    -n $env:VNET_GATEWAY_NAME `
-    --public-ip-address $env:VNET_GATEWAY_NAME-ip `
-    --vnet $env:VNET_ID `
-    --gateway-type Vpn `
-    --vpn-type RouteBased `
-    --sku VpnGw5AZ `
-    --vpn-gateway-generation Generation2
-    --no-wait;
-
-az network vnet-gateway update `
-    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
-    -n $env:VNET_GATEWAY_NAME `
-    --set "vpnClientConfiguration.vpnClientAddressPool.addressPrefixes=$env:VNET_GATEWAY_VPN_CLIENT_ADDRESS_POOL";
-
-az network vnet-gateway update `
-    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
-    -n $env:VNET_GATEWAY_NAME `
-    --set "vpnClientConfiguration.vpnClientProtocols=['OpenVPN']" `
-    --set "vpnClientConfiguration.vpnAuthenticationTypes=['Aad']" `
-    --set vpnClientConfiguration.aadTenant=$env:VNET_GATEWAY_ADD_TENANT `
-    --set vpnClientConfiguration.aadAudience=$env:VNET_GATEWAY_ADD_AUDIENCE `
-    --set vpnClientConfiguration.aadIssuer=$env:VNET_GATEWAY_ADD_ISSUER;
-
-az network vnet-gateway vpn-client generate `
-  -g $env:AZURE_RESOURCE_GROUP_ASSETS `
-  -n $env:VNET_GATEWAY_NAME;
-
-# System Nodepool (Optional)
-$env:KUBERNETES_NODEPOOL_SYSTEM_NAME = "system";
-$env:KUBERNETES_SYSTEM_NODE_SIZE = "standard_d4as_v7"; 
-$env:KUBERNETES_SYSTEM_NODE_COUNT=1
-$env:KUBERNETES_SYSTEM_NODES_MIN=1
-$env:KUBERNETES_SYSTEM_NODES_MAX=2
-
-az aks nodepool add `
     -g $env:AZURE_RESOURCE_GROUP `
-    -n $env:KUBERNETES_NODEPOOL_SYSTEM_NAME `
-    --cluster-name $env:APP_NAME `
-    --kubernetes-version $env:KUBERNETES_VERSION `
-    --mode System `
-    --os-type Linux `
-    --node-taints CriticalAddonsOnly=true:NoSchedule `
-    --node-vm-size $env:KUBERNETES_SYSTEM_NODE_SIZE `
-    --node-count $env:KUBERNETES_SYSTEM_NODE_COUNT `
-    --min-count $env:KUBERNETES_SYSTEM_NODES_MIN `
-    --max-count $env:KUBERNETES_SYSTEM_NODES_MAX `
-    --enable-encryption-at-host `
-    --enable-cluster-autoscaler;
-
-az aks nodepool update `
-    -g $env:AZURE_RESOURCE_GROUP `
-    --cluster-name $env:APP_NAME `
-    --name $env:KUBERNETES_NODEPOOL_NAME `
-    --mode user;
-
-# GPU Nodepool (Optional)
-$env:KUBERNETES_NODEPOOL_GPU_NAME = "gpu";
-$env:KUBERNETES_GPU_NODE_SIZE = ""; 
-$env:KUBERNETES_GPU_NODE_COUNT=1
-$env:KUBERNETES_GPU_NODES_MIN=1
-$env:KUBERNETES_GPU_NODES_MAX=1
-
-az aks nodepool add `
-    -g $env:AZURE_RESOURCE_GROUP `
-    -n $env:KUBERNETES_NODEPOOL_GPU_NAME `
-    --cluster-name $env:KUBERNETES_CLUSTER `
-    --kubernetes-version $env:KUBERNETES_VERSION `
-    --mode User `
-    --os-type Linux `
-    --node-vm-size $env:KUBERNETES_NODE_SIZE `
-    --node-count $env:KUBERNETES_GPU_NODE_COUNT `
-    --min-count $env:KUBERNETES_GPU_NODES_MIN `
-    --max-count $env:KUBERNETES_GPU_NODES_MAX `
-    --labels nodepool.compute=gpu `
-    --enable-cluster-autoscaler `
-    --enable-encryption-at-host `
-    --gpu-instance-profile MIG1g;
+    --addons azure-policy;

@@ -1,5 +1,5 @@
 $env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "North Europe";
+$env:AZURE_LOCATION = "Sweden Central";
 $env:AZURE_RESOURCE_GROUP = "Nano-Database";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
@@ -134,8 +134,7 @@ $env:PRIVATE_LINK = "privatelink.mysql.database.azure.com";
 $env:PRIVATE_ENDPOINT_NAME = $env:APP_NAME + "-private-endpoint";
 $env:MYSQL_ID = az mysql flexible-server list -g $env:AZURE_RESOURCE_GROUP --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
 $env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].id -o tsv;
-$env:SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query [0].id -o tsv;
-$env:SUBNET_NAME = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query [0].name -o tsv;
+$env:SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query "[?name =='aks-subnet'].[id]" -o tsv;
 
 az network private-dns zone create `
   -g $env:AZURE_RESOURCE_GROUP `

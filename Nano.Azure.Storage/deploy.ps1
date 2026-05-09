@@ -1,10 +1,14 @@
 $env:ENVIRONMENT = "";
+$env:AZURE_LOCATION = "Sweden Central";
 $env:AZURE_RESOURCE_GROUP = "Nano-Storage";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_BACKUP = "Nano-Backup";
+$env:AZURE_RESOURCE_GROUP_KUBERNETES = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
-$env:AZURE_LOCATION = "North Europe";
-$env:STORAGE_SKU = "Standard_LRS";
+$env:AZURE_FILE_IDENTITY = "aks-azurefile";
+$env:KUBERNETES_NAMESPACE = "apps";
+$env:ACCESS_TIR = "Hot";
+$env:STORAGE_SKU = "Standard_ZRS";
 $env:APP_NAME = "nanostorage" + $env:ENVIRONMENT.ToLower();
 
 # Register Providers
@@ -22,19 +26,21 @@ az storage account create `
     -l $env:AZURE_LOCATION `
     --sku $env:STORAGE_SKU `
     --kind StorageV2 `
+    --access-tier $env:ACCESS_TIR `
     --default-action Deny `
     --https-only true `
-    --access-tier Hot `
     --enable-large-file-share `
     --public-network-access Disabled `
     --allow-blob-public-access false `
     --min-tls-version TLS1_2 `
-    --require-infrastructure-encryption;
+    --require-infrastructure-encryption `
+    --identity-type SystemAssigned `
+    --allow-shared-key-access false;
 
 # Backup Policy
-$env:STORAGE_ACCOUNT_BACKUP_POLICY_NAME = $env:APP_NAME + "-backup-policy";
-$env:BACKUP_VAULT_NAME = az backup vault list --query "[0].name" -o tsv;
-
+$env:STORAGE_ACCOUNT_BACKUP_POLICY_NAME = $env:APP_NAME + "-fileshare-backup-policy";
+$env:BACKUP_VAULT_NAME = az backup vault list -g $env:AZURE_RESOURCE_GROUP_BACKUP --query [0].name -o tsv;
+    
 az backup policy create `
     -n $env:STORAGE_ACCOUNT_BACKUP_POLICY_NAME `
     -g $env:AZURE_RESOURCE_GROUP_BACKUP `
@@ -43,27 +49,9 @@ az backup policy create `
     --workload-type AzureFileShare `
     --policy .backup-policies/storage-backup-policy.json;
 
-# Diagnostic Settings
-$env:DIAGNOSTIC_SETTINGS_NAME = "diagnostics-" + $env:APP_NAME;
-$env:WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query "[0].[id]" -o tsv;
-$env:STORAGE_ACCOUNT_ID = az storage account list --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
-
-az monitor diagnostic-settings create `
-    -n $env:DIAGNOSTIC_SETTINGS_NAME `
-    --workspace $env:WORKSPACE_ID `
-    --resource $env:STORAGE_ACCOUNT_ID `
-    --metrics '@.diagnostic-settings/metrics.json';
-
-az monitor diagnostic-settings create `
-    -n $env:DIAGNOSTIC_SETTINGS_NAME `
-    --workspace $env:WORKSPACE_ID `
-    --resource $env:STORAGE_ACCOUNT_ID/fileServices/default `
-    --logs '@.diagnostic-settings/file/logs.json' `
-    --metrics '@.diagnostic-settings/file/metrics2.json';
-
-# Alert Rules
-$env:STORAGE_ACCOUNT_ID = az storage account list -g $env:AZURE_RESOURCE_GROUP --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
-$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query "[0].[id]" -o tsv;
+# Alerts
+$env:STORAGE_ACCOUNT_ID = az storage account show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
 
 az monitor metrics alert create `
   --name "High Transaction Count" `
@@ -109,12 +97,31 @@ az monitor metrics alert create `
   --severity 2 `
   --description "Alert when egress exceeds 1000MB for 5 minutes.";
 
+# Diagnostic Settings
+$env:STORAGE_ACCOUNT_ID = az storage account list --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
+$env:DIAGNOSTIC_SETTINGS_NAME = "diagnostics-" + $env:APP_NAME;
+$env:WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+
+az monitor diagnostic-settings create `
+    -n $env:DIAGNOSTIC_SETTINGS_NAME `
+    --workspace $env:WORKSPACE_ID `
+    --resource $env:STORAGE_ACCOUNT_ID `
+    --metrics '@.diagnostic-settings/metrics.json';
+
+az monitor diagnostic-settings create `
+    -n $env:DIAGNOSTIC_SETTINGS_NAME `
+    --workspace $env:WORKSPACE_ID `
+    --resource $env:STORAGE_ACCOUNT_ID/fileServices/default `
+    --logs '@.diagnostic-settings/file/logs.json' `
+    --metrics '@.diagnostic-settings/file/metrics.json';
+
 # Network Rules.
 $env:PRIVATE_LINK = "privatelink.file.core.windows.net";
 $env:PRIVATE_ENDPOINT_NAME = $env:APP_NAME + "-private-endpoint";
-$env:STORAGE_ACCOUNT_ID = az storage account list -g $env:AZURE_RESOURCE_GROUP --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
+$env:STORAGE_ACCOUNT_ID = az storage account show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
 $env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].id -o tsv;
-$env:SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query [0].id -o tsv;
+$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].name -o tsv;
+$env:SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query "[?name =='aks-subnet'].[id]" -o tsv;
 
 az network private-dns zone create `
   -g $env:AZURE_RESOURCE_GROUP `
@@ -142,3 +149,52 @@ az network private-endpoint dns-zone-group create `
   --endpoint-name $env:PRIVATE_ENDPOINT_NAME `
   --private-dns-zone $env:PRIVATE_LINK `
   --zone-name file;
+
+# Managed Identity (Kubernetes)
+$env:KUBERNETES_NAME = az aks list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES --query [0].name -o tsv;
+$env:KUBERNETES_ISSUER_URL = az aks list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES --query [0].['oidcIssuerProfile.issuerUrl'] -o tsv;
+
+az identity create `
+  -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS `
+  -n $env:AZURE_FILE_IDENTITY;
+
+$env:STORAGE_ACCOUNT_ID = az storage account show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
+$env:CLIENT_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:AZURE_FILE_IDENTITY --query clientId -o tsv;
+$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:AZURE_FILE_IDENTITY --query principalId -o tsv;
+
+az role assignment create `
+  --assignee-object-id $env:PRINCIPAL_ID `
+  --assignee-principal-type ServicePrincipal `
+  --role "Storage File Data SMB Share Contributor" `
+  --scope $env:STORAGE_ACCOUNT_ID;
+
+az identity federated-credential create `
+  --name azurefile-federated `
+  --resource-group $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS `
+  --identity-name $env:AZURE_FILE_IDENTITY `
+  --issuer $env:KUBERNETES_ISSUER_URL `
+  --subject system:serviceaccount:$env:KUBERNETES_NAMESPACE:azurefile-sa `
+  --audience api://AzureADTokenExchange;
+
+az aks command invoke \
+  -g $env:AZURE_RESOURCE_GROUP_KUBERNETES \
+  -n $env:KUBERNETES_NAME \
+  -c "kubectl create namespace $env:KUBERNETES_NAMESPACE --dry-run=client -o yaml | kubectl apply -f -"
+
+$env:SERVICE_ACCOUNT_PATH = Join-Path $env:USERPROFILE serviceaccount.yaml;
+Get-Content .kubernetes/serviceaccount.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:SERVICE_ACCOUNT_PATH;
+
+az aks command invoke `
+  -g $env:AZURE_RESOURCE_GROUP_KUBERNETES `
+  -n $env:KUBERNETES_NAME `
+  --file $env:SERVICE_ACCOUNT_PATH `
+  -c "kubectl apply -f serviceaccount.yaml";
+
+$env:STORAGE_CLASS_PATH = Join-Path $env:USERPROFILE storageclass.yaml;
+Get-Content .kubernetes/storageclass.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:STORAGE_CLASS_PATH;
+
+az aks command invoke `
+  -g $env:AZURE_RESOURCE_GROUP_KUBERNETES `
+  -n $env:KUBERNETES_NAME `
+  --file $env:STORAGE_CLASS_PATH `
+  -c "kubectl apply -f storageclass.yaml";

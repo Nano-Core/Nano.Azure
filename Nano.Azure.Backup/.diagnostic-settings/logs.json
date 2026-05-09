@@ -24,6 +24,10 @@
     "enabled": true
   },
   {
+    "category": "AddonAzureBackupProtectedInstance",
+    "enabled": true
+  },
+  {
     "category": "ASRReplicatedItems",
     "enabled": true
   },
