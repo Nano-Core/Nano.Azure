@@ -153,14 +153,13 @@ az network private-endpoint dns-zone-group create `
 # Managed Identity (Kubernetes)
 $env:KUBERNETES_NAME = az aks list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES --query [0].name -o tsv;
 $env:KUBERNETES_ISSUER_URL = az aks list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES --query [0].['oidcIssuerProfile.issuerUrl'] -o tsv;
+$env:STORAGE_ACCOUNT_ID = az storage account show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
+$env:CLIENT_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:AZURE_FILE_IDENTITY --query clientId -o tsv;
+$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:AZURE_FILE_IDENTITY --query principalId -o tsv;
 
 az identity create `
   -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS `
   -n $env:AZURE_FILE_IDENTITY;
-
-$env:STORAGE_ACCOUNT_ID = az storage account show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
-$env:CLIENT_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:AZURE_FILE_IDENTITY --query clientId -o tsv;
-$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:AZURE_FILE_IDENTITY --query principalId -o tsv;
 
 az role assignment create `
   --assignee-object-id $env:PRINCIPAL_ID `
