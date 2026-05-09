@@ -10,7 +10,7 @@ $env:MYSQL_TIER = "GeneralPurpose";
 $env:MYSQL_BACKUP_INTERVAL = 24
 $env:MYSQL_BACKUP_RETENTION = 35
 $env:MYSQL_ADMIN_USERNAME = "adminuser";
-$env:MYSQL_ADMIN_PASSWORD = "";
+$env:MYSQL_ADMIN_PASSWORD = "sDF9r0DsPxkq9Ly560I2";
 $env:MYSQL_PORT = 3306;
 $env:APP_NAME = "nano-mysql-" + $env:ENVIRONMENT.ToLower();
 
@@ -39,11 +39,10 @@ az mysql flexible-server create `
     --admin-user $env:MYSQL_ADMIN_USERNAME `
     --admin-password $env:MYSQL_ADMIN_PASSWORD `
     --public-access Disabled `
+    --zone 1 `
+    --high-availability ZoneRedundant `
+    --standby-zone 2 `
     -y;
-    #--high-availability ZoneRedundant `
-    #--zone 1 `
-    #--standby-zone 2 `
-    #--geo-redundant-backup Enabled `
 
 # Maintenance
 az mysql flexible-server update `
@@ -60,8 +59,8 @@ az mysql flexible-server parameter set `
 
 # Diagnostics Settings
 $env:DIAGNOSTIC_SETTINGS_NAME = "diagnostics-" + $env:APP_NAME;
-$env:WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query "[0].[id]" -o tsv;
-$env:MYSQL_ID = az mysql flexible-server list -g $env:AZURE_RESOURCE_GROUP --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
+$env:WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:MYSQL_ID = az mysql flexible-server show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
 
 az monitor diagnostic-settings create `
     --name $env:DIAGNOSTIC_SETTINGS_NAME `
@@ -71,8 +70,8 @@ az monitor diagnostic-settings create `
     --metrics '@.diagnostic-settings/metrics.json';
 
 # Alert Rules
-$env:MYSQL_ID = az mysql flexible-server list -g $env:AZURE_RESOURCE_GROUP --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
-$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query "[0].[id]" -o tsv;
+$env:MYSQL_ID = az mysql flexible-server show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
 
 az monitor metrics alert create `
   --name "High CPU Usage" `
@@ -132,8 +131,9 @@ az monitor metrics alert create `
 # Network Rules.
 $env:PRIVATE_LINK = "privatelink.mysql.database.azure.com";
 $env:PRIVATE_ENDPOINT_NAME = $env:APP_NAME + "-private-endpoint";
-$env:MYSQL_ID = az mysql flexible-server list -g $env:AZURE_RESOURCE_GROUP --query "[?name =='$env:APP_NAME'].[id]" -o tsv;
+$env:MYSQL_ID = az mysql flexible-server show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
 $env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].id -o tsv;
+$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].name -o tsv;
 $env:SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query "[?name =='aks-subnet'].[id]" -o tsv;
 
 az network private-dns zone create `
@@ -152,7 +152,7 @@ az network private-endpoint create `
   --connection-name $env:PRIVATE_ENDPOINT_NAME-connection `
   --nic-name $env:PRIVATE_ENDPOINT_NAME-nic `
   --resource-group $env:AZURE_RESOURCE_GROUP `
-  --group-id file `
+  --group-id mysqlServer `
   --subnet $env:SUBNET_ID `
   --private-connection-resource-id $env:MYSQL_ID;
 
@@ -161,4 +161,4 @@ az network private-endpoint dns-zone-group create `
   -n $env:PRIVATE_ENDPOINT_NAME-dns-zone-group `
   --endpoint-name $env:PRIVATE_ENDPOINT_NAME `
   --private-dns-zone $env:PRIVATE_LINK `
-  --zone-name file;
+  --zone-name mysql;

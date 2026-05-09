@@ -1,4 +1,4 @@
-$env:ENVIRONMENT = "Staging";
+$env:ENVIRONMENT = "";
 $env:AZURE_LOCATION = "Sweden Central";
 $env:AZURE_RESOURCE_GROUP = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";

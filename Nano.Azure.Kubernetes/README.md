@@ -306,14 +306,17 @@ However, Microsoft Defender for AKS must still be explicitly enabled in the Azur
 ## Image Pull Secret
 This step creates a Kubernetes image pull secret that allows the cluster to authenticate against the container registry and pull private images.  
 
-Execute the `cr-pull-secret.ps1` script to create the required Docker registry secret in the cluster. The script provisions a `docker-registry` type secret that Kubernetes uses 
+Execute the `image-pull-secret.ps1` script to create the required Docker registry secret in the cluster. The script provisions a `docker-registry` type secret that Kubernetes uses 
 when pulling container images. This secret is referenced by workloads that require access to images stored in the container registry.  
 
-## Connecting to the cluster
+📖 Learn how to configure access to **[GitHub Container Registry](https://github.com/Nano-Core/Nano.GitHub/tree/master/Nano.GitHub.ContainerRegistry)** to obtain the credentials needed to 
+create a Kubernetes image-pull secret for pulling private images during GitHub Actions deployments.
+
+## Configure kubectl Access
 Once the cluster has been registered, retrieve the credentials using the following command.  
 
 ```powershell
-az aks get-credentials -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME
+az aks get-credentials -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --public-fqdn;
 ```
 
 You can now use `kubectl` to manage the cluster.  
