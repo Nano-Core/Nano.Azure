@@ -27,6 +27,7 @@
 * **[Image Pull Secret](#image-pull-secret)**  
 * **[Configure kubectl Access](#configure-kubectl-access)**  
 * **[Dependencies](#dependencies)**  
+* **[Common `kubectl` Commands](#common-kubectl-commands)**
 
 ## Summary
 Azure Kubernetes Service (AKS) is a managed Kubernetes service that simplifies the deployment and operation of Kubernetes clusters. AKS automates tasks such as provisioning, 
@@ -336,3 +337,66 @@ Kubernetes has the following dependencies that must be deployed or otherwise sat
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
 | **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**                   | The is the foundation or prerequites of the Nano Azure infrastructure.  |
 | **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
+
+## Common `kubectl` Commands
+The following section contains commonly used Kubernetes (kubectl) commands for managing and troubleshooting resources in the cluster. These commands can be used to inspect workloads, view 
+logs, monitor deployments, validate configuration, and diagnose issues related to networking, storage, and application health.  
+
+List all Kubernetes nodes to view cluster infrastructure, status, and readiness of compute resources.  
+
+```powershell
+kubectl get nodes
+```
+
+Describe the `{{node-name}}` to inspect its capacity, conditions, system information, and scheduling details.  
+
+```powershell
+kubectl describe node {{node-name}};
+```
+
+Describe a pod with the `{{pod-name}}` in the `{{namespace}}` to inspect its full configuration, runtime status, and recent events for troubleshooting and validation.  
+
+```powershell
+kubectl describe pod {{pod-name}} -n {{namespace}};
+```
+
+List all pods in the `{{namespace}}` to view running workloads, status, and readiness information.  
+
+```powershell
+kubectl get pods -n {{namespace}};
+```
+
+View the highest resource-consuming pods in the `{{namespace}}` to monitor CPU and memory usage.  
+
+```powershell
+kubectl top pods -n {{namespace}}
+```
+
+Retrieve events for the `{{pod-name}}` in the `{{namespace}}` to analyze scheduling, warnings, and runtime issues.  
+
+```powershell
+kubectl events -n {{namespace}} --field-selector InvolvedObject.Name {{pod-name}};
+```
+
+Fetch logs from all pods labeled `{{app}}` and filter results using `{{search}}` to quickly locate relevant runtime output or errors.  
+
+```powershell
+kubectl logs -l -n {{namespace}} app={{app}} --tail -1 | findstr -i '{{search}}';
+```
+
+Manually trigger a new Kubernetes Job from an existing CronJob for immediate execution.  
+
+```powershell
+kubectl create job --from cronjob/{{cronjob-name}} {{job-name}}
+```
+
+Temporarily suspend a CronJob to prevent scheduled executions while maintaining its configuration in the cluster.  
+
+```powershell
+kubectl patch cronjob {{cronjob-name}} -p '{"spec": {"suspend": true}}'
+```
+
+
+```powershell
+kubectl port-forward pod/<pod-name> 8080:80 -n {{namespace}}
+```
