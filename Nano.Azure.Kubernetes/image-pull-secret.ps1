@@ -1,6 +1,10 @@
+$env:AZURE_RESOURCE_GROUP_KUBERNETES = "Nano-Kubernetes";
 $env:CONTAINER_REGISTRY_HOST = "ghcr.io/{{organization-name}}";
 $env:CONTAINER_REGISTRY_USERNAME = "";
 $env:CONTAINER_REGISTRY_PASSWORD = "";
+
+# Image Pull Secret
+$env:KUBERNETES_NAME = az aks list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES --query [0].name -o tsv;
 
 az aks command invoke `
   -g $env:AZURE_RESOURCE_GROUP_KUBERNETES `

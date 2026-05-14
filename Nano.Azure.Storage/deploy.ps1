@@ -124,31 +124,31 @@ $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_AS
 $env:SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query "[?name =='aks-subnet'].[id]" -o tsv;
 
 az network private-dns zone create `
-  -g $env:AZURE_RESOURCE_GROUP `
-  -n $env:PRIVATE_LINK;
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:PRIVATE_LINK;
 
 az network private-dns link vnet create `
-  -g $env:AZURE_RESOURCE_GROUP `
-  -n $env:PRIVATE_ENDPOINT_NAME-dns-link `
-  -z $env:PRIVATE_LINK `
-  -v $env:VNET_ID `
-  -e false;
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:PRIVATE_ENDPOINT_NAME-dns-link `
+    -z $env:PRIVATE_LINK `
+    -v $env:VNET_ID `
+    -e false;
 
 az network private-endpoint create `
-  --name $env:PRIVATE_ENDPOINT_NAME `
-  --connection-name $env:PRIVATE_ENDPOINT_NAME-connection `
-  --nic-name $env:PRIVATE_ENDPOINT_NAME-nic `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --group-id file `
-  --subnet $env:SUBNET_ID `
-  --private-connection-resource-id $env:STORAGE_ACCOUNT_ID;
+    --name $env:PRIVATE_ENDPOINT_NAME `
+    --connection-name $env:PRIVATE_ENDPOINT_NAME-connection `
+    --nic-name $env:PRIVATE_ENDPOINT_NAME-nic `
+    --resource-group $env:AZURE_RESOURCE_GROUP `
+    --group-id file `
+    --subnet $env:SUBNET_ID `
+    --private-connection-resource-id $env:STORAGE_ACCOUNT_ID;
 
  dns-zone-group create `
-  -g $env:AZURE_RESOURCE_GROUP `
-  -n $env:PRIVATE_ENDPOINT_NAME-dns-zone-group `
-  --endpoint-name $env:PRIVATE_ENDPOINT_NAME `
-  --private-dns-zone $env:PRIVATE_LINK `
-  --zone-name file;
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:PRIVATE_ENDPOINT_NAME-dns-zone-group `
+    --endpoint-name $env:PRIVATE_ENDPOINT_NAME `
+    --private-dns-zone $env:PRIVATE_LINK `
+    --zone-name file;
 
 # Managed Identity (Kubernetes)
 $env:KUBERNETES_NAME = az aks list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES --query [0].name -o tsv;
@@ -158,42 +158,37 @@ $env:CLIENT_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS
 $env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:AZURE_FILE_IDENTITY --query principalId -o tsv;
 
 az identity create `
-  -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS `
-  -n $env:AZURE_FILE_IDENTITY;
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:AZURE_FILE_IDENTITY;
 
 az role assignment create `
-  --assignee-object-id $env:PRINCIPAL_ID `
-  --assignee-principal-type ServicePrincipal `
-  --role "Storage File Data SMB Share Contributor" `
-  --scope $env:STORAGE_ACCOUNT_ID;
-
-az identity federated-credential create `
-  --name azurefile-federated `
-  --resource-group $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS `
-  --identity-name $env:AZURE_FILE_IDENTITY `
-  --issuer $env:KUBERNETES_ISSUER_URL `
-  --subject system:serviceaccount:$env:KUBERNETES_NAMESPACE:azurefile-sa `
-  --audience api://AzureADTokenExchange;
-
-az aks command invoke \
-  -g $env:AZURE_RESOURCE_GROUP_KUBERNETES \
-  -n $env:KUBERNETES_NAME \
-  -c "kubectl create namespace $env:KUBERNETES_NAMESPACE --dry-run=client -o yaml | kubectl apply -f -"
+    --assignee-object-id $env:PRINCIPAL_ID `
+    --assignee-principal-type ServicePrincipal `
+    --role "Storage File Data SMB Share Contributor" `
+    --scope $env:STORAGE_ACCOUNT_ID;
 
 $env:SERVICE_ACCOUNT_PATH = Join-Path $env:USERPROFILE serviceaccount.yaml;
 Get-Content .kubernetes/serviceaccount.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:SERVICE_ACCOUNT_PATH;
 
 az aks command invoke `
-  -g $env:AZURE_RESOURCE_GROUP_KUBERNETES `
-  -n $env:KUBERNETES_NAME `
-  --file $env:SERVICE_ACCOUNT_PATH `
-  -c "kubectl apply -f serviceaccount.yaml";
+    -g $env:AZURE_RESOURCE_GROUP_KUBERNETES `
+    -n $env:KUBERNETES_NAME `
+    --file $env:SERVICE_ACCOUNT_PATH `
+    -c "kubectl apply -f serviceaccount.yaml";
+
+az identity federated-credential create `
+    --name azurefile-federated `
+    --resource-group $env:AZURE_RESOURCE_GROUP `
+    --identity-name $env:AZURE_FILE_IDENTITY `
+    --issuer $env:KUBERNETES_ISSUER_URL `
+    --subject system:serviceaccount:$env:KUBERNETES_NAMESPACE:$env:APP_NAME-service-account `
+    --audience api://AzureADTokenExchange;
 
 $env:STORAGE_CLASS_PATH = Join-Path $env:USERPROFILE storageclass.yaml;
 Get-Content .kubernetes/storageclass.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:STORAGE_CLASS_PATH;
 
 az aks command invoke `
-  -g $env:AZURE_RESOURCE_GROUP_KUBERNETES `
-  -n $env:KUBERNETES_NAME `
-  --file $env:STORAGE_CLASS_PATH `
-  -c "kubectl apply -f storageclass.yaml";
+    -g $env:AZURE_RESOURCE_GROUP_KUBERNETES `
+    -n $env:KUBERNETES_NAME `
+    --file $env:STORAGE_CLASS_PATH `
+    -c "kubectl apply -f storageclass.yaml";

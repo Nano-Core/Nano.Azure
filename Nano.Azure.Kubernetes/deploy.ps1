@@ -16,13 +16,22 @@ $env:APP_NAME = $env:ENVIRONMENT.ToLower() + "-cluster";
 # Register Providers
 az provider register --namespace Microsoft.PolicyInsights;
 az provider register --namespace Microsoft.ContainerService;
+az provider register --namespace Microsoft.Network;
+az provider register --namespace Microsoft.NetworkFunction;
+az provider register --namespace Microsoft.ServiceNetworking;
+
+az feature register --namespace "Microsoft.ContainerService" --name "ManagedGatewayAPIPreview";
+az feature register --namespace "Microsoft.ContainerService" --name "ApplicationLoadBalancerPreview";
+
+az extension add --name alb;
+az extension add --name aks-preview;
 
 # Resource Group
 az group create `
     -n $env:AZURE_RESOURCE_GROUP `
     -l $env:AZURE_LOCATION;
 
-# Create Cluster
+# Kubernetes Cluster
 az aks create `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:APP_NAME `
@@ -48,6 +57,8 @@ az aks create `
     --enable-private-cluster `
     --enable-workload-identity `
     --enable-oidc-issuer `
+    --enable-gateway-api `
+    --enable-application-load-balancer `
     --zones 1 2 3;
 
 # VPN Gateway
@@ -55,8 +66,8 @@ $env:TENANT_ID = "";
 $env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].id -o tsv;
 $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
 $env:VNET_ADDRESS_PREFIXES = "10.231.0.0/24";
-$env:VNET_GATEWAY_NAME = $env:APP_NAME + "-vnet-gateway";
-$env:VNET_GATEWAY_IP_NAME = $env:APP_NAME + "-vnet-gateway-ip";
+$env:VNET_GATEWAY_NAME = $env:APP_NAME + "-vnet-vpn-gateway";
+$env:VNET_GATEWAY_IP_NAME = $env:APP_NAME + "-vnet-vpn-gateway-ip";
 $env:VNET_GATEWAY_VPN_CLIENT_ADDRESS_POOL = "['172.16.201.0/24']";
 $env:VNET_GATEWAY_ADD_TENANT = "https://login.microsoftonline.com/" + $env:TENANT_ID;
 $env:VNET_GATEWAY_ADD_AUDIENCE = "41b23e61-6c1e-4545-b367-cd054e0ed4b4";

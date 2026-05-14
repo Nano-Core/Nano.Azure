@@ -8,6 +8,7 @@
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
   * **[Kubernetes Cluster](#kubernetes-cluster)**  
+  * **[Gateway Load Balancer](#gateway-load-balancer)**  
   * **[Automatic Upgrades](#automatic-upgrades)**  
   * **[Auto Scaling](#auto-scaling)**  
   * **[Network Policy](#network-policy)**  
@@ -24,6 +25,7 @@
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#m,icrosoft-defender)**  
   * **[Policy](#policy)**  
+* **[App Namespace](#app-namespace)**  
 * **[Image Pull Secret](#image-pull-secret)**  
 * **[Configure kubectl Access](#configure-kubectl-access)**  
 * **[Dependencies](#dependencies)**  
@@ -76,6 +78,15 @@ Create the required secrets in GitHub for the Kubernetes cluster.
 | ---------------------------------------- | -------- | ----------------------------------------------------- |
 | `AZURE_KUBERNETES_RESOURCE_GROUP`        | vars     | The Azure resource group of the Kubernetes cluster.   |
 | `{{environment}}_KUBERNETES_CLUSTER`     | vars     | The name of the Kubernets cluster.                    |
+
+### Gateway Load Balancer
+Gateway API support is activated in the AKS cluster through `--enable-gateway-api`, introducing a modern Kubernetes-native model for traffic routing based on `Gateway` and 
+`HTTPRoute` resources instead of traditional Ingress objects.
+
+The Azure Application Load Balancer (ALB) Controller is deployed and integrated with the cluster through `--enable-application-load-balancer`, enabling automatic provisioning and 
+management of Azure Application Gateway for Containers driven by Gateway API resources defined within Kubernetes.  
+
+> 📖 Learn more about **[Azure Application Gateway](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-addon)**.
 
 ### Automatic Upgrades
 Automatic upgrades ensure that the AKS cluster remains up to date with the latest security patches and node image updates. The `--auto-upgrade-channel patch` setting enables automatic 
@@ -287,8 +298,8 @@ $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS = "";
 
 az aks updaate `
     -g $env:AZURE_RESOURCE_GROUP `
-    -l $env:AZURE_LOCATION `
     -n $env:APP_NAME `
+    -l $env:AZURE_LOCATION `
     --api-server-authorized-ip-ranges $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS;
 ```
 
@@ -309,6 +320,15 @@ The Defender configuration is minimal and primarily used to link the cluster to 
 resource ID and is required during setup.
 
 However, Microsoft Defender for AKS must still be explicitly enabled in the Azure Portal after deployment to fully activate security protections for the cluster.
+
+## App Namespace
+This step creates the default Kubernetes namespace used by all Nano applications and components. It provides a consistent isolation boundary and ensures Gateway API resources, 
+services, and supporting objects such as secrets and config maps are grouped together, reducing permission complexity and configuration overhead.  
+
+It is created during cluster bootstrap and is safe to reapply in CI/CD pipelines. All application resources should target this namespace unless a specific multi-namespace design 
+is explicitly required.  
+
+Execute the `namespace.ps1` script to create the Kubernetes namespace.  
 
 ## Image Pull Secret
 This step creates a Kubernetes image pull secret that allows the cluster to authenticate against the container registry and pull private images.  
