@@ -28,7 +28,7 @@ Add the resource group name as GitHub organization variables.
 
 | Secret                      | Type    | Description                                |
 | --------------------------- | ------- |------------------------------------------- |
-| `AZURE_DNS_RESOURCE_GROUP`  | vars    | The Azure resource group of the DNS Zone.  |
+| `AZURE_RESOURCE_GROUP_DNS`  | vars    | The Azure resource group of the DNS Zone.  |
 
 ### DNS Zone
 Creates the Azure DNS zone for the application domain, which will host all DNS records for the delegated subdomain and enable cert-manager DNS-01 validation.  
@@ -54,9 +54,8 @@ For each returned name server, add an NS record for the delegated subdomain.
 | NS   | $env:APP_DOMAIN_NAME  | {{name-server}}   |
 
 ## Dependencies
-Monitoring has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
+DNS has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
 
 | Dependency                                                                                                           | Description                                                             | 
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
 | **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**  | The is the foundation or prerequites of the Nano Azure infrastructure.  |
-| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                           |

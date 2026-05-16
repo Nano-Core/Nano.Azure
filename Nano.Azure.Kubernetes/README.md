@@ -10,7 +10,7 @@
   * **[Kubernetes Cluster](#kubernetes-cluster)**  
   * **[Gateway Load Balancer](#gateway-load-balancer)**  
   * **[Automatic Upgrades](#automatic-upgrades)**  
-  * **[Auto Scaling](#auto-scaling)**  
+  * **[Node Scaling](#node-scaling)**  
   * **[Network Policy](#network-policy)**  
   * **[Private API Server](#private-api-server)**  
   * **[VPN Gateway](#vpn-gateway)**  
@@ -19,13 +19,13 @@
   * **[Maintenance Window](#maintenance-window)**  
   * **[Monitoring](#monitoring)**  
   * **[Alerts](#alerts)**  
-  * **[Backup](#backup)**  
+  * **[Site Recovery](#site-recovery)**  
   * **[Image Cleaner](#image-cleaner)**  
   * **[Diagnostic Settings](#diagnostic-settings)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#m,icrosoft-defender)**  
   * **[Policy](#policy)**  
-* **[App Namespace](#app-namespace)**  
+* **[Apps Namespace](#apps-namespace)**  
 * **[Image Pull Secret](#image-pull-secret)**  
 * **[Configure kubectl Access](#configure-kubectl-access)**  
 * **[Dependencies](#dependencies)**  
@@ -47,10 +47,11 @@ Start by registering the required Azure providers and creating the resource grou
 
 Add the following GitHub organization variables.  
 
-| Secret                                | Type    | Description                                                |
-| ------------------------------------- | ------- |----------------------------------------------------------- |
-| `AZURE_STORAGE_RESOURCE_GROUP`        | vars    | The Azure resource group of the Kubernetes cluster (AKS).  |
-| `{{environment}}_KUBERNETES_CLUSTER`  | vars    | The name of the Kubernetes cluster.                        |
+| Secret                                    | Type    | Description                                                        |
+| ----------------------------------------- | ------- |------------------------------------------------------------------- |
+| `AZURE_RESOURCE_GROUP_KUBERNETES`         | vars    | The Azure resource group of the Kubernetes cluster (AKS).          |
+| `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS`  | vars    | The Azure resource group of the Kubernetes cluster (AKS) Asserts.  |
+| `{{environment}}_KUBERNETES_CLUSTER`      | vars    | The name of the Kubernetes cluster.                                |
 
 ### Kubernetes Cluster
 Execute the next part of the `deploy.ps1` to create a managed Kubernetes cluster (AKS) on Azure.  
@@ -76,15 +77,22 @@ Create the required secrets in GitHub for the Kubernetes cluster.
 
 | Secret                                   | Type     | Description                                           |
 | ---------------------------------------- | -------- | ----------------------------------------------------- |
-| `AZURE_KUBERNETES_RESOURCE_GROUP`        | vars     | The Azure resource group of the Kubernetes cluster.   |
+| `AZURE_RESOURCE_GROUP_KUBERNETES`        | vars     | The Azure resource group of the Kubernetes cluster.   |
 | `{{environment}}_KUBERNETES_CLUSTER`     | vars     | The name of the Kubernets cluster.                    |
 
 ### Gateway Load Balancer
-Gateway API support is activated in the AKS cluster through `--enable-gateway-api`, introducing a modern Kubernetes-native model for traffic routing based on `Gateway` and 
-`HTTPRoute` resources instead of traditional Ingress objects.
+Gateway API support is enabled in the AKS cluster through `--enable-gateway-api`, adding the Kubernetes Gateway API custom resource definitions (CRDs) required for defining `Gateway`, 
+`HTTPRoute`, and related networking resources. This introduces a modern Kubernetes-native traffic management model that replaces traditional Ingress-based routing with a more flexible and 
+extensible API.  
 
-The Azure Application Load Balancer (ALB) Controller is deployed and integrated with the cluster through `--enable-application-load-balancer`, enabling automatic provisioning and 
-management of Azure Application Gateway for Containers driven by Gateway API resources defined within Kubernetes.  
+Together with `--enable-application-load-balancer`, AKS deploys and configures the Azure Application Load Balancer (ALB) Controller within the cluster. The controller extends the cluster with 
+the custom resource definitions (CRDs) required for managing `ApplicationLoadBalancer` resources and integrates Kubernetes Gateway API resources with Azure Application Gateway for Containers.  
+
+Enabling these features prepares the cluster for ALB-based traffic routing, but the Azure Application Gateway for Containers infrastructure is only provisioned after deploying the corresponding 
+Kubernetes `ApplicationLoadBalancer`, `Gateway`, and routing resources. Nano automates the deployment and configuration of these Kubernetes resources as part of the platform setup. 
+See [Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure.Kubernetes/tree/master/Nano.Azure.Kubernetes.Gateway#nanoazurekubernetesgateway).
+
+> ⚠️ Make sure to choose a region that supports Azure Application Gateway for Containers. See **[Supported Regions](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/overview#supported-regions)**.
 
 > 📖 Learn more about **[Azure Application Gateway](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-addon)**.
 
@@ -93,12 +101,10 @@ Automatic upgrades ensure that the AKS cluster remains up to date with the lates
 Kubernetes patch version updates, helping keep the cluster secure with minimal manual intervention. In addition, `--node-os-upgrade-channel NodeImage` ensures that the underlying node 
 operating system images are automatically updated, providing the latest fixes and improvements for the cluster nodes.  
 
-### Auto Scaling 
-Cluster autoscaling automatically adjusts the number of nodes in the AKS cluster based on workload demand. By enabling `--enable-cluster-autoscaler`, the cluster can scale up when 
-resource demand increases and scale down during periods of low utilization, improving both performance and cost efficiency. The `--min-count` and `--max-count` argumets define the scaling 
-boundaries, ensuring the cluster remains within a controlled range of nodes.  
-
-For more advanced and event-driven scaling scenarios, KEDA can be used to provide more fine-grained and configurable scaling options at the application level.  
+### Node Scaling 
+Cluster autoscaling in AKS automatically adjusts the number of nodes in a node pool based on workload demand. When enabled with `--enable-cluster-autoscaler`, AKS scales up when pods 
+cannot be scheduled due to insufficient requested resources or scheduling constraints, and scales down when existing nodes are underutilized and workloads can be safely rescheduled. The 
+`--min-count` and `--max-count` parameters define the scaling boundaries to ensure the cluster operates within a controlled range of nodes.  
 
 When configuring the Horizontal Pod Autoscaler (HPA), Kubernetes uses resource requests as the baseline for scaling decisions. However, scaling is often intended to react closer to 
 resource limits to better reflect actual capacity pressure. To achieve this, the target utilization can be derived using the formula below, which converts a desired scale percentage into 
@@ -106,6 +112,8 @@ the HPA average utilization value:
 
 Formula: `Pod Resource Limit(L) x Desired Scale percentage(P) / Pod Resource Request(R) * 100 = HPA Average Utilization`  
 Example: `2.100 * 80% / 700 * 100 = 240`  
+
+> 💡 For more advanced and event-driven scaling scenarios, KEDA can be used to provide more fine-grained and configurable scaling options at the application level.  
 
 ### Network Policy
 The AKS cluster is configured with the Azure CNI network plugin in overlay mode to enable scalable pod networking while conserving virtual network IP space. By using `--network-plugin azure` 
@@ -158,6 +166,8 @@ az network vnet-gateway vpn-client generate `
     -g $env:AZURE_RESOURCE_GROUP_ASSETS `
     -n $env:VNET_GATEWAY_NAME;
 ```
+
+> ⚠️ Creating the Gateway can take 20–30 minutes to complete.
 
 ### System Nodepool
 The system nodepool is used to host critical Kubernetes system components such as DNS, metrics, and core add-ons. It is deployed in `System` mode and configured with dedicated compute 
@@ -252,7 +262,7 @@ Prometheus-based alerts provide higher accuracy and more detailed insights. The 
 | PodRestart Rate High           | Pods with more than 3 restarts in 5 minutes                   | Warn     | PT5M        |
 | Deployment Replicas Mismatch   | Available replicas do not match desired deployment replicas   | Info     | PT10M       |
 
-### Backup
+### Site Recovery
 Backup and site recovery are not configured for the AKS cluster. The deployment follows an ephemeral infrastructure model, where workloads can be recreated at any time, and all critical 
 data is stored in external managed services rather than within the cluster.
 
@@ -321,7 +331,7 @@ resource ID and is required during setup.
 
 However, Microsoft Defender for AKS must still be explicitly enabled in the Azure Portal after deployment to fully activate security protections for the cluster.
 
-## App Namespace
+## Apps Namespace
 This step creates the default Kubernetes namespace used by all Nano applications and components. It provides a consistent isolation boundary and ensures Gateway API resources, 
 services, and supporting objects such as secrets and config maps are grouped together, reducing permission complexity and configuration overhead.  
 

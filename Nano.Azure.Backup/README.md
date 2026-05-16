@@ -32,10 +32,14 @@ Add the resource group name as GitHub organization variables.
 
 | Secret                          | Type    | Description                                    |
 | ------------------------------- | ------- |----------------------------------------------- |
-| `AZURE_BACKUP_RESOURCE_GROUP`   | vars    | The Azure resource group of the backup vault.  |
+| `AZURE_RESOURCE_GROUP_BACKUP`   | vars    | The Azure resource group of the backup vault.  |
 
 ### Backup Vault
 Execute the next part of the `deploy.ps1` to create the backup vault on Azure.  
+
+By default, the Backup Vault is configured with `--soft-delete-feature-state` enabled and `--soft-delete-duration` set to 14 days. Use `az backup vault backup-properties set` to 
+customize these settings. This also means that backup items created from protected Azure resources can prevent the vault from being deleted until the configured soft-delete 
+retention period has expired.  
 
 ### Data Redundancy
 The `--backup-storage-redundancy` parameter defines how backup data is replicated for durability. In this case, it is set to `ZoneRedundant`, meaning data is replicated across 

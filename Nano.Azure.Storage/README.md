@@ -35,7 +35,7 @@ Add the resource group name as GitHub organization variables.
 
 | Secret                          | Type    | Description                                       |
 | ------------------------------- | ------- |-------------------------------------------------- |
-| `AZURE_STORAGE_RESOURCE_GROUP`  | vars    | The Azure resource group of the storage account.  |
+| `AZURE_RESOURCE_GROUP_STORAGE`  | vars    | The Azure resource group of the storage account.  |
 
 ### Storage Account
 Execute the next part of the `deploy.ps1` to create the storage account on Azure.  
@@ -96,9 +96,9 @@ removed before the storage account or file share can be deleted.
 To inspect or remove the lock from the storage account.
 
 ```powershell
-az lock list --resource $env:STORAGE_ACCOUNT_ID
+az lock list --resource $env:STORAGE_ACCOUNT_ID;
 
-az lock delete --name AzureBackupProtectionLock --resource $env:STORAGE_ACCOUNT_ID
+az lock delete --name AzureBackupProtectionLock --resource $env:STORAGE_ACCOUNT_ID;
 ```
 
 ## Alerts

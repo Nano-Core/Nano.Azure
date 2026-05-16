@@ -1,5 +1,6 @@
 $env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "Sweden Central";
+$env:AZURE_TENANT_ID = "";
+$env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_ASSETS = "Nano-Kubernetes-Assets";
@@ -15,7 +16,6 @@ $env:APP_NAME = $env:ENVIRONMENT.ToLower() + "-cluster";
 
 # Register Providers
 az provider register --namespace Microsoft.PolicyInsights;
-az provider register --namespace Microsoft.ContainerService;
 az provider register --namespace Microsoft.Network;
 az provider register --namespace Microsoft.NetworkFunction;
 az provider register --namespace Microsoft.ServiceNetworking;
@@ -51,27 +51,55 @@ az aks create `
     --network-plugin azure `
     --network-plugin-mode overlay `
     --network-policy azure `
-    --generate-ssh-keys `
     --enable-encryption-at-host `
-    --enable-managed-identity `
     --enable-private-cluster `
+    --enable-managed-identity `
     --enable-workload-identity `
     --enable-oidc-issuer `
     --enable-gateway-api `
     --enable-application-load-balancer `
+    --ssh-access `
     --zones 1 2 3;
 
+# Load Balancer
+$env:SUBNET_ALB_NAME = "aks-subnet-alb"; 
+$env:SUBNET_ADDRESS_PREFIXES = "10.230.0.0/24";
+$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
+
+az network vnet subnet create `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n $env:SUBNET_ALB_NAME `
+    --vnet-name $env:VNET_NAME `
+    --address-prefixes $env:SUBNET_ADDRESS_PREFIXES `
+    --delegations 'Microsoft.ServiceNetworking/trafficControllers';
+
+$env:ALB_IDENTITY_NAME = az identity list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query "[?contains(name, 'applicationloadbalancer')].name" -o tsv
+$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:ALB_IDENTITY_NAME --query principalId -o tsv;
+$env:SUBNET_ALB_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id --output tsv;
+$env:RESOURCE_GROUP_ID = az group show -n $env:AZURE_RESOURCE_GROUP_ASSETS --query id;
+
+az role assignment create `
+    --assignee-object-id $env:PRINCIPAL_ID `
+    --assignee-principal-type ServicePrincipal `
+    --scope $env:RESOURCE_GROUP_ID `
+    --role "Contributor";
+
+az role assignment create `
+    --assignee-object-id $env:PRINCIPAL_ID `
+    --assignee-principal-type ServicePrincipal `
+    --scope $env:SUBNET_ALB_ID `
+    --role "Network Contributor";
+
 # VPN Gateway
-$env:TENANT_ID = "";
 $env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].id -o tsv;
 $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
-$env:VNET_ADDRESS_PREFIXES = "10.231.0.0/24";
 $env:VNET_GATEWAY_NAME = $env:APP_NAME + "-vnet-vpn-gateway";
 $env:VNET_GATEWAY_IP_NAME = $env:APP_NAME + "-vnet-vpn-gateway-ip";
 $env:VNET_GATEWAY_VPN_CLIENT_ADDRESS_POOL = "['172.16.201.0/24']";
-$env:VNET_GATEWAY_ADD_TENANT = "https://login.microsoftonline.com/" + $env:TENANT_ID;
+$env:VNET_GATEWAY_ADD_TENANT = "https://login.microsoftonline.com/" + $env:AZURE_TENANT_ID;
 $env:VNET_GATEWAY_ADD_AUDIENCE = "41b23e61-6c1e-4545-b367-cd054e0ed4b4";
-$env:VNET_GATEWAY_ADD_ISSUER = "https://sts.windows.net/" + $env:TENANT_ID + "/";
+$env:VNET_GATEWAY_ADD_ISSUER = "https://sts.windows.net/" + $env:AZURE_TENANT_ID + "/";
+$env:SUBNET_ADDRESS_PREFIXES = "10.231.0.0/24";
 
 az network public-ip create `
     -g $env:AZURE_RESOURCE_GROUP_ASSETS `
@@ -84,12 +112,12 @@ az network vnet subnet create `
     -g $env:AZURE_RESOURCE_GROUP_ASSETS `
     -n GatewaySubnet `
     --vnet-name $env:VNET_NAME `
-    --address-prefix $env:VNET_ADDRESS_PREFIXES;
+    --address-prefix $env:SUBNET_ADDRESS_PREFIXES;
 
 az network vnet-gateway create `
     -g $env:AZURE_RESOURCE_GROUP_ASSETS `
     -n $env:VNET_GATEWAY_NAME `
-    --public-ip-address  $env:VNET_GATEWAY_IP_NAME `
+    --public-ip-address $env:VNET_GATEWAY_IP_NAME `
     --vnet $env:VNET_ID `
     --gateway-type Vpn `
     --vpn-type RouteBased `
