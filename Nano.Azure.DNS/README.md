@@ -10,6 +10,7 @@
   * **[DNS Zone](#dns-zone)**  
   * **[Managed Identity (Kubernetes)](#managed-identity-kubernetes)**  
   * **[External DNS Registrar Delegation](#external-dns-registrar-delegation)** 
+* **[Multiple DNS Zone](#multiple-dns-zone)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -52,6 +53,10 @@ For each returned name server, add an NS record for the delegated subdomain.
 | Type | Host / Name           | Value             |
 | ---- |---------------------- | ----------------- |
 | NS   | $env:APP_DOMAIN_NAME  | {{name-server}}   |
+
+## Multiple DNS Zone
+Creating multiple DNS zones for different domain names is fully supported. Create each additional DNS zone as needed, but reuse the existing Managed Identity rather than creating a 
+new one. Instead, add a new role assignment for the existing identity that grants access to the additional DNS zone.  
 
 ## Dependencies
 DNS has the following dependencies that must be deployed or otherwise satisfied prior to setup.  

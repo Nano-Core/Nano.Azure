@@ -94,7 +94,7 @@ See [Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure.Kubernetes/t
 
 > ⚠️ Make sure to choose a region that supports Azure Application Gateway for Containers. See **[Supported Regions](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/overview#supported-regions)**.
 
-> 📖 Learn more about **[Azure Application Gateway](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-addon)**.
+> 📖 Learn more about how to **[Deploy Application Gateway for Containers ALB Controller using AKS Add-on](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-addon)**.
 
 ### Automatic Upgrades
 Automatic upgrades ensure that the AKS cluster remains up to date with the latest security patches and node image updates. The `--auto-upgrade-channel patch` setting enables automatic 
@@ -207,6 +207,8 @@ omitted to use Azure default configuration. This can be modified later on if nee
 Enable Prometheus on your cluster with Azure Monitor managed workspace for Prometheus if you don't already have a Prometheus environment. Use Azure Managed Grafana to analyze the collected 
 Prometheus data. See Customize scraping of Prometheus metrics in Azure Monitor managed service for Prometheus to collect additional metrics beyond the default configuration. Azure will 
 create a bunch of collection rules, which takes care of ingrsting the Kubernetes metrics and logs into the Monitor Workspace.
+
+> ⚠️ Azure Prometheus uses different CRDs: `azmonitoring.coreos.com/v1` instead of `monitoring.coreos.com/v1`.  
 
 > 📖 Learn more about **[Azure Kubernetes Monitoring](https://learn.microsoft.com/en-us/azure/azure-monitor/containers/kubernetes-monitoring-tutorial)**.
 
