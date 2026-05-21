@@ -62,7 +62,7 @@ And the SKU feature letters.
 | z      | High memory / special variants                     |
 | l      | Low latency / local disk optimized (older series)  |
 
-> ⚠️ Be ware that the chosen tier must match the chosen SKU. e.g. Family=B, Tier=Burstable.
+> ⚠️ Be aware that the chosen tier must match the chosen SKU. e.g. Family=B, Tier=Burstable.
 
 To see all available SKUs for a specific region use the command below.  
 
@@ -71,6 +71,8 @@ az mysql flexible-server list-skus -l $env:AZURE_LOCATION -o table;
 ```
 
 You can also check out the official list of available SKUs on the **[MySQL Service Tiers](https://learn.microsoft.com/en-us/azure/mysql/flexible-server/concepts-service-tiers-storage)** page.
+
+> ⚠️ Make sure to store the _admin password_ returned during creation. It cannot be retrieved later from Azure.  
 
 Create the required secrets in GitHub for the MySQL server. These secrets will be used later to securely connect your applications to the database.  
 
