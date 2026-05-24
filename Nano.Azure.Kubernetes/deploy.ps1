@@ -1,5 +1,5 @@
-$env:ENVIRONMENT = "";
-$env:AZURE_TENANT_ID = "";
+$env:ENVIRONMENT = "Production";
+$env:AZURE_TENANT_ID = "9071a89e-4c58-4163-9bb4-f87488ff1427";
 $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
@@ -58,7 +58,7 @@ az aks create `
     --enable-oidc-issuer `
     --enable-gateway-api `
     --enable-application-load-balancer `
-    --ssh-access `
+    --ssh-access Disabled `
     --zones 1 2 3;
 
 # Load Balancer
@@ -159,6 +159,7 @@ az aks nodepool add `
     --max-count $env:KUBERNETES_SYSTEM_NODES_MAX `
     --enable-encryption-at-host `
     --enable-cluster-autoscaler `
+    --ssh-access Disabled `
     --zones 1 2 3;
 
 az aks nodepool update `
@@ -190,6 +191,7 @@ az aks nodepool add `
     --enable-encryption-at-host `
     --gpu-driver Install `
     --gpu-instance-profile MIG1g `
+    --ssh-access Disabled `
     --zones 1 2 3;
 
 # Maintenance

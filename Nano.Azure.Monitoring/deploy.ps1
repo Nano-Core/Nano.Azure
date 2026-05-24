@@ -1,5 +1,5 @@
 $env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "Sweden Central";
+$env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Logs";
 $env:APP_NAME_LOG_ANALYTCS = "nano-log-analytics-workspace-" + $env:ENVIRONMENT.ToLower();
 $env:APP_NAME_MONITOR = "nano-monitor-workspace-" + $env:ENVIRONMENT.ToLower();
@@ -30,7 +30,7 @@ az monitor account create `
     -l $env:AZURE_LOCATION `
     -n $env:APP_NAME_MONITOR;
 
-# Monitor Group
+# Monitor Action Group
 az monitor action-group create  `
     -n $env:ACTION_GROUP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `

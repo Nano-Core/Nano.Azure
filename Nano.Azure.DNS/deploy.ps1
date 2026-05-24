@@ -24,7 +24,7 @@ az identity create `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:APP_NAME_IDENTITY;
 
-$env:DNS_ZONE_ID = az network dns zone show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_DOMAIN_NAME --query id -o tsv;
+$env:DNS_ZONE_ID = az network dns zone show -g $env:AZURE_RESOURCE_GROUP -n $env:DOMAIN_NAME --query id -o tsv;
 $env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME_IDENTITY --query principalId -o tsv;
 
 az role assignment create `

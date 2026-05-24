@@ -28,8 +28,8 @@
 * **[Apps Namespace](#apps-namespace)**  
 * **[Image Pull Secret](#image-pull-secret)**  
 * **[Configure kubectl Access](#configure-kubectl-access)**  
-* **[Dependencies](#dependencies)**  
 * **[Common `kubectl` Commands](#common-kubectl-commands)**
+* **[Dependencies](#dependencies)**  
 
 ## Summary
 Azure Kubernetes Service (AKS) is a managed Kubernetes service that simplifies the deployment and operation of Kubernetes clusters. AKS automates tasks such as provisioning, 
@@ -78,7 +78,7 @@ Create the required secrets in GitHub for the Kubernetes cluster.
 | Secret                                   | Type     | Description                                           |
 | ---------------------------------------- | -------- | ----------------------------------------------------- |
 | `AZURE_RESOURCE_GROUP_KUBERNETES`        | vars     | The Azure resource group of the Kubernetes cluster.   |
-| `{{environment}}_KUBERNETES_CLUSTER`     | vars     | The name of the Kubernets cluster.                    |
+| `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS` | vars     | The Azure resource group of the Kubernetes assets.    |
 
 ### Gateway Load Balancer
 Gateway API support is enabled in the AKS cluster through `--enable-gateway-api`, adding the Kubernetes Gateway API custom resource definitions (CRDs) required for defining `Gateway`, 
@@ -362,14 +362,6 @@ You can now use `kubectl` to manage the cluster.
 
 > ⚠️ Make sure you are connected the the VPn Gateway, if the Kubernetes cluster is set up with private access.  
 
-## Dependencies
-Kubernetes has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
-
-| Dependency                                                                                                                            | Description                                                             | 
-| ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**                   | The is the foundation or prerequites of the Nano Azure infrastructure.  |
-| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
-
 ## Common `kubectl` Commands
 The following section contains commonly used Kubernetes (kubectl) commands for managing and troubleshooting resources in the cluster. These commands can be used to inspect workloads, view 
 logs, monitor deployments, validate configuration, and diagnose issues related to networking, storage, and application health.  
@@ -432,3 +424,11 @@ kubectl patch cronjob {{cronjob-name}} -p '{"spec": {"suspend": true}}'
 ```powershell
 kubectl port-forward pod/<pod-name> 8080:80 -n {{namespace}}
 ```
+
+## Dependencies
+Kubernetes has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
+
+| Dependency                                                                                                                            | Description                                                             | 
+| ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
+| **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**                   | The is the foundation or prerequites of the Nano Azure infrastructure.  |
+| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
