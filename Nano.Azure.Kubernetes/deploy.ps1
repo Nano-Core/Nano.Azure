@@ -1,5 +1,5 @@
-$env:ENVIRONMENT = "Production";
-$env:AZURE_TENANT_ID = "9071a89e-4c58-4163-9bb4-f87488ff1427";
+$env:ENVIRONMENT = "";
+$env:AZURE_TENANT_ID = "";
 $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
@@ -138,7 +138,7 @@ az network vnet-gateway vpn-client generate `
   -g $env:AZURE_RESOURCE_GROUP_ASSETS `
   -n $env:VNET_GATEWAY_NAME;
 
-# System Nodepool (Optional)
+# System Nodepool
 $env:KUBERNETES_NODEPOOL_SYSTEM_NAME = "system";
 $env:KUBERNETES_SYSTEM_NODE_SIZE = "standard_d2as_v6"; 
 $env:KUBERNETES_SYSTEM_NODE_COUNT=3;
@@ -203,7 +203,7 @@ az aks maintenanceconfiguration add `
     --start-hour 4 `
     --duration 4;
 
-# Monitoring (Container Insights - Legacy)
+# Monitoring (Container Insights)
 $env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
 
 az aks enable-addons `
@@ -213,7 +213,76 @@ az aks enable-addons `
     --workspace-resource-id $env:LOG_ANALYTICS_WORKSPACE_ID `
     --data-collection-settings '.data-collection-settings/data-collection-settings.json';
 
-# Alerts (Container insights - Legacy)
+# Monitoring (Prometheus)
+az extension add -n amg;
+az config set extension.dynamic_install_allow_preview=true;
+
+$env:APP_NAME_GRAFANA = "grafana-" + (Get-Random -Maximum 999999).ToString("D6");
+$env:MONITOR_WORKSPACE_ID = az monitor account list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+
+$env:GRAFANA_ID = az grafana create `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:APP_NAME_GRAFANA `
+    -l $env:AZURE_LOCATION `
+    --query id -o tsv;
+
+az aks update `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:APP_NAME `
+    --enable-azure-monitor-metrics `
+    --azure-monitor-workspace-resource-id $env:MONITOR_WORKSPACE_ID `
+    --grafana-resource-id $env:GRAFANA_ID;
+
+# Alerts (Prometheus)
+az extension add -n alertsmanagement;
+
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+
+az alerts-management prometheus-rule-group create `
+  --name 'Prometheus Alerts - Resource Saturation' `
+  --resource-group $env:AZURE_RESOURCE_GROUP `
+  --location $env:AZURE_LOCATION `
+  --cluster-name $env:APP_NAME `
+  --enabled true `
+  --description "Resource saturation alerts" `
+  --interval PT5M `
+  --scopes $env:MONITOR_WORKSPACE_ID `
+  --rules '.alerts/resource-saturation.json';
+
+az alerts-management prometheus-rule-group create `
+  --name 'Prometheus Alerts - Workload Stability' `
+  --resource-group $env:AZURE_RESOURCE_GROUP `
+  --location $env:AZURE_LOCATION `
+  --cluster-name $env:APP_NAME `
+  --enabled true `
+  --description "Workload stability alerts" `
+  --interval PT5M `
+  --scopes $env:MONITOR_WORKSPACE_ID `
+  --rules '.alerts/workload-stability.json';
+
+az alerts-management prometheus-rule-group create `
+  --name 'Prometheus Alerts - Scheduling Scaling' `
+  --resource-group $env:AZURE_RESOURCE_GROUP `
+  --location $env:AZURE_LOCATION `
+  --cluster-name $env:APP_NAME `
+  --enabled true `
+  --description "Scheduling scaling alerts" `
+  --interval PT5M `
+  --scopes $env:MONITOR_WORKSPACE_ID `
+  --rules '.alerts/scheduling-scaling.json';
+
+az alerts-management prometheus-rule-group create `
+  --name 'Prometheus Alerts - Node Health' `
+  --resource-group $env:AZURE_RESOURCE_GROUP `
+  --location $env:AZURE_LOCATION `
+  --cluster-name $env:APP_NAME `
+  --enabled true `
+  --description "Node health alerts" `
+  --interval PT5M `
+  --scopes $env:MONITOR_WORKSPACE_ID `
+  --rules '.alerts/node-health.json';
+
+# Alerts (Legacy)
 az extension add --name scheduled-query;
 
 $env:KUBERNETES_ID = az aks show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
@@ -391,74 +460,6 @@ az monitor scheduled-query create `
   --action $env:ACTION_GROUP `
   --location $env:AZURE_LOCATION `
   --severity 3;
-
-# Monitoring (Prometheus)
-az extension add -n amg;
-az config set extension.dynamic_install_allow_preview=true;
-
-$env:MONITOR_WORKSPACE_ID = az monitor account list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
-
-$env:GRAFANA_ID = az grafana create `
-    -g $env:AZURE_RESOURCE_GROUP `
-    -n $env:APP_NAME-grafana `
-    -l $env:AZURE_LOCATION `
-    --query id -o tsv;
-
-az aks update `
-    -g $env:AZURE_RESOURCE_GROUP `
-    -n $env:APP_NAME `
-    --enable-azure-monitor-metrics `
-    --azure-monitor-workspace-resource-id $env:MONITOR_WORKSPACE_ID `
-    --grafana-resource-id $env:GRAFANA_ID;
-
-# Alerts (Prometheus)
-az extension add -n alertsmanagement;
-
-$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
-
-az alerts-management prometheus-rule-group create `
-  --name 'Prometheus Alerts - Resource Saturation' `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --location $env:AZURE_LOCATION `
-  --cluster-name $env:APP_NAME `
-  --enabled true `
-  --description "Resource saturation alerts" `
-  --interval PT5M `
-  --scopes $env:MONITOR_WORKSPACE_ID `
-  --rules '.alerts/resource-saturation.json';
-
-az alerts-management prometheus-rule-group create `
-  --name 'Prometheus Alerts - Workload Stability' `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --location $env:AZURE_LOCATION `
-  --cluster-name $env:APP_NAME `
-  --enabled true `
-  --description "Workload stability alerts" `
-  --interval PT5M `
-  --scopes $env:MONITOR_WORKSPACE_ID `
-  --rules '.alerts/workload-stability.json';
-
-az alerts-management prometheus-rule-group create `
-  --name 'Prometheus Alerts - Scheduling Scaling' `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --location $env:AZURE_LOCATION `
-  --cluster-name $env:APP_NAME `
-  --enabled true `
-  --description "Scheduling scaling alerts" `
-  --interval PT5M `
-  --scopes $env:MONITOR_WORKSPACE_ID `
-  --rules '.alerts/scheduling-scaling.json';
-
-az alerts-management prometheus-rule-group create `
-  --name 'Prometheus Alerts - Node Health' `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --location $env:AZURE_LOCATION `
-  --cluster-name $env:APP_NAME `
-  --enabled true `
-  --description "Node health alerts" `
-  --interval PT5M `
-  --scopes $env:MONITOR_WORKSPACE_ID `
-  --rules '.alerts/node-health.json';
   
 # Image Cleaner (Optional)
 az aks update `
