@@ -7,6 +7,7 @@
 ## Table of Contents
 &nbsp;&nbsp;&nbsp;&nbsp;📌 **[Summary](#-summary)**  
 &nbsp;&nbsp;&nbsp;&nbsp;⚙️ **[Required Tools](#-required-tools)**  
+&nbsp;&nbsp;&nbsp;&nbsp;⚖️ **[Licenses](#-licenses)**  
 
 ### Documentaion
 &nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**    
@@ -47,3 +48,9 @@ Before continuing, make sure you have the following tools installed and configur
 | **[Azure VPN Client](https://apps.microsoft.com/detail/9np355qt2sqb)**    | Azure VPN client used to connect to private Azure resources.     |
 
 > ⚠️ If Azure CLI is already installed, make sure it is updated to the latest version: `az upgrade`.
+
+## ⚖️ Licenses
+Nano.Azure is free to use and released under the MIT License.
+
+The scripts in this repository use Azure CLI and interact with Microsoft Azure services. The Azure CLI and Azure services are governed by their respective Microsoft licensing terms and 
+service agreements.
