@@ -75,20 +75,34 @@ az network vnet subnet create `
 
 $env:ALB_IDENTITY_NAME = az identity list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query "[?contains(name, 'applicationloadbalancer')].name" -o tsv
 $env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:ALB_IDENTITY_NAME --query principalId -o tsv;
-$env:SUBNET_ALB_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id --output tsv;
-$env:RESOURCE_GROUP_ID = az group show -n $env:AZURE_RESOURCE_GROUP_ASSETS --query id;
+$env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id --output tsv;
+$env:AZURE_RESOURCE_GROUP_ASSETS_ID = az group show -n $env:AZURE_RESOURCE_GROUP_ASSETS --query id;
 
 az role assignment create `
     --assignee-object-id $env:PRINCIPAL_ID `
     --assignee-principal-type ServicePrincipal `
-    --scope $env:RESOURCE_GROUP_ID `
+    --scope $env:AZURE_RESOURCE_GROUP_ASSETS_ID `
     --role "Contributor";
 
 az role assignment create `
     --assignee-object-id $env:PRINCIPAL_ID `
     --assignee-principal-type ServicePrincipal `
-    --scope $env:SUBNET_ALB_ID `
+    --scope $env:ALB_SUBNET_ID `
     --role "Network Contributor";
+
+$env:APPLICATION_LOAD_BALANCER_PATH = Join-Path $env:USERPROFILE "application-load-balancer.yaml";
+$env:KUBERNETES_NAMESPACE = "apps";
+$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
+$env:ALB_SUBNET_ID = az network vnet subnet show -n aks-subnet-alb -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
+
+Get-Content .kubernetes/application-load-balancer.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:APPLICATION_LOAD_BALANCER_PATH;
+
+az aks command invoke `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:APP_NAME `
+    --file $env:APPLICATION_LOAD_BALANCER_PATH `
+    --command "kubectl apply -f application-load-balancer.yaml" `
+    --output json | ConvertFrom-Json;
 
 # VPN Gateway
 $env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].id -o tsv;
@@ -469,16 +483,15 @@ az aks update `
     --image-cleaner-interval-hours 72;
 
 # Diagnostic Settings
+$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
 $env:KUBERNETES_ID = az aks show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
 $env:DIAGNOSTIC_SETTINGS_NAME = "diagnostics-" + $env:APP_NAME;
-$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
 
 az monitor diagnostic-settings create `
     --name $env:DIAGNOSTIC_SETTINGS_NAME `
     --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
     --resource $env:KUBERNETES_ID `
-    --logs '@.diagnostic-settings/logs.json' `
-    --metrics '@.diagnostic-settings/metrics.json';
+    --logs '@.diagnostic-settings/logs.json';
 
 $env:LOAD_BALANCER_ID = az network lb show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n kubernetes --query id -o tsv;
 $env:DIAGNOSTIC_SETTINGS_LOAD_BALANCER_NAME = $env:DIAGNOSTIC_SETTINGS_NAME + "-load-balancer";
@@ -489,6 +502,15 @@ az monitor diagnostic-settings create `
     --resource $env:LOAD_BALANCER_ID `
     --logs '@.diagnostic-settings/load-balancer/logs.json' `
     --metrics '@.diagnostic-settings/load-balancer/metrics.json';
+
+$env:ALB_LOAD_BALANCER_ID = az network alb list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].id -o tsv;
+$env:DIAGNOSTIC_SETTINGS_ALB_LOAD_BALANCER_NAME = $env:DIAGNOSTIC_SETTINGS_NAME + "-alb";
+
+az monitor diagnostic-settings create `
+    --name $env:DIAGNOSTIC_SETTINGS_ALB_LOAD_BALANCER_NAME `
+    --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
+    --resource $env:ALB_LOAD_BALANCER_ID `
+    --logs '@.diagnostic-settings/alb/logs.json';
 
 # Microsoft Defender
 $env:DEFENDER_CONFIG = @{logAnalyticsWorkspaceResourceId = $env:LOG_ANALYTICS_WORKSPACE_ID} | ConvertTo-Json -Compress

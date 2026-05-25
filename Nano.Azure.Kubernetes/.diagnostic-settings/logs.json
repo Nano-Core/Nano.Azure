@@ -26,37 +26,5 @@
   {
     "category": "cloud-controller-manager",
     "enabled": true
-  },
-  {
-    "category": "guard",
-    "enabled": true
-  },
-  {
-    "category": "csi-azuredisk-controller",
-    "enabled": true
-  },
-  {
-    "category": "csi-azurefile-controller",
-    "enabled": true
-  },
-  {
-    "category": "csi-snapshot-controller",
-    "enabled": true
-  },
-  {
-    "category": "fleet-member-agent",
-    "enabled": true
-  },
-  {
-    "category": "fleet-member-net-controller-manager",
-    "enabled": true
-  },
-  {
-    "category": "fleet-mcs-controller-manager",
-    "enabled": true
-  },
-  {
-    "category": "karpenter-events",
-    "enabled": true
   }
 ]

@@ -1,5 +1,5 @@
 $env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "Sweden Central";
+$env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Database";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
@@ -10,12 +10,12 @@ $env:MYSQL_TIER = "GeneralPurpose";
 $env:MYSQL_BACKUP_INTERVAL = 24
 $env:MYSQL_BACKUP_RETENTION = 35
 $env:MYSQL_ADMIN_USERNAME = "adminuser";
-$env:MYSQL_ADMIN_PASSWORD = "sDF9r0DsPxkq9Ly560I2";
+$env:MYSQL_ADMIN_PASSWORD = "";
 $env:MYSQL_PORT = 3306;
 $env:APP_NAME = "nano-mysql-" + $env:ENVIRONMENT.ToLower();
 
 # Register Providers
-az provider register -n Microsoft.DBforMySQL
+az provider register -n Microsoft.DBforMySQL;
 
 # Resource Group
 az group create `
@@ -74,59 +74,59 @@ $env:MYSQL_ID = az mysql flexible-server show -g $env:AZURE_RESOURCE_GROUP -n $e
 $env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
 
 az monitor metrics alert create `
-  --name "High CPU Usage" `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --scopes $env:MYSQL_ID `
-  --condition "avg cpu_percent > 80" `
-  --window-size PT5M `
-  --evaluation-frequency PT1M `
-  --action $env:ACTION_GROUP `
-  --severity 2 `
-  --description "Alert when CPU usage is above 80% for 5 minutes.";
+    --name "High CPU Usage" `
+    --resource-group $env:AZURE_RESOURCE_GROUP `
+    --scopes $env:MYSQL_ID `
+    --condition "avg cpu_percent > 80" `
+    --window-size PT5M `
+    --evaluation-frequency PT1M `
+    --action $env:ACTION_GROUP `
+    --severity 2 `
+    --description "Alert when CPU usage is above 80% for 5 minutes.";
 
 az monitor metrics alert create `
-  --name "High Memory Usage" `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --scopes $env:MYSQL_ID `
-  --condition "avg memory_percent > 80" `
-  --window-size PT5M `
-  --evaluation-frequency PT1M `
-  --action $env:ACTION_GROUP `
-  --severity 2 `
-  --description "Alert when Memory usage is above 80% for 5 minutes.";
+    --name "High Memory Usage" `
+    --resource-group $env:AZURE_RESOURCE_GROUP `
+    --scopes $env:MYSQL_ID `
+    --condition "avg memory_percent > 80" `
+    --window-size PT5M `
+    --evaluation-frequency PT1M `
+    --action $env:ACTION_GROUP `
+    --severity 2 `
+    --description "Alert when Memory usage is above 80% for 5 minutes.";
 
 az monitor metrics alert create `
-  --name "High Number Of Connections" `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --scopes $env:MYSQL_ID `
-  --condition "avg active_connections > 100" `
-  --window-size PT5M `
-  --evaluation-frequency PT1M `
-  --action $env:ACTION_GROUP `
-  --severity 2 `
-  --description "Alert when the number of active connections exceeds 100 for 5 minutes.";
+    --name "High Number Of Connections" `
+    --resource-group $env:AZURE_RESOURCE_GROUP `
+    --scopes $env:MYSQL_ID `
+    --condition "avg active_connections > 100" `
+    --window-size PT5M `
+    --evaluation-frequency PT1M `
+    --action $env:ACTION_GROUP `
+    --severity 2 `
+    --description "Alert when the number of active connections exceeds 100 for 5 minutes.";
 
 az monitor metrics alert create `
-  --name "High Storage IO" `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --scopes $env:MYSQL_ID `
-  --condition "avg io_consumption_percent > 80" `
-  --window-size PT5M `
-  --evaluation-frequency PT1M `
-  --action $env:ACTION_GROUP `
-  --severity 2 `
-  --description "Alert when Storage IO consumption is above 80% for 5 minutes.";
+    --name "High Storage IO" `
+    --resource-group $env:AZURE_RESOURCE_GROUP `
+    --scopes $env:MYSQL_ID `
+    --condition "avg io_consumption_percent > 80" `
+    --window-size PT5M `
+    --evaluation-frequency PT1M `
+    --action $env:ACTION_GROUP `
+    --severity 2 `
+    --description "Alert when Storage IO consumption is above 80% for 5 minutes.";
 
 az monitor metrics alert create `
-  --name "High Storage Percent" `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --scopes $env:MYSQL_ID `
-  --condition "avg storage_percent > 80" `
-  --window-size PT5M `
-  --evaluation-frequency PT1M `
-  --action $env:ACTION_GROUP `
-  --severity 2 `
-  --description "Alert when Storage usage exceeds 80% for 5 minutes.";
+    --name "High Storage Percent" `
+    --resource-group $env:AZURE_RESOURCE_GROUP `
+    --scopes $env:MYSQL_ID `
+    --condition "avg storage_percent > 80" `
+    --window-size PT5M `
+    --evaluation-frequency PT1M `
+    --action $env:ACTION_GROUP `
+    --severity 2 `
+    --description "Alert when Storage usage exceeds 80% for 5 minutes.";
   
 # Network Rules.
 $env:PRIVATE_LINK = "privatelink.mysql.database.azure.com";
@@ -137,28 +137,29 @@ $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_AS
 $env:SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query "[?name =='aks-subnet'].[id]" -o tsv;
 
 az network private-dns zone create `
-  -g $env:AZURE_RESOURCE_GROUP `
-  -n $env:PRIVATE_LINK;
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:PRIVATE_LINK;
 
 az network private-dns link vnet create `
-  -g $env:AZURE_RESOURCE_GROUP `
-  -n $env:PRIVATE_ENDPOINT_NAME-dns-link `
-  -z $env:PRIVATE_LINK `
-  -v $env:VNET_ID `
-  -e false;
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:PRIVATE_ENDPOINT_NAME-dns-link `
+    -z $env:PRIVATE_LINK `
+    -v $env:VNET_ID `
+    -e false;
 
 az network private-endpoint create `
-  --name $env:PRIVATE_ENDPOINT_NAME `
-  --connection-name $env:PRIVATE_ENDPOINT_NAME-connection `
-  --nic-name $env:PRIVATE_ENDPOINT_NAME-nic `
-  --resource-group $env:AZURE_RESOURCE_GROUP `
-  --group-id mysqlServer `
-  --subnet $env:SUBNET_ID `
-  --private-connection-resource-id $env:MYSQL_ID;
+    -l $env:AZURE_LOCATION `
+    --name $env:PRIVATE_ENDPOINT_NAME `
+    --connection-name $env:PRIVATE_ENDPOINT_NAME-connection `
+    --nic-name $env:PRIVATE_ENDPOINT_NAME-nic `
+    --resource-group $env:AZURE_RESOURCE_GROUP `
+    --group-id mysqlServer `
+    --subnet $env:SUBNET_ID `
+    --private-connection-resource-id $env:MYSQL_ID;
 
 az network private-endpoint dns-zone-group create `
-  -g $env:AZURE_RESOURCE_GROUP `
-  -n $env:PRIVATE_ENDPOINT_NAME-dns-zone-group `
-  --endpoint-name $env:PRIVATE_ENDPOINT_NAME `
-  --private-dns-zone $env:PRIVATE_LINK `
-  --zone-name mysql;
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:PRIVATE_ENDPOINT_NAME-dns-zone-group `
+    --endpoint-name $env:PRIVATE_ENDPOINT_NAME `
+    --private-dns-zone $env:PRIVATE_LINK `
+    --zone-name mysql;

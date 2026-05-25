@@ -9,7 +9,6 @@
     "Microsoft-KubeEvents",
     "Microsoft-KubePodInventory",
     "Microsoft-KubeNodeInventory",
-    "Microsoft-InsightsMetrics",
     "Microsoft-KubePVInventory"
   ]
 }

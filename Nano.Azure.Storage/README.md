@@ -131,6 +131,8 @@ To list the available `--group-id` values for use with the `az network private-e
 az network private-link-resource list --id $env:STORAGE_ACCOUNT_ID;
 ```
 
+> ⚠️ The private endpoint must be deployed in the same Azure region as the virtual network (VNet) it is associated with.
+
 Optionally, IP address whitelisting can be configured to allow access to the storage file shares. By default, access is fully restricted, and no external connections are permitted. 
 The Nano system does not depend on IP whitelisting for connectivity, and using it is generally discouraged as it can negatively impact the overall cloud security score. If IP 
 whitelisting is required, it can be configured using the following command.  

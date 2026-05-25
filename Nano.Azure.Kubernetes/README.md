@@ -8,6 +8,7 @@
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
   * **[Kubernetes Cluster](#kubernetes-cluster)**  
+  * **[Apps Namespace](#apps-namespace)**  
   * **[Gateway Load Balancer](#gateway-load-balancer)**  
   * **[Automatic Upgrades](#automatic-upgrades)**  
   * **[Node Scaling](#node-scaling)**  
@@ -25,7 +26,6 @@
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#m,icrosoft-defender)**  
   * **[Policy](#policy)**  
-* **[Apps Namespace](#apps-namespace)**  
 * **[Image Pull Secret](#image-pull-secret)**  
 * **[Configure kubectl Access](#configure-kubectl-access)**  
 * **[Common `kubectl` Commands](#common-kubectl-commands)**
@@ -51,7 +51,6 @@ Add the following GitHub organization variables.
 | ----------------------------------------- | ------- |------------------------------------------------------------------- |
 | `AZURE_RESOURCE_GROUP_KUBERNETES`         | vars    | The Azure resource group of the Kubernetes cluster (AKS).          |
 | `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS`  | vars    | The Azure resource group of the Kubernetes cluster (AKS) Asserts.  |
-| `{{environment}}_KUBERNETES_CLUSTER`      | vars    | The name of the Kubernetes cluster.                                |
 
 ### Kubernetes Cluster
 Execute the next part of the `deploy.ps1` to create a managed Kubernetes cluster (AKS) on Azure.  
@@ -80,21 +79,44 @@ Create the required secrets in GitHub for the Kubernetes cluster.
 | `AZURE_RESOURCE_GROUP_KUBERNETES`        | vars     | The Azure resource group of the Kubernetes cluster.   |
 | `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS` | vars     | The Azure resource group of the Kubernetes assets.    |
 
+### Apps Namespace
+This step creates the default Kubernetes namespace used by all Nano applications and components. It provides a consistent isolation boundary and ensures Gateway API resources, 
+services, and supporting objects such as secrets and config maps are grouped together, reducing permission complexity and configuration overhead.  
+
+It is created during cluster bootstrap and is safe to reapply in CI/CD pipelines. All application resources should target this namespace unless a specific multi-namespace design 
+is explicitly required.  
+
+Execute the `namespace.ps1` script to create the Kubernetes namespace.  
+
 ### Gateway Load Balancer
-Gateway API support is enabled in the AKS cluster through `--enable-gateway-api`, adding the Kubernetes Gateway API custom resource definitions (CRDs) required for defining `Gateway`, 
-`HTTPRoute`, and related networking resources. This introduces a modern Kubernetes-native traffic management model that replaces traditional Ingress-based routing with a more flexible and 
-extensible API.  
+Application Gateway API support is enabled in the AKS cluster through `--enable-gateway-api`, adding the Kubernetes Gateway API custom resource definitions (CRDs) required for 
+defining `Gateway`, `HTTPRoute`, and related networking resources. This introduces a modern Kubernetes-native traffic management model that replaces traditional Ingress-based 
+routing with a more flexible and extensible API.  
 
-Together with `--enable-application-load-balancer`, AKS deploys and configures the Azure Application Load Balancer (ALB) Controller within the cluster. The controller extends the cluster with 
-the custom resource definitions (CRDs) required for managing `ApplicationLoadBalancer` resources and integrates Kubernetes Gateway API resources with Azure Application Gateway for Containers.  
-
-Enabling these features prepares the cluster for ALB-based traffic routing, but the Azure Application Gateway for Containers infrastructure is only provisioned after deploying the corresponding 
-Kubernetes `ApplicationLoadBalancer`, `Gateway`, and routing resources. Nano automates the deployment and configuration of these Kubernetes resources as part of the platform setup. 
-See [Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure.Kubernetes/tree/master/Nano.Azure.Kubernetes.Gateway#nanoazurekubernetesgateway).
+Together with `--enable-application-load-balancer`, AKS deploys and configures the Azure Application Load Balancer (ALB) Controller within the cluster. The controller extends the 
+cluster with the custom resource definitions (CRDs) required for managing `ApplicationLoadBalancer` resources and integrates Kubernetes Gateway API resources with Azure Application 
+Gateway for Containers.  
 
 > ⚠️ Make sure to choose a region that supports Azure Application Gateway for Containers. See **[Supported Regions](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/overview#supported-regions)**.
 
-> 📖 Learn more about how to **[Deploy Application Gateway for Containers ALB Controller using AKS Add-on](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-addon)**.
+A separate subnet is created for the Azure Application Load Balancer, and the proper role assignments created for the load balancer to have the proper network permissions.  
+
+> 📖 Learn more about how to **[Deploy Application Gateway for Containers ALB Controller using AKS Add-on](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/quickstart-deploy-application-gateway-for-containers-alb-controller-addon)**.  
+> 📖 Learn more about how to **[Create Application Gateway for Containers managed by ALB Controller](https://learn.microsoft.com/en-us/azure/application-gateway/for-containers/quickstart-create-application-gateway-for-containers-managed-by-alb-controller)**.  
+
+Finally, the Kubernetes resource is deployed in the cluster, which triggers the creation of the Azure Application Load Balancer resource. The Application Load Balancer provides the 
+Azure-managed traffic distribution layer for Kubernetes ingress, routing external traffic into the cluster through the configured subnet and integrating with the Gateway API for 
+application-level routing.  
+
+This resource is managed by Azure and forms the foundation for inbound connectivity.  
+
+> ⚠️ Only a single `ApplicationLoadBalancer` should be deployed.   
+
+The deployed Application Load Balancer can be retrieved using the following command.
+
+```powershell
+kubectl get ApplicationLoadBalancer -n {{namespace}};
+```
 
 ### Automatic Upgrades
 Automatic upgrades ensure that the AKS cluster remains up to date with the latest security patches and node image updates. The `--auto-upgrade-channel patch` setting enables automatic 
@@ -197,47 +219,36 @@ The maintenance window is configured to run on Sunday at 04:00 UTC, but can be a
 > ⚠️ Note that the Azure Portal does not display the default maintenance schedule unless custom update schedules are explicitly configured for the different maintenance controls.
 
 ### Monitoring
-Enable monitoring using either Container Insight or Prometheus with optional Grafana. 
+Monitoring is distributed across Container Insights, Azure Managed Prometheus, and Azure Managed Grafana, with each component responsible for a distinct layer of observability 
+in the system.
 
-Container insights collects stdout/stderr logs, performance metrics, and Kubernetes events from each node in your cluster. It provides dashboards and reports for analyzing this data, 
-including the availability of your nodes and other components. Use Log Analytics to identify any availability errors in your collected logs. The data collection rule for collection logs 
-and metrics is a pretty decent production-grade configuration. For dev/test environments, this can be modified to save costs. The `--data-collection-settings ` parameter may also be 
-omitted to use Azure default configuration. This can be modified later on if needs changes.
+Container Insights is used for centralized logging, Kubernetes events, and cluster inventory. It collects container stdout/stderr logs, Kubernetes events, and pod/node inventory from 
+across the cluster, providing visibility into node and cluster availability and operational state through Log Analytics. Metrics collection through Container Insights is intentionally 
+minimized because metrics are handled by Prometheus. The data collection rule is a production-oriented configuration and can be customized or omitted in development or test environments 
+to reduce cost, with Azure defaults available as an alternative. The `--data-collection-settings` parameter controls this configuration during AKS enablement and can be adjusted later 
+if requirements change.
 
-Enable Prometheus on your cluster with Azure Monitor managed workspace for Prometheus if you don't already have a Prometheus environment. Use Azure Managed Grafana to analyze the collected 
-Prometheus data. See Customize scraping of Prometheus metrics in Azure Monitor managed service for Prometheus to collect additional metrics beyond the default configuration. Azure will 
-create a bunch of collection rules, which takes care of ingrsting the Kubernetes metrics and logs into the Monitor Workspace.
+Azure Managed Prometheus is used for collecting Kubernetes and application metrics, which form the basis for dashboards, analysis, and alerting. It is enabled through an Azure Monitor 
+managed Prometheus workspace, which automatically provisions scraping and collection rules for Kubernetes metrics. Azure Managed Grafana is connected to the Prometheus workspace for 
+visualization and deeper analysis of the collected metrics. Prometheus Rule Groups are used for metric-based alerting using PromQL expressions, with support for extending scraping 
+configuration to include additional metrics beyond the default setup when required.
 
 > ⚠️ Azure Prometheus uses different CRDs: `azmonitoring.coreos.com/v1` instead of `monitoring.coreos.com/v1`.  
+
+The following table provides an overview of how observability responsibilities are distributed across the different Azure monitoring components in the AKS architecture.  
+
+| Layer               | Azure Service                                   | Responsibility                                                    |
+| ------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
+| Application Metrics | Azure Managed Prometheus                        | Application, pod, node, and Kubernetes metrics.                   |
+| Logging & Events    | Container Insights                              | Container logs, Kubernetes events, pod/node inventory.            |
+| Dashboards          | Azure Managed Grafana                           | Metrics visualization and dashboards.                             |
+| Alerting            | Prometheus Rule Groups                          | Metric-based alerting using PromQL.                               |
 
 > 📖 Learn more about **[Azure Kubernetes Monitoring](https://learn.microsoft.com/en-us/azure/azure-monitor/containers/kubernetes-monitoring-tutorial)**.
 
 ### Alerts
-Enabling alerts differs between using Container Insight or Prometheus monitoring. 
-
-For Container Insight the following alerts are supplied.
-
-| Name                                     | Description                                         | Severity | Window Size |
-| ---------------------------------------- | --------------------------------------------------- | -------- | ----------- |
-| Node CPU Rising (60)                     | Node CPU sustained pressure above 60%               | Warn     | PT5M        |
-| Node CPU High (80)                       | Node CPU usage above 80%                            | Severe   | PT5M        |
-| Node CPU Critical (95)                   | Node CPU usage above 95%                            | Critical | PT5M        |
-| Node Memory Rising (60)                  | Node memory sustained pressure above 60%            | Warn     | PT5M        |
-| Node Memory High (80)                    | Node memory usage above 80%                         | Severe   | PT5M        |
-| Node Memory Critical (95)                | Node memory usage above 95%                         | Critical | PT5M        |
-| Node Disk High (80)                      | Node disk usage above 80%                           | Severe   | PT5M        |
-| Container CPU High (Absolute NanoCores)  | Container CPU high usage (requires limits set)      | Severe   | PT5M        |
-| Container Memory High (Absolute Bytes)   | Container memory high usage (absolute threshold)    | Severe   | PT5M        |
-| Node Not Ready                           | Node is not in Ready state                          | Critical | PT5M        |
-| Pod CrashLoopBackOff                     | Pods in CrashLoopBackOff state                      | Critical | PT5M        |
-| Image Pull Failures                      | Image pull failures detected                        | Severe   | PT5M        |
-| OOM Killed Containers                    | Containers terminated due to OOM                    | Critical | PT5M        |
-| Pod Restart Rate High                    | High restart rate in last 5 minutes                 | Severe   | PT5M        |
-| Pods Pending                             | Pods stuck in Pending state                         | Warn     | PT5M        |
-
-> ⚠️ Legacy alerts are less precise and rely on fixed container thresholds (e.g. 800 mCPU) rather than percentage-based utilization of resource limits.
-
-Prometheus-based alerts provide higher accuracy and more detailed insights. The full set of Prometheus alerts is listed below.  
+Alerts are handled through Azure Managed Prometheus using Prometheus Rule Groups with PromQL-based expressions. Prometheus-based alerts provide higher accuracy and more detailed 
+insights that the legacy Container Insight Alerts. The full set of Prometheus alerts is listed below.  
 
 | Name                           | Description                                                   | Severity | Window Size |
 | ------------------------------ | ------------------------------------------------------------- | -------- | ----------- |
@@ -264,6 +275,28 @@ Prometheus-based alerts provide higher accuracy and more detailed insights. The 
 | PodRestart Rate High           | Pods with more than 3 restarts in 5 minutes                   | Warn     | PT5M        |
 | Deployment Replicas Mismatch   | Available replicas do not match desired deployment replicas   | Info     | PT10M       |
 
+For Container Insights, the following alerts are supplied in the `deploy.ps1` script. This is provided as a fallback in cases where Prometheus is not installed in the Kubernetes cluster.  
+
+| Name                                     | Description                                         | Severity | Window Size |
+| ---------------------------------------- | --------------------------------------------------- | -------- | ----------- |
+| Node CPU Rising (60)                     | Node CPU sustained pressure above 60%               | Warn     | PT5M        |
+| Node CPU High (80)                       | Node CPU usage above 80%                            | Severe   | PT5M        |
+| Node CPU Critical (95)                   | Node CPU usage above 95%                            | Critical | PT5M        |
+| Node Memory Rising (60)                  | Node memory sustained pressure above 60%            | Warn     | PT5M        |
+| Node Memory High (80)                    | Node memory usage above 80%                         | Severe   | PT5M        |
+| Node Memory Critical (95)                | Node memory usage above 95%                         | Critical | PT5M        |
+| Node Disk High (80)                      | Node disk usage above 80%                           | Severe   | PT5M        |
+| Container CPU High (Absolute NanoCores)  | Container CPU high usage (requires limits set)      | Severe   | PT5M        |
+| Container Memory High (Absolute Bytes)   | Container memory high usage (absolute threshold)    | Severe   | PT5M        |
+| Node Not Ready                           | Node is not in Ready state                          | Critical | PT5M        |
+| Pod CrashLoopBackOff                     | Pods in CrashLoopBackOff state                      | Critical | PT5M        |
+| Image Pull Failures                      | Image pull failures detected                        | Severe   | PT5M        |
+| OOM Killed Containers                    | Containers terminated due to OOM                    | Critical | PT5M        |
+| Pod Restart Rate High                    | High restart rate in last 5 minutes                 | Severe   | PT5M        |
+| Pods Pending                             | Pods stuck in Pending state                         | Warn     | PT5M        |
+
+> ⚠️ Legacy alerts are less precise and rely on fixed container thresholds (e.g. 800 mCPU) rather than percentage-based utilization of resource limits.
+
 ### Site Recovery
 Backup and site recovery are not configured for the AKS cluster. The deployment follows an ephemeral infrastructure model, where workloads can be recreated at any time, and all critical 
 data is stored in external managed services rather than within the cluster.
@@ -280,23 +313,42 @@ operational requirements.
 ### Diagnostic Settings
 Next, create the diagnostic settings for the Kubernetes (AKS) cluster.
 
-The diagnostic configuration includes `AllMetrics` for metric collection, with the time grain set to a 1-minute aggregation interval. This value can be adjusted if required. The diagnostic 
-logs configuration includes a comprehensive set of log categories emitted by Kubernetes. Refer to the JSON file used by the script for detailed configuration.  
+AKS Diagnostic Settings are used for Kubernetes control plane and platform-level logs such as API server, audit, scheduler, autoscaler, and controller manager logs. Diagnostic metrics 
+(`AllMetrics`) are intentionally disabled because Prometheus already handles metrics collection and alerting.
 
-You can retrieve the full list of supported metric and log categories for the AKS resource using the following command.
+> ⚠️ If Prometheus is not installed, enable `Microsoft-InsightsMetrics` and `AllMetrics`.
+
+You can retrieve the full list of supported metric and log categories for the Azure Kuberentes Cluster (AKS) resource using the following command.
 
 ```powershell
 az monitor diagnostic-settings categories list --resource $env:KUBERNETES_ID;
 ```
 
-Continue creating the load-balancer diagnostic settings. The configuration includes `AllMetrics` for metric collection, with the time grain set to a 1-minute aggregation interval. The logs
-configuration is limited to `LoadBalancerHealthEvent`. 
+Azure Load Balancer Diagnostic Settings are configured to collect `LoadBalancerHealthEvent` logs for backend probe failures and health status, with optional `AllMetrics` enabled using 
+a 1-minute aggregation interval for metric collection.
 
-You can retrieve the full list of supported metric and log categories for the load-balancer resource using the following command.
+You can retrieve the full list of supported metric and log categories for the Azure Load Balancer resource using the following command.
 
 ```powershell
 az monitor diagnostic-settings categories list --resource $env:LOAD_BALANCER_ID;
 ```
+
+Application Gateway for Containers (ALB) Diagnostic Settings are enabled to collect ingress access logs, providing visibility into HTTP requests, routing behavior, and response 
+outcomes at the cluster edge.
+
+You can retrieve the full list of supported metric and log categories for the Azure Application Load Balancer resource using the following command.
+
+```powershell
+az monitor diagnostic-settings categories list --resource $env:ALB_ID;
+```
+
+The following table provides an overview of log and metric coverage in Diagnostic Settings, outlining how observability responsibilities are distributed within the AKS architecture.
+
+| Layer               | Azure Service                                   | Responsibility                                                    |
+| ------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
+| AKS Control Plane   | AKS Diagnostic Settings                         | API server, audit, scheduler, autoscaler, and controller logs.    |
+| Azure Networking    | Azure Load Balancer Diagnostic Settings         | Load balancer health and probe events.                            |
+| Edge / Ingress      | ALB Diagnostic Settings                         | Application Gateway for Containers access and firewall logs.      |
 
 ### Network Rules
 The Kubernetes Cluster has no public access by default.
@@ -321,7 +373,7 @@ az aks updaate `
 Adds the default Azure Policy assignment to the cluster, enabling built-in compliance monitoring and governance enforcement. This provides visibility into configuration drift, 
 security posture, and best-practice adherence, while continuously evaluating the cluster against Azure Policy definitions and initiatives.  
 
-> 📖 Learn more about [Azure Policy](https://portal.azure.com/#view/Microsoft_Azure_Policy/PolicyMenuBlade.MenuView/~/Overview).
+> 📖 Learn more about **[Azure Policy](https://portal.azure.com/#view/Microsoft_Azure_Policy/PolicyMenuBlade.MenuView/~/Overview)**.
 
 ### Microsoft Defender
 Microsoft Defender for Containers is used to enhance security monitoring and threat detection for the AKS cluster. It integrates with the Log Analytics workspace created via 
@@ -332,15 +384,6 @@ The Defender configuration is minimal and primarily used to link the cluster to 
 resource ID and is required during setup.
 
 However, Microsoft Defender for AKS must still be explicitly enabled in the Azure Portal after deployment to fully activate security protections for the cluster.
-
-## Apps Namespace
-This step creates the default Kubernetes namespace used by all Nano applications and components. It provides a consistent isolation boundary and ensures Gateway API resources, 
-services, and supporting objects such as secrets and config maps are grouped together, reducing permission complexity and configuration overhead.  
-
-It is created during cluster bootstrap and is safe to reapply in CI/CD pipelines. All application resources should target this namespace unless a specific multi-namespace design 
-is explicitly required.  
-
-Execute the `namespace.ps1` script to create the Kubernetes namespace.  
 
 ## Image Pull Secret
 This step creates a Kubernetes image pull secret that allows the cluster to authenticate against the container registry and pull private images.  

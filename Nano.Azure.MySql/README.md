@@ -34,6 +34,12 @@ Start by registering the required Azure providers and creating the resource grou
 
 > ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
 
+Add the following GitHub organization variables.  
+
+| Secret                           | Type    | Description                                     |
+| -------------------------------- | ------- |------------------------------------------------ |
+| `AZURE_RESOURCE_GROUP_DATABASE`  | vars    | The Azure resource group of the SQL Database.   |
+
 ### MySQL Flexble Server
 Execute the next part of the `deploy.ps1` to create a managed flexible MySQL database server on Azure.  
 
@@ -72,16 +78,13 @@ az mysql flexible-server list-skus -l $env:AZURE_LOCATION -o table;
 
 You can also check out the official list of available SKUs on the **[MySQL Service Tiers](https://learn.microsoft.com/en-us/azure/mysql/flexible-server/concepts-service-tiers-storage)** page.
 
-> ⚠️ Make sure to store the _admin password_ returned during creation. It cannot be retrieved later from Azure.  
+> ⚠️ Make sure to store the information returned during creation. The _admin password_ for instance cannot be retrieved later.  
 
-Create the required secrets in GitHub for the MySQL server. These secrets will be used later to securely connect your applications to the database.  
+Create the required secrets in GitHub for the MySQL server. They will be used later to securely connect your applications to the database.  
 
-| Secret                                   | Type     | Description                                                                    |
-| ---------------------------------------- | -------- | ------------------------------------------------------------------------------ |
-| `DATA_PORT`                              | vars     | The MySQL port. The is a cross environment variable.                           |
-| `{{environment}}_DATA_HOST`              | Secret   | The MySQL host.                                                                |
-| `{{environment}}_DATA_ADMIN_USER `       | Secret   | The MySQL admin username, used when applying EF migrations during deployment.  |
-| `{{environment}}_DATA_ADMIN_PASSWORD `   | Secret   | The MySQL admin password, used when applying EF migrations during deployment.  |
+| Secret                                  | Type     | Description                                                                    |
+| --------------------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `{{environment}}_SQL_ADMIN_PASSWORD `   | Secret   | The MySQL admin password, used when applying EF migrations during deployment.  |
 
 The MySQL connection string has this format.  
 
@@ -134,6 +137,8 @@ To get the avaiable `group-id`, run the following command.
 ```powershell
 az network private-link-resource list --id $env:MYSQL_ID;
 ```
+
+> ⚠️ The private endpoint must be deployed in the same Azure region as the virtual network (VNet) it is associated with.
 
 Optionally, IP address whitelisting can be configured to allow access to the MySQL server. By default, access is fully restricted, and no external connections are permitted. The 
 Nano system does not depend on IP whitelisting for connectivity, and using it is generally discouraged as it can negatively impact the overall cloud security score. If IP 

@@ -1,5 +1,5 @@
 $env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "Sweden Central";
+$env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Storage";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_BACKUP = "Nano-Backup";
@@ -135,6 +135,7 @@ az network private-dns link vnet create `
     -e false;
 
 az network private-endpoint create `
+    -l $env:AZURE_LOCATION `
     --name $env:PRIVATE_ENDPOINT_NAME `
     --connection-name $env:PRIVATE_ENDPOINT_NAME-connection `
     --nic-name $env:PRIVATE_ENDPOINT_NAME-nic `
@@ -143,7 +144,7 @@ az network private-endpoint create `
     --subnet $env:SUBNET_ID `
     --private-connection-resource-id $env:STORAGE_ACCOUNT_ID;
 
- dns-zone-group create `
+az network private-endpoint dns-zone-group create `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:PRIVATE_ENDPOINT_NAME-dns-zone-group `
     --endpoint-name $env:PRIVATE_ENDPOINT_NAME `
@@ -154,12 +155,12 @@ az network private-endpoint create `
 $env:KUBERNETES_NAME = az aks list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES --query [0].name -o tsv;
 $env:KUBERNETES_ISSUER_URL = az aks list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES --query [0].['oidcIssuerProfile.issuerUrl'] -o tsv;
 $env:STORAGE_ACCOUNT_ID = az storage account show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
-$env:CLIENT_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:AZURE_FILE_IDENTITY --query clientId -o tsv;
-$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:AZURE_FILE_IDENTITY --query principalId -o tsv;
 
 az identity create `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:AZURE_FILE_IDENTITY;
+
+$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP -n $env:AZURE_FILE_IDENTITY --query principalId -o tsv;
 
 az role assignment create `
     --assignee-object-id $env:PRINCIPAL_ID `
@@ -167,6 +168,7 @@ az role assignment create `
     --role "Storage File Data SMB Share Contributor" `
     --scope $env:STORAGE_ACCOUNT_ID;
 
+$env:CLIENT_ID = az identity show -g $env:AZURE_RESOURCE_GROUP -n $env:AZURE_FILE_IDENTITY --query clientId -o tsv;
 $env:SERVICE_ACCOUNT_PATH = Join-Path $env:USERPROFILE serviceaccount.yaml;
 Get-Content .kubernetes/serviceaccount.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:SERVICE_ACCOUNT_PATH;
 
