@@ -4,7 +4,7 @@ $env:AZURE_RESOURCE_GROUP = "Nano-Delivery";
 $env:AZURE_RESOURCE_GROUP_ASSETS = "Nano-Delivery-Assets";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
-$env:APP_NAME = $env:ENVIRONMENT + "-delivery-platform";
+$env:APP_NAME = $env:ENVIRONMENT.ToLower() + "-delivery-platform";
 
 # Register Providers
 az provider register --namespace Microsoft.App
