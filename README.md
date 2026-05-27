@@ -14,6 +14,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**    
 &nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Dns](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Dns/README.md#nanoazuredns)**    
 &nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Delivery](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Delivery/README.md#nanoazuredelivery)**    
 &nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**    
 &nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Storage](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Storage/README.md#nanoazurestorage)**    
 &nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.MySql](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.MySql/README.md#nanoazuremysql)**    
