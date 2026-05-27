@@ -3,7 +3,7 @@ $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Delivery";
 $env:AZURE_RESOURCE_GROUP_ASSETS = "Nano-Delivery-Assets";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
-$env:AZURE_RESOURCE_GROUP_ASSETS = "Nano-Kubernetes-Assets";
+$env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
 $env:APP_NAME = $env:ENVIRONMENT + "-delivery-platform";
 
 # Register Providers
@@ -19,16 +19,16 @@ az group create `
 # Container App Environment
 $env:SUBNET_NAME = "aks-subnet-ci"; 
 $env:SUBNET_ADDRESS_PREFIXES = "10.232.0.0/24";
-$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
+$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].name -o tsv;
 
 az network vnet subnet create `
-    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS `
     -n $env:SUBNET_NAME `
     --vnet-name $env:VNET_NAME `
     --address-prefixes $env:SUBNET_ADDRESS_PREFIXES `
     --delegations "Microsoft.App/environments";
 
-$env:SUBNET_ID = az network vnet subnet show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:SUBNET_NAME --vnet-name $env:VNET_NAME --query id --output tsv;
+$env:SUBNET_ID = az network vnet subnet show -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS -n $env:SUBNET_NAME --vnet-name $env:VNET_NAME --query id --output tsv;
 $env:LOG_ANALYTICS_WORKSPACE_CUSTOMER_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].customerId -o tsv;
 $env:LOG_ANALYTICS_WORKSPACE_NAME = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].name -o tsv;
 $env:LOG_ANALYTICS_WORKSPACE_KEY = az monitor log-analytics workspace get-shareD-keys -g $env:AZURE_RESOURCE_GROUP_LOGS -n $env:LOG_ANALYTICS_WORKSPACE_NAME --query primarySharedKey -o tsv
