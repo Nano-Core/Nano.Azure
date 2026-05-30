@@ -57,6 +57,6 @@ This configuration ensures that all Nano alerts are routed through the `monitor-
 ## Dependencies
 Monitoring has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
 
-| Dependency                                                                                                           | Description                                                             | 
-| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**  | The is the foundation or prerequites of the Nano Azure infrastructure.  |
+| Dependency                                                                                                                   | Description                                                             | 
+| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
+| **[Nano.Azure.Account](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**  | The is the foundation or prerequites of the Nano Azure infrastructure.  |

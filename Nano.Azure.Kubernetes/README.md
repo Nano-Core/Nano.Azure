@@ -473,5 +473,4 @@ Kubernetes has the following dependencies that must be deployed or otherwise sat
 
 | Dependency                                                                                                                            | Description                                                             | 
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**                   | The is the foundation or prerequites of the Nano Azure infrastructure.  |
 | **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |

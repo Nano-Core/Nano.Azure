@@ -61,6 +61,6 @@ new one. Instead, add a new role assignment for the existing identity that grant
 ## Dependencies
 DNS has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
 
-| Dependency                                                                                                           | Description                                                             | 
-| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**  | The is the foundation or prerequites of the Nano Azure infrastructure.  |
+| Dependency                                                                                                                   | Description                                                             | 
+| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
+| **[Nano.Azure.Account](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**  | The is the foundation or prerequites of the Nano Azure infrastructure.  |
