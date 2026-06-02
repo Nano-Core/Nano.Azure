@@ -93,7 +93,7 @@ az role assignment create `
 $env:APPLICATION_LOAD_BALANCER_PATH = Join-Path $env:USERPROFILE "application-load-balancer.yaml";
 $env:KUBERNETES_NAMESPACE = "apps";
 $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
-$env:ALB_SUBNET_ID = az network vnet subnet show -n aks-subnet-alb -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
+$env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
 
 Get-Content .kubernetes/application-load-balancer.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:APPLICATION_LOAD_BALANCER_PATH;
 
@@ -103,6 +103,45 @@ az aks command invoke `
     --file $env:APPLICATION_LOAD_BALANCER_PATH `
     --command "kubectl apply -f application-load-balancer.yaml" `
     --output json | ConvertFrom-Json;
+
+# DNS Resolver
+$env:DNS_RESOLVER_NAME = $env:APP_NAME + "-dns-resolver";
+$env:SUBNET_DNS_RESOLVER_NAME = "aks-dns-resolver-subnet";
+$env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].id -o tsv;
+
+az extension add --name dns-resolver;
+
+az dns-resolver create `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n $env:DNS_RESOLVER_NAME `
+    -l $env:AZURE_LOCATION `
+    --id $env:VNET_ID;
+
+$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
+$env:SUBNET_ADDRESS_PREFIXES = "10.233.0.0/28";
+
+az network vnet subnet create `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n $env:SUBNET_DNS_RESOLVER_NAME `
+    --vnet-name $env:VNET_NAME `
+    --address-prefixes $env:SUBNET_ADDRESS_PREFIXES `
+    --delegations "Microsoft.Network/dnsResolvers";
+
+$env:DNS_RESOLVER_SUBNET_ID = az network vnet subnet show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:SUBNET_DNS_RESOLVER_NAME --vnet-name $env:VNET_NAME --query id -o tsv;
+
+az dns-resolver inbound-endpoint create `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -l $env:AZURE_LOCATION `
+    --name inbound `
+    --dns-resolver-name $env:DNS_RESOLVER_NAME `
+    --ip-configurations "[{private-ip-address:'',private-ip-allocation-method:'Dynamic',id:'$($env:DNS_RESOLVER_SUBNET_ID)'}]";
+
+$env:DNS_RESOLVER_PRIVATE_ID = az dns-resolver inbound-endpoint show -g $env:AZURE_RESOURCE_GROUP_ASSETS --dns-resolver-name $env:DNS_RESOLVER_NAME --name inbound --query ipConfigurations[0].privateIpAddress -o tsv;
+
+az network vnet update `
+    -g $env:AZURE_RESOURCE_GROUP_ASSETS `
+    -n $env:VNET_NAME `
+    --dns-servers $env:DNS_RESOLVER_PRIVATE_ID;
 
 # VPN Gateway
 $env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].id -o tsv;

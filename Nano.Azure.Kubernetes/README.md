@@ -14,6 +14,7 @@
   * **[Node Scaling](#node-scaling)**  
   * **[Network Policy](#network-policy)**  
   * **[Private API Server](#private-api-server)**  
+  * **[DNS Resolver](#dns-resolver)**  
   * **[VPN Gateway](#vpn-gateway)**  
   * **[System Nodepool](#system-nodepool)**  
   * **[GPU Nodepool](#gpu-Nodepool)**  
@@ -148,6 +149,17 @@ access to the Kubernetes control plane is restricted to the private network, eli
 without requiring a separate dedicated subnet, ensuring that all communication with the control plane remains private and accessible only through connected network resources.  
 
 This also means that interacting with the Kubernetes cluster using `kubectl` is restricted and requires a VPN connection to the Kubernetes virtual network. See [VPN Gateway](#vpn-gateway).
+
+### DNS Resolver
+The DNS Resolver setup provisions an Azure DNS Resolver within the virtual network and configures an inbound endpoint that is reachable from both VPN clients and resources running 
+inside the VNet. This enables consistent resolution of private DNS zones, such as those used by Azure Private Endpoints for services like Azure Databases and Storage Accounts, without 
+relying on manual DNS configuration or host-based overrides.
+
+Once configured, the VPN gateway distributes the resolver’s IP address to connected clients as their DNS server. This ensures that any `privatelink` hostname is automatically resolved 
+to its correct private IP address within the virtual network, allowing seamless connectivity to private Azure resources from local machines as well as from workloads running inside 
+Kubernetes or other compute environments in the same network.  
+
+> ⚠️ The DNS Resolver must be set before generating the VPN client profile, otherwise private DNS zones won’t be included and private endpoints won’t resolve from VPN-connected clients.
 
 ### VPN Gateway
 The VPN Gateway provides secure remote access to the Kubernetes virtual network, enabling private connectivity to cluster resources such as the AKS API server and internal services. It is 
