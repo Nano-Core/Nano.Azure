@@ -134,6 +134,7 @@ $env:PRIVATE_ENDPOINT_NAME = $env:APP_NAME + "-private-endpoint";
 $env:MYSQL_ID = az mysql flexible-server show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
 $env:VNET_ID = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].id -o tsv;
 $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].name -o tsv;
+$env:VNET_LOCATION = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].location -o tsv;
 $env:SUBNET_ID = az network vnet subnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query "[?name =='aks-subnet'].[id]" -o tsv;
 
 az network private-dns zone create `
@@ -148,7 +149,7 @@ az network private-dns link vnet create `
     -e false;
 
 az network private-endpoint create `
-    -l $env:AZURE_LOCATION `
+    -l $env:VNET_LOCATION `
     --name $env:PRIVATE_ENDPOINT_NAME `
     --connection-name $env:PRIVATE_ENDPOINT_NAME-connection `
     --nic-name $env:PRIVATE_ENDPOINT_NAME-nic `
