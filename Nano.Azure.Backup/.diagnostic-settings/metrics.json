@@ -1,0 +1,7 @@
+[
+  {
+    "category": "AllMetrics",
+    "enabled": true,
+    "timeGrain": "PT1M"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "alert": "KubeHpaMaxedOut",
+    "expression": "(kube_horizontalpodautoscaler_status_current_replicas == kube_horizontalpodautoscaler_spec_max_replicas) and (kube_horizontalpodautoscaler_status_desired_replicas >= kube_horizontalpodautoscaler_spec_max_replicas)",
+    "severity": 3,
+    "for": "PT10M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeHpaReplicasMismatch",
+    "expression": "kube_horizontalpodautoscaler_status_desired_replicas != kube_horizontalpodautoscaler_status_current_replicas",
+    "severity": 3,
+    "for": "PT10M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeDaemonSetNotScheduled",
+    "expression": "sum by (namespace, daemonset) (kube_daemonset_status_desired_number_scheduled - kube_daemonset_status_current_number_scheduled) > 0",
+    "severity": 3,
+    "for": "PT10M",
+    "enabled": true
+  },
+  {
+    "alert": "KubePodSchedulingPressure",
+    "expression": "sum by (namespace, pod) (kube_pod_status_phase{phase=\"Pending\"}) > 0",
+    "severity": 3,
+    "for": "PT10M",
+    "enabled": true
+  }
+]

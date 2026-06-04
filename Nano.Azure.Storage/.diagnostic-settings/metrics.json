@@ -1,0 +1,12 @@
+[
+  {
+    "category": "Capacity",
+    "enabled": true,
+    "timeGrain": "PT1M"
+  },
+  {
+    "category": "Transaction",
+    "enabled": true,
+    "timeGrain": "PT1M"
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "alert": "KubeNodeNotReady",
+    "expression": "kube_node_status_condition{condition=\"Ready\", status=\"false\"} == 1",
+    "severity": 1,
+    "for": "PT5M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeNodeUnreachable",
+    "expression": "kube_node_spec_taint{key=\"node.kubernetes.io/unreachable\"} == 1",
+    "severity": 2,
+    "for": "PT10M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeNodeReadinessFlapping",
+    "expression": "changes(kube_node_status_condition{condition=\"Ready\"}[15m]) > 2",
+    "severity": 3,
+    "for": "PT10M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeNodeMemoryPressure",
+    "expression": "kube_node_status_condition{condition=\"MemoryPressure\", status=\"true\"} == 1",
+    "severity": 2,
+    "for": "PT5M",
+    "enabled": true
+  },
+  {
+    "alert": "KubeNodeCPUPressure",
+    "expression": "1 - avg by (node) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) > 0.85",
+    "severity": 2,
+    "for": "PT5M",
+    "enabled": true
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "properties": {
+    "backupManagementType": "AzureStorage",
+    "workLoadType": "AzureFileShare",
+    "timeZone": "UTC",
+    "schedulePolicy": {
+      "schedulePolicyType": "SimpleSchedulePolicy",
+      "scheduleRunFrequency": "Daily",
+      "scheduleRunTimes": [
+        "2024-08-25T04:00:00Z"
+      ]
+    },
+    "retentionPolicy": {
+      "retentionPolicyType": "LongTermRetentionPolicy",
+      "dailySchedule": {
+        "retentionTimes": [
+          "2024-08-25T04:00:00Z"
+        ],
+        "retentionDuration": {
+          "count": 30,
+          "durationType": "Days"
+        }
+      }
+    }
+  }
+}

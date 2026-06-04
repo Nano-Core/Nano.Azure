@@ -1,0 +1,30 @@
+[
+  {
+    "category": "kube-apiserver",
+    "enabled": true
+  },
+  {
+    "category": "kube-audit",
+    "enabled": true
+  },
+  {
+    "category": "kube-audit-admin",
+    "enabled": true
+  },
+  {
+    "category": "kube-controller-manager",
+    "enabled": true
+  },
+  {
+    "category": "kube-scheduler",
+    "enabled": true
+  },
+  {
+    "category": "cluster-autoscaler",
+    "enabled": true
+  },
+  {
+    "category": "cloud-controller-manager",
+    "enabled": true
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "category": "Transaction",
+    "enabled": true,
+    "timeGrain": "PT1M"
+  },
+  {
+    "category": "SLI",
+    "enabled": true,
+    "timeGrain": "PT1M"
+  }
+]

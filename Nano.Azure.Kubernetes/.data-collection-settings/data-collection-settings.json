@@ -1,0 +1,14 @@
+{
+  "interval": "1m",
+  "namespaceFilteringMode": "Exclude",
+  "namespaces": [
+  ],
+  "enableContainerLogV2": true,
+  "streams": [
+    "Microsoft-ContainerLogV2",
+    "Microsoft-KubeEvents",
+    "Microsoft-KubePodInventory",
+    "Microsoft-KubeNodeInventory",
+    "Microsoft-KubePVInventory"
+  ]
+}
