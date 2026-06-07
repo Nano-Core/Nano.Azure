@@ -27,7 +27,7 @@ Create a storage account to host and provision Azure File Shares for Nano applic
 > 📖 Learn more about **[Azure Storage](https://learn.microsoft.com/azure/storage)**.
 
 #### Azure Diagram
-![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/1.svg)
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/test.svg)
 
 ## Registration
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
