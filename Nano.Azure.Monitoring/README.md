@@ -25,8 +25,10 @@ access control, allowing you to isolate monitoring data per application, workloa
 Create a shared Log Analytics workspace to centralize logs and diagnostics across all Nano resources, alongside an Azure Monitor workspace aligned with modern monitoring practices 
 and used for Prometheus-based metrics. An Azure Monitor Action Group is also provisioned to route and dispatch alerts from Azure resources.
 
-> 📖 Learn more about **[Azure Log Analytics Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview)**.
-> 📖 Learn more about **[Azure Monitor Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/overview)**.
+> 📖 Learn more about **[Azure Log Analytics Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview)**.  
+> 📖 Learn more about **[Azure Monitor Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/overview)**.  
+
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Monitoring.png)
 
 ## Registration
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.

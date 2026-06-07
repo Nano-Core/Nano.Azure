@@ -19,6 +19,8 @@ centralized observability.
 Finally, it creates an Azure Container Apps Environment configured for internal-only access and zone redundancy, providing a hardened and reliable execution layer for GitHub-based 
 CI/CD workloads.  
 
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Delivery.png)
+
 ## Registration
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
 

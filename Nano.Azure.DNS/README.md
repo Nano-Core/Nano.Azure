@@ -20,6 +20,8 @@ Azure identity and security services, Azure DNS ensures fast, resilient, and sec
 
 > 📖 Learn more about **[Azure DNS](https://learn.microsoft.com/en-us/azure/dns/dns-overview)**.
 
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Dns.png)
+
 ## Registration
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
 
