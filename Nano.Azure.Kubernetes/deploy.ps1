@@ -150,7 +150,7 @@ $env:VNET_GATEWAY_NAME = $env:APP_NAME + "-vnet-vpn-gateway";
 $env:VNET_GATEWAY_IP_NAME = $env:APP_NAME + "-vnet-vpn-gateway-ip";
 $env:VNET_GATEWAY_VPN_CLIENT_ADDRESS_POOL = "['172.16.201.0/24']";
 $env:VNET_GATEWAY_ADD_TENANT = "https://login.microsoftonline.com/" + $env:AZURE_TENANT_ID;
-$env:VNET_GATEWAY_ADD_AUDIENCE = "41b23e61-6c1e-4545-b367-cd054e0ed4b4";
+$env:VNET_GATEWAY_ADD_AUDIENCE = "c632b3df-fb67-4d84-bdcf-b95ad541b5c8";
 $env:VNET_GATEWAY_ADD_ISSUER = "https://sts.windows.net/" + $env:AZURE_TENANT_ID + "/";
 $env:SUBNET_ADDRESS_PREFIXES = "10.231.0.0/24";
 
