@@ -18,9 +18,10 @@ Azure DNS is a cloud-based Domain Name System service that provides reliable and
 records, supporting services such as domain resolution, subdomain delegation, and automated DNS record management. With built-in high availability, global redundancy, and integration with 
 Azure identity and security services, Azure DNS ensures fast, resilient, and secure name resolution for applications and infrastructure.  
 
-> 📖 Learn more about **[Azure DNS](https://learn.microsoft.com/en-us/azure/dns/dns-overview)**.
+#### Azure Architecture
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Dns.jpg)
 
-![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Dns.png)
+> 📖 Learn more about **[Azure DNS](https://learn.microsoft.com/en-us/azure/dns/dns-overview)**.
 
 ## Registration
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.

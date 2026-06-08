@@ -21,9 +21,10 @@ your data is protected and recoverable in the event of a failure or loss.
 
 Create a Backup Vault used for file share and database backups, as well as other backup-enabled resources.  
 
-> 📖 Learn more about **[Azure Backup](https://learn.microsoft.com/azure/backup)**.
+#### Azure Architecture
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Backup.jpg)
 
-![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Backup.png)
+> 📖 Learn more about **[Azure Backup](https://learn.microsoft.com/azure/backup)**.
 
 ## Registration
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
