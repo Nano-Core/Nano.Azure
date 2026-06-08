@@ -40,6 +40,9 @@ in the Nano infrastructure are.
 - Minimal operational overhead – reduce maintenance burden in production systems  
 - Composable architecture – services can be combined or used independently  
 
+#### Azure Architecture
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Azure.jpg)
+
 ## ⚙️ Required Tools
 Before continuing, make sure you have the following tools installed and configured.
 
