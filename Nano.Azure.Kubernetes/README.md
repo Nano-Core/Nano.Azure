@@ -76,12 +76,13 @@ az vm list-skus -l $env:AZURE_LOCATION --query "[?resourceType=='virtualMachines
 
 > ⚠️ For production-grade Azure Kubernetes Service (AKS) clusters, a minimum of three nodes is recommended, each with at least four vCPUs.
 
-Create the required secrets in GitHub for the Kubernetes cluster.    
+Create the required vars in GitHub for the Kubernetes cluster.    
 
 | Secret                                   | Type     | Description                                           |
 | ---------------------------------------- | -------- | ----------------------------------------------------- |
 | `AZURE_RESOURCE_GROUP_KUBERNETES`        | vars     | The Azure resource group of the Kubernetes cluster.   |
 | `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS` | vars     | The Azure resource group of the Kubernetes assets.    |
+| `KUBERNETES_NAMESPACE`                   | vars     | The Kubernetes namespace to use for all deployments.  |
 
 ### Apps Namespace
 This step creates the default Kubernetes namespace used by all Nano applications and components. It provides a consistent isolation boundary and ensures Gateway API resources, 
