@@ -27,8 +27,7 @@
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#m,icrosoft-defender)**  
   * **[Policy](#policy)**  
-* **[Image Pull Secret](#image-pull-secret)**  
-* **[Configure kubectl Access](#configure-kubectl-access)**  
+* **[Get `kubectl` Credentials](#get-kubectl-credentials)**  
 * **[Common `kubectl` Commands](#common-kubectl-commands)**
 * **[Dependencies](#dependencies)**  
 
@@ -55,6 +54,7 @@ Add the following GitHub organization variables.
 | ----------------------------------------- | ------- |------------------------------------------------------------------- |
 | `AZURE_RESOURCE_GROUP_KUBERNETES`         | vars    | The Azure resource group of the Kubernetes cluster (AKS).          |
 | `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS`  | vars    | The Azure resource group of the Kubernetes cluster (AKS) Asserts.  |
+| `KUBERNETES_NAMESPACE`                    | vars     | The Kubernetes namespace to use for all deployments.              |
 
 ### Kubernetes Cluster
 Execute the next part of the `deploy.ps1` to create a managed Kubernetes cluster (AKS) on Azure.  
@@ -75,14 +75,6 @@ az vm list-skus -l $env:AZURE_LOCATION --query "[?resourceType=='virtualMachines
 ```
 
 > ⚠️ For production-grade Azure Kubernetes Service (AKS) clusters, a minimum of three nodes is recommended, each with at least four vCPUs.
-
-Create the required vars in GitHub for the Kubernetes cluster.    
-
-| Secret                                   | Type     | Description                                           |
-| ---------------------------------------- | -------- | ----------------------------------------------------- |
-| `AZURE_RESOURCE_GROUP_KUBERNETES`        | vars     | The Azure resource group of the Kubernetes cluster.   |
-| `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS` | vars     | The Azure resource group of the Kubernetes assets.    |
-| `KUBERNETES_NAMESPACE`                   | vars     | The Kubernetes namespace to use for all deployments.  |
 
 ### Apps Namespace
 This step creates the default Kubernetes namespace used by all Nano applications and components. It provides a consistent isolation boundary and ensures Gateway API resources, 
@@ -401,16 +393,7 @@ resource ID and is required during setup.
 
 However, Microsoft Defender for AKS must still be explicitly enabled in the Azure Portal after deployment to fully activate security protections for the cluster.
 
-## Image Pull Secret
-This step creates a Kubernetes image pull secret that allows the cluster to authenticate against the container registry and pull private images.  
-
-Execute the `image-pull-secret.ps1` script to create the required Docker registry secret in the cluster. The script provisions a `docker-registry` type secret that Kubernetes uses 
-when pulling container images. This secret is referenced by workloads that require access to images stored in the container registry.  
-
-📖 Learn how to configure access to **[GitHub Container Registry](https://github.com/Nano-Core/Nano.GitHub/tree/master/Nano.GitHub.ContainerRegistry)** to obtain the credentials needed to 
-create a Kubernetes image-pull secret for pulling private images during GitHub Actions deployments.
-
-## Configure kubectl Access
+## Get kubectl Credentials
 Once the cluster has been registered, retrieve the credentials using the following command.  
 
 ```powershell
