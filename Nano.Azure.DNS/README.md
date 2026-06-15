@@ -8,6 +8,7 @@
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
   * **[DNS Zone](#dns-zone)**  
+  * **[DNSSEC](#dnssec)**  
   * **[Managed Identity (Kubernetes)](#managed-identity-kubernetes)**  
   * **[External DNS Registrar Delegation](#external-dns-registrar-delegation)** 
 * **[Multiple DNS Zone](#multiple-dns-zone)**  
@@ -36,6 +37,9 @@ Add the resource group name as GitHub organization variables.
 
 ### DNS Zone
 Creates the Azure DNS zone for the application domain, which will host all DNS records for the delegated subdomain and enable cert-manager DNS-01 validation.  
+
+### DNSSEC
+Is enabled for the DNS zone.
 
 ### Managed Identity (Kubernetes)
 Creates a Managed Identity in Azure and assigns it the DNS Zone Contributor role on the DNS zone, allowing it to manage DNS records required for automated DNS-based operations such as domain 
