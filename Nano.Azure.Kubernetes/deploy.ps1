@@ -257,7 +257,7 @@ az aks maintenanceconfiguration add `
     --duration 4;
 
 # Monitoring (Container Insights)
-$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 
 az aks enable-addons `
     -g $env:AZURE_RESOURCE_GROUP `
@@ -271,7 +271,7 @@ az extension add -n amg;
 az config set extension.dynamic_install_allow_preview=true;
 
 $env:APP_NAME_GRAFANA = "grafana-" + (Get-Random -Maximum 999999).ToString("D6");
-$env:MONITOR_WORKSPACE_ID = az monitor account list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:MONITOR_WORKSPACE_ID = az monitor account list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 
 $env:GRAFANA_ID = az grafana create `
     -g $env:AZURE_RESOURCE_GROUP `
@@ -289,7 +289,7 @@ az aks update `
 # Alerts (Prometheus)
 az extension add -n alertsmanagement;
 
-$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 
 az alerts-management prometheus-rule-group create `
   --name 'Prometheus Alerts - Resource Saturation' `
@@ -339,7 +339,7 @@ az alerts-management prometheus-rule-group create `
 az extension add --name scheduled-query;
 
 $env:KUBERNETES_ID = az aks show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
-$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 
 az monitor metrics alert create `
   --name "Node CPU Rising (60)" `
@@ -522,7 +522,7 @@ az aks update `
     --image-cleaner-interval-hours 72;
 
 # Diagnostic Settings
-$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 $env:KUBERNETES_ID = az aks show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
 $env:DIAGNOSTIC_SETTINGS_NAME = "diagnostics-" + $env:APP_NAME;
 
