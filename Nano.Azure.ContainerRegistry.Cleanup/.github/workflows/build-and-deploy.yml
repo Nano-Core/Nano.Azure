@@ -1,0 +1,63 @@
+name: Cleanup
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  push:
+    branches:
+      - master 
+env:
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }} 
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }} 
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }} 
+  AZURE_GROUP_DELIVERY: ${{ vars.AZURE_RESOURCE_GROUP_DELIVERY }} 
+  AZURE_SUBSCRIPTION_ID: ${{ github.ref == 'refs/heads/master' && secrets.PRODUCTION_AZURE_SUBSCRIPTION_ID || secrets.STAGING_AZURE_SUBSCRIPTION_ID }}
+  IMAGE_HISTORY_COUNT: 15
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - environment: Staging
+          - environment: Production
+    concurrency:
+      group: ${{ github.repository }}-${{ matrix.environment }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Azure Login
+        shell: pwsh
+        run: |
+          az login --service-principal -u $env:AZURE_CLIENT_ID -p $env:AZURE_CLIENT_SECRET --tenant $env:AZURE_TENANT_ID -o none;
+
+          $subscription = if ("${{ matrix.environment }}" -eq "Staging") { "${{ secrets.STAGING_AZURE_SUBSCRIPTION_ID }}" } else { "${{ secrets.PRODUCTION_AZURE_SUBSCRIPTION_ID }}" };
+          az account set -s $subscription -o none;
+
+      - name: Azure Container Registry (ACR) Cleanup
+        shell: pwsh
+        run: |
+          $env:ACR_NAME = az acr list -g $env:AZURE_GROUP_DELIVERY --query [0].name -o tsv;
+
+          $repositories = az acr repository list -n $env:ACR_NAME -o json | ConvertFrom-Json;
+
+          foreach ($repo in $repositories) 
+          {
+              $tags = az acr repository show-tags `
+                  --name $env:ACR_NAME `
+                  --repository $repo `
+                  --orderby time_desc `
+                  --output json | ConvertFrom-Json;
+
+              $tagsToDelete = $tags | Select-Object -Skip ([int]$env:IMAGE_HISTORY_COUNT);
+
+              foreach ($tag in $tagsToDelete) 
+              {
+                  echo "Deleting $repo`:$tag"
+
+                  az acr repository delete `
+                      --name $env:ACR_NAME `
+                      --image "$repo`:$tag" `
+                      --yes;
+              }
+          }
