@@ -7,7 +7,7 @@
 ## Table of Contents
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
-  * **[Kubernete VNet Integration](#kubernete-vnet-integration)**  
+  * **[Kubernetes VNet Integration](#kubernetes-vnet-integration)**  
   * **[Log Analytics](#log-analytics)**  
 * **[Dependencies](#dependencies)**  
 
@@ -33,7 +33,9 @@ Add the resource group name as GitHub organization variables.
 | -------------------------------- | ------- |------------------------------------ |
 | `AZURE_RESOURCE_GROUP_DELIVERY`  | vars    | The Delivery Azure resource group.  |
 
-### Kubernete VNet Integration
+Continue with the `deploy.ps1` script.
+
+### Kubernetes VNet Integration
 The Azure Container Apps Environment is deployed into a dedicated subnet within an existing Virtual Network. This is required when the underlying Kubernetes cluster (AKS) is private 
 and not publicly accessible. By delegating a dedicated subnet to Container Apps, we ensure secure network-level isolation and enable controlled communication between the runner 
 infrastructure and the private AKS cluster.  
