@@ -4,6 +4,7 @@ $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_ASSETS = "Nano-Kubernetes-Assets";
+$env:AZURE_RESOURCE_GROUP_DELIVERY = "Nano-Delivery";
 $env:KUBERNETES_VERSION = "1.35.0";
 $env:KUBERNETES_TIER = "standard";
 $env:KUBERNETES_NODEPOOL_NAME = "default";
@@ -563,8 +564,19 @@ az aks update `
     --enable-defender `
     --defender-config=$env:DEFENDER_CONFIG_FILE_PATH;
 
-# Policy (Optional)
+# Policies
 az aks enable-addons `
     -n $env:APP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `
     --addons azure-policy;
+
+$env:SUBSCRIPTION_ID = "";
+$env:ACR_HOST = az acr list -g $env:AZURE_RESOURCE_GROUP_DELIVERY --query "[0].loginServer" -o tsv;
+
+$acrHostEscaped = $env:ACR_HOST -replace '\.', '\.'
+$params = "{`"allowedContainerImagesInKubernetesClusterRegex`":{`"value`":`"^($acrHostEscaped|docker\.io|registry-1\.docker\.io|index\.docker\.io|quay\.io)/.+`"},`"allowedContainerImagesInKubernetesClusterEffect`":{`"value`":`"deny`"}}"
+
+az policy assignment update `
+    -n SecurityCenterBuiltIn `
+    --scope "/subscriptions/$env:SUBSCRIPTION_ID" `
+    --params $params;

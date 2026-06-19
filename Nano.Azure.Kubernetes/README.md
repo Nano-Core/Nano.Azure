@@ -26,7 +26,7 @@
   * **[Diagnostic Settings](#diagnostic-settings)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#m,icrosoft-defender)**  
-  * **[Policy](#policy)**  
+  * **[Policies](#policies)**  
 * **[Get `kubectl` Credentials](#get-kubectl-credentials)**  
 * **[Common `kubectl` Commands](#common-kubectl-commands)**
 * **[Dependencies](#dependencies)**  
@@ -377,12 +377,6 @@ az aks updaate `
 
 > ⚠️ Whitelisting IP addresses can reduce the overall security posture and negatively impact the security score.  
 
-### Policy
-Adds the default Azure Policy assignment to the cluster, enabling built-in compliance monitoring and governance enforcement. This provides visibility into configuration drift, 
-security posture, and best-practice adherence, while continuously evaluating the cluster against Azure Policy definitions and initiatives.  
-
-> 📖 Learn more about **[Azure Policy](https://portal.azure.com/#view/Microsoft_Azure_Policy/PolicyMenuBlade.MenuView/~/Overview)**.
-
 ### Microsoft Defender
 Microsoft Defender for Containers is used to enhance security monitoring and threat detection for the AKS cluster. It integrates with the Log Analytics workspace created via 
 **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)** to centralize security telemetry and enable 
@@ -392,6 +386,24 @@ The Defender configuration is minimal and primarily used to link the cluster to 
 resource ID and is required during setup.
 
 However, Microsoft Defender for AKS must still be explicitly enabled in the Azure Portal after deployment to fully activate security protections for the cluster.
+
+### Policies
+Adds the default Azure Policy assignment to the cluster, enabling built-in compliance monitoring and governance enforcement. This provides visibility into configuration drift, 
+security posture, and best-practice adherence, while continuously evaluating the cluster against Azure Policy definitions and initiatives.  
+
+> 📖 Learn more about **[Azure Policy](https://portal.azure.com/#view/Microsoft_Azure_Policy/PolicyMenuBlade.MenuView/~/Overview)**.
+
+Installs the Gatekeeper/OPA addon on the AKS cluster itself, which is the enforcement engine that actually blocks the pods. Without it, the policy exists in Azure but nothing enforces 
+it on the cluster.
+
+To get the names of all policies, execute the following command.
+
+```powershell
+$env:SUBSCRIPTION_ID = "";
+$env:POLICY_DEFINTION_ID = az policy assignment show -n SecurityCenterBuiltIn --scope "/subscriptions/$env:SUBSCRIPTION_ID" --query policyDefinitionId -o tsv;
+
+az policy set-definition show --% -n $env:POLICY_DEFINTION_ID --query "keys(parameters)" -o tsv;
+```
 
 ## Get kubectl Credentials
 Once the cluster has been registered, retrieve the credentials using the following command.  
