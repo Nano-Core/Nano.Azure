@@ -14,7 +14,10 @@ env:
   IMAGE_HISTORY_COUNT: 15
 jobs:
   cleanup:
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - linux 
+      - ${{ github.ref == 'refs/heads/master' && 'Production' || 'Staging' }}
     strategy:
       matrix:
         include:
