@@ -45,7 +45,7 @@ imagePullSecrets:
 ```
 
 ## Network Rules
-The containe registry has public network access disabled by default.
+The container registry has public network access disabled by default.
 
 A Private Endpoint is created within the Kubernetes virtual network, enabling applications running in the cluster to securely access the Storage Account file shares over a private 
 connection.

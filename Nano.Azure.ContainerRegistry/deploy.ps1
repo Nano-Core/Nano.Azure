@@ -18,6 +18,7 @@ az acr create `
   -l $env:AZURE_LOCATION `
   --sku Preimium `
   --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
+  --public-network-enabled false `
   --admin-enabled false;
 
 # Attach ACR to AKS
