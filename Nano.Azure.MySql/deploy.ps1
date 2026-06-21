@@ -40,6 +40,7 @@ az mysql flexible-server create `
     --admin-password $env:MYSQL_ADMIN_PASSWORD `
     --public-access Disabled `
     --zone 1 `
+    --geo-redundant-backup Enabled
     --high-availability ZoneRedundant `
     --standby-zone 2 `
     -y;

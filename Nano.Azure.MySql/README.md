@@ -102,6 +102,11 @@ parameter in the create command.
 > ⚠️ MySQL database backups is not integrated with **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)**, 
 but has its own integrated configurable service.  
 
+Also, note that geo-redundant backups are not supported in all regions. If geo-redundant backup is not required, remove the `--geo-redundant-backup Enabled` parameter. Otherwise, ensure that 
+the selected region supports geo-redundant backups before deployment.
+
+For a list of supported regions, see: **[Supported Regions](https://learn.microsoft.com/en-us/azure/mysql/flexible-server/overview#azure-regions)**.
+
 ### IOPS Auto Scaling
 Furthermoe, IOPS is set to auto-grow, allowing flexible a scaled database server.  
 

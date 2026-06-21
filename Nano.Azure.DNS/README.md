@@ -39,7 +39,20 @@ Add the resource group name as GitHub organization variables.
 Creates the Azure DNS zone for the application domain, which will host all DNS records for the delegated subdomain and enable cert-manager DNS-01 validation.  
 
 ### DNSSEC
+DNSSEC is enabled for the DNS zone.
+
+After enabling DNSSEC, you may see a warning: _DNSSEC is not fully configured for the DNS zone.** This means the chain of trust is incomplete._  
+
+To complete setup, add the `DS` record at your domain registrar or parent zone using the DNSSEC details shown in the Azure Portal.  
+
+### DNSSEC
 Is enabled for the DNS zone.
+
+After enabling DNSSEC a warning will show: DNSSEC is not fully configured for the DNS zone. For this zone to complete the chain of trust, the DS record must be updated in the parent zone/registrar.
+
+To establish a DNSSEC chain of trust, you must add a DS record to the parent zone or registrar using the DNSSEC information obtained from your zone that you can see in Azure Portal.
+
+
 
 ### Managed Identity (Kubernetes)
 Creates a Managed Identity in Azure and assigns it the DNS Zone Contributor role on the DNS zone, allowing it to manage DNS records required for automated DNS-based operations such as domain 

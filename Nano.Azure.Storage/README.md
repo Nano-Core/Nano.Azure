@@ -9,6 +9,7 @@
 * **[Registration](#registration)**  
   * **[Storage Account](#storage-account)**  
   * **[Storage Security](#storage-security)**  
+  * **[Soft Delete](#soft-delete)**  
   * **[Backup Policy](#backup-policy)**  
   * **[Alerts](#alerts)**  
   * **[Diagnostic Settings](#diagnostic-settings)**  
@@ -84,6 +85,9 @@ az storage account keys list --account-name $env:APP_NAME --resource-group $env:
 | `{{environment}}_STORAGE_CREDENTIALS_SECRET` | Secrets  | The account key used to authenticate with the storage account.   |
 
 > ⚠️ The GitHub secrets are only needed when shared access keys are enabled on the storage account.
+
+### Soft Delete
+Enables soft delete for blobs, containers, and file shares with a 7-day retention period, allowing recovery of accidentally deleted data.  
 
 ### Backup Policy
 Continue the script by registering the backup policy for the storage account.  

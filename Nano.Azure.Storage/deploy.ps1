@@ -37,6 +37,21 @@ az storage account create `
     --identity-type SystemAssigned `
     --allow-shared-key-access false;
 
+# Soft Delete
+az storage account blob-service-properties update `
+    -n $env:APP_NAME `
+    -g $env:AZURE_RESOURCE_GROUP `
+    --enable-delete-retention true `
+    --delete-retention-days 7 `
+    --enable-container-delete-retention true `
+    --container-delete-retention-days 7;
+
+az storage account file-service-properties update `
+    -n $env:APP_NAME `
+    -g $env:AZURE_RESOURCE_GROUP `
+    --enable-delete-retention true `
+    --delete-retention-days 7;
+
 # Backup Policy
 $env:STORAGE_ACCOUNT_BACKUP_POLICY_NAME = $env:APP_NAME + "-fileshare-backup-policy";
 $env:BACKUP_VAULT_NAME = az backup vault list -g $env:AZURE_RESOURCE_GROUP_BACKUP --query [0].name -o tsv;

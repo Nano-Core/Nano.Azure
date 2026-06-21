@@ -1,8 +1,7 @@
-$env:ENVIRONMENT = "";
 $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Dns";
 $env:APP_NAME = "dns-zone"; 
-$env:DOMAIN_NAME = ""; 
+$env:DOMAIN_NAME = "live.nano-ignite.com"; 
 
 # Register Providers
 az provider register --namespace Microsoft.Network;
