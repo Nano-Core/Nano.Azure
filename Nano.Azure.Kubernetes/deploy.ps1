@@ -574,7 +574,7 @@ $env:SUBSCRIPTION_ID = "";
 $env:ACR_HOST = az acr list -g $env:AZURE_RESOURCE_GROUP_DELIVERY --query "[0].loginServer" -o tsv;
 
 $acrHostEscaped = $env:ACR_HOST -replace '\.', '\.'
-$params = "{`"allowedContainerImagesInKubernetesClusterRegex`":{`"value`":`"^($acrHostEscaped|docker\.io|registry-1\.docker\.io|index\.docker\.io|quay\.io)/.+`"},`"allowedContainerImagesInKubernetesClusterEffect`":{`"value`":`"deny`"}}"
+$params = "{`"allowedContainerImagesInKubernetesClusterRegex`":{`"value`":`"^($acrHostEscaped|docker\.io|registry-1\.docker\.io|index\.docker\.io|quay\.io|ghcr\.io)/.+`"},`"allowedContainerImagesInKubernetesClusterEffect`":{`"value`":`"deny`"}}"
 
 az policy assignment update `
     -n SecurityCenterBuiltIn `
