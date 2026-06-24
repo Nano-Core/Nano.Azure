@@ -400,9 +400,9 @@ To get the names of all policies, execute the following command.
 
 ```powershell
 $env:SUBSCRIPTION_ID = "";
-$env:POLICY_DEFINTION_ID = az policy assignment show -n SecurityCenterBuiltIn --scope "/subscriptions/$env:SUBSCRIPTION_ID" --query policyDefinitionId -o tsv;
+$env:POLICY_DEFINTION_ID = (az policy assignment show -n SecurityCenterBuiltIn --scope "/subscriptions/$env:SUBSCRIPTION_ID" --query policyDefinitionId -o tsv).Split('/')[-1];
 
-az policy set-definition show --% -n $env:POLICY_DEFINTION_ID --query "keys(parameters)" -o tsv;
+az policy set-definition show -n $env:POLICY_DEFINTION_ID --query "parameters | keys(@)" -o tsv;
 ```
 
 ## Get kubectl Credentials
