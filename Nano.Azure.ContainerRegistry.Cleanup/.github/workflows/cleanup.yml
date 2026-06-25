@@ -4,20 +4,20 @@ on:
     - cron: "0 0 * * *"
   push:
     branches:
-      - master 
+      - main 
 env:
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }} 
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }} 
   AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }} 
   AZURE_GROUP_DELIVERY: ${{ vars.AZURE_RESOURCE_GROUP_DELIVERY }} 
-  AZURE_SUBSCRIPTION_ID: ${{ github.ref == 'refs/heads/master' && secrets.PRODUCTION_AZURE_SUBSCRIPTION_ID || secrets.STAGING_AZURE_SUBSCRIPTION_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ github.ref == 'refs/heads/main' && secrets.PRODUCTION_AZURE_SUBSCRIPTION_ID || secrets.STAGING_AZURE_SUBSCRIPTION_ID }}
   IMAGE_HISTORY_COUNT: 15
 jobs:
   cleanup:
     runs-on:
       - self-hosted
       - linux 
-      - ${{ github.ref == 'refs/heads/master' && 'Production' || 'Staging' }}
+      - ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }}
     strategy:
       matrix:
         include:

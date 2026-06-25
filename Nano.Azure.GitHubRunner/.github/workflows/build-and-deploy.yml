@@ -2,10 +2,10 @@ name: Build and Deploy
 on:
   pull_request:
     branches:
-      - master 
+      - main 
   push:
     branches:
-      - master 
+      - main 
 env:
   APP_NAME: github-runner
   VERSION: '${{ vars.VERSION }}.${{ github.run_number }}.${{ github.run_attempt }}'
@@ -14,14 +14,14 @@ env:
   AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }} 
   AZURE_GROUP_KUBERNETES: ${{ vars.AZURE_RESOURCE_GROUP_KUBERNETES }} 
   AZURE_GROUP_DELIVERY: ${{ vars.AZURE_RESOURCE_GROUP_DELIVERY }} 
-  AZURE_SUBSCRIPTION_ID: ${{ github.ref == 'refs/heads/master' && secrets.PRODUCTION_AZURE_SUBSCRIPTION_ID || secrets.STAGING_AZURE_SUBSCRIPTION_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ github.ref == 'refs/heads/main' && secrets.PRODUCTION_AZURE_SUBSCRIPTION_ID || secrets.STAGING_AZURE_SUBSCRIPTION_ID }}
   GITHUB_RUNNER_CONTAINER_IMAGE: ghcr.io/nano-core/nano-github-runner
   GITHUB_RUNNER_CONTAINER_IMAGE_TAG: latest
   GITHUB_RUNNER_OWNER: ${{ github.repository_owner }}
   GITHUB_RUNNER_APP_ID: ${{ secrets.GITHUBRUNNER_APP_ID }}
   GITHUB_RUNNER_INSTALLATION_ID: ${{ secrets.GITHUBRUNNER_INSTALLATION_ID }}
   GITHUB_RUNNER_PRIVATE_KEY: ${{ secrets.GITHUBRUNNER_PRIVATE_KEY }}
-  GITHUB_RUNNER_ENV_LABEL: ${{ github.ref == 'refs/heads/master' && 'Production' || 'Staging' }}
+  GITHUB_RUNNER_ENV_LABEL: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Staging' }}
   GITHUB_RUNNER_REPLICA_TIMEOUT: 600
   GITHUB_RUNNER_REPLICA_RETRY_LIMIT: 1
   GITHUB_RUNNER_MIN_EXECUTIONS: 0
@@ -107,7 +107,7 @@ jobs:
           }
 
       - name: GitHub Release
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ env.VERSION }}
