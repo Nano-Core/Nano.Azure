@@ -26,7 +26,7 @@
   * **[Diagnostic Settings](#diagnostic-settings)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#m,icrosoft-defender)**  
-  * **[Policies](#policies)**  
+  * **[Azure Policy](#azure-policy)**  
 * **[Get `kubectl` Credentials](#get-kubectl-credentials)**  
 * **[Common `kubectl` Commands](#common-kubectl-commands)**
 * **[Dependencies](#dependencies)**  
@@ -387,7 +387,7 @@ resource ID and is required during setup.
 
 However, Microsoft Defender for AKS must still be explicitly enabled in the Azure Portal after deployment to fully activate security protections for the cluster.
 
-### Policies
+### Azure Policy
 Adds the default Azure Policy assignment to the cluster, enabling built-in compliance monitoring and governance enforcement. This provides visibility into configuration drift, 
 security posture, and best-practice adherence, while continuously evaluating the cluster against Azure Policy definitions and initiatives.  
 
@@ -404,6 +404,13 @@ $env:POLICY_DEFINTION_ID = (az policy assignment show -n SecurityCenterBuiltIn -
 
 az policy set-definition show -n $env:POLICY_DEFINTION_ID --query "parameters | keys(@)" -o tsv;
 ```
+
+The following policies are configured on the cluster to enforce security boundaries at admission time.  
+
+Container image pulls are restricted to a set of whitelisted registries (the cluster's own ACR, docker.io, quay.io, and ghcr.io). Any pod referencing an unlisted registry is denied before it 
+runs, preventing malware from pulling images from unknown sources.  
+
+Exposed service ports are limited to `8080`. Any workload attempting to open a different port is denied, preventing malware from binding to arbitrary ports.  
 
 ## Get kubectl Credentials
 Once the cluster has been registered, retrieve the credentials using the following command.  

@@ -580,3 +580,8 @@ az policy assignment update `
     -n SecurityCenterBuiltIn `
     --scope "/subscriptions/$env:SUBSCRIPTION_ID" `
     --params $params;
+
+az policy assignment update `
+    -n SecurityCenterBuiltIn `
+    --scope "/subscriptions/$env:AZURE_SUBSCRIPTION_ID" `
+    --params "{`"allowedservicePortsInKubernetesClusterPorts`":{`"value`":[`"8080`"]},`"allowedservicePortsInKubernetesClusterEffect`":{`"value`":`"deny`"}}";
