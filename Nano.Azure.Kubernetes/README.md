@@ -25,7 +25,8 @@
   * **[Image Cleaner](#image-cleaner)**  
   * **[Diagnostic Settings](#diagnostic-settings)**  
   * **[Network Rules](#network-rules)**  
-  * **[Microsoft Defender](#m,icrosoft-defender)**  
+  * **[Firewall](#firewall)**  
+  * **[Microsoft Defender](#microsoft-defender)**  
   * **[Azure Policy](#azure-policy)**  
 * **[Get `kubectl` Credentials](#get-kubectl-credentials)**  
 * **[Common `kubectl` Commands](#common-kubectl-commands)**
@@ -376,6 +377,14 @@ az aks updaate `
 ```
 
 > ⚠️ Whitelisting IP addresses can reduce the overall security posture and negatively impact the security score.  
+
+### Firewall
+Azure Firewall has not been deployed due to its high baseline cost regardless of traffic, which is difficult to justify for this architecture.  
+
+The cluster is already well protected, the API server has no public endpoint, nodes carry no public IPs, and an approved registry policy controls what images can run.  
+
+The primary gaps without a firewall are egress control (a compromised pod can freely call external IPs) and east-west traffic between pods and internal VNET resources. These risks are mitigated 
+by Microsoft Defender for Containers, which provides runtime threat detection for suspicious pod behaviour at a fraction of the cost.  
 
 ### Microsoft Defender
 Microsoft Defender for Containers is used to enhance security monitoring and threat detection for the AKS cluster. It integrates with the Log Analytics workspace created via 
