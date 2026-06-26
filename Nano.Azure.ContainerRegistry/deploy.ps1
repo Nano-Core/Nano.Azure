@@ -19,6 +19,7 @@ az acr create `
   --sku Preimium `
   --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
   --public-network-enabled false `
+  --allow-trusted-services true `
   --admin-enabled false;
 
 # Attach ACR to AKS
