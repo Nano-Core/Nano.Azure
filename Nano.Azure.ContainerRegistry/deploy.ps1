@@ -20,6 +20,7 @@ az acr create `
   --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
   --public-network-enabled false `
   --allow-trusted-services true `
+  --default-action Deny `
   --admin-enabled false;
 
 # Attach ACR to AKS
