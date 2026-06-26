@@ -570,18 +570,17 @@ az aks enable-addons `
     -g $env:AZURE_RESOURCE_GROUP `
     --addons azure-policy;
 
-$env:SUBSCRIPTION_ID = "";
-$env:ACR_HOST = az acr list -g $env:AZURE_RESOURCE_GROUP_DELIVERY --query "[0].loginServer" -o tsv;
+$env:AZURE_SUBSCRIPTION_ID = "";
+$env:ACR_HOST = (az acr list -g $env:AZURE_RESOURCE_GROUP_DELIVERY --query "[0].loginServer" -o tsv)
 
-$acrHostEscaped = $env:ACR_HOST -replace '\.', '\.'
-$params = "{`"allowedContainerImagesInKubernetesClusterRegex`":{`"value`":`"^($acrHostEscaped|docker\.io|registry-1\.docker\.io|index\.docker\.io|quay\.io|ghcr\.io)/.+`"},`"allowedContainerImagesInKubernetesClusterEffect`":{`"value`":`"deny`"}}"
-
-az policy assignment update `
-    -n SecurityCenterBuiltIn `
-    --scope "/subscriptions/$env:SUBSCRIPTION_ID" `
-    --params $params;
+$params = @{
+    allowedContainerImagesInKubernetesClusterRegex = @{ value = "^($env:ACR_HOST|docker.io|registry-1.docker.io|index.docker.io|quay.io|ghcr.io)/.+" }
+    allowedContainerImagesInKubernetesClusterEffect = @{ value = "deny" }
+    allowedservicePortsInKubernetesClusterPorts = @{ value = @("8080") }
+    allowedservicePortsInKubernetesClusterEffect = @{ value = "deny" }
+} | ConvertTo-Json -Compress 
 
 az policy assignment update `
     -n SecurityCenterBuiltIn `
     --scope "/subscriptions/$env:AZURE_SUBSCRIPTION_ID" `
-    --params "{`"allowedservicePortsInKubernetesClusterPorts`":{`"value`":[`"8080`"]},`"allowedservicePortsInKubernetesClusterEffect`":{`"value`":`"deny`"}}";
+    --params $params;
