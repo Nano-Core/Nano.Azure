@@ -140,6 +140,24 @@ The AKS cluster is configured with the Azure CNI network plugin in overlay mode 
 with `--network-plugin-mode=overlay`, pods receive IPs from an overlay network instead of the underlying VNet. The `--network-policy azure` setting enforces Azure Network Policies, 
 allowing fine-grained control over traffic flow between pods and services to improve cluster security and isolation.  
 
+By default, no ingress or egress network policies are defined. Network policies can be applied at the namespace or individual deployment level, allowing fine-grained and more restrictive 
+traffic control. Below is a simple example of restricting ingress.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-ingress-to-namespace
+  namespace: %KUBERNETES_NAMESPACE%
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+```
+
 ### Private API Server
 The AKS cluster is configured to use a private API server by integrating the control plane with the existing virtual network. By enabling private cluster mode and API server VNet integration, 
 access to the Kubernetes control plane is restricted to the private network, eliminating any public endpoint exposure. The API server is hosted within the same virtual network infrastructure 
@@ -416,7 +434,7 @@ az policy set-definition show -n $env:POLICY_DEFINTION_ID --query "parameters | 
 
 The following policies are configured on the cluster to enforce security boundaries at admission time.  
 
-Container image pulls are restricted to a set of whitelisted registries (the cluster's own ACR, docker.io, quay.io, and ghcr.io). Any pod referencing an unlisted registry is denied before it 
+Container image pulls are restricted to a set of whitelisted registries (the cluster's own ACR, docker.io, mcr.microsoft.com, quay.io, and ghcr.io). Any pod referencing an unlisted registry is denied before it 
 runs, preventing malware from pulling images from unknown sources.  
 
 Exposed service ports are limited to `8080`. Any workload attempting to open a different port is denied, preventing malware from binding to arbitrary ports.  
