@@ -29,9 +29,6 @@ and configurations needed for Nano workloads and components.
 
 > 📖 Learn more about **[Nano GitHub Runner Image](https://github.com/Nano-Core/.githubRunnerImage)**
 
-The GitHub runner runs as the root user, as this is required to build and push Docker images. This does not pose a security concern because the runner executes in an isolated, private,
-and ephemeral build environment.  
-
 ### GitHub App Authentication
 Authentication is handled through a GitHub App, which provides secure, scoped access to the GitHub API without using personal tokens.
 

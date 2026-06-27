@@ -13,24 +13,33 @@ az provider register --namespace Microsoft.ContainerRegistry;
 $env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 
 az acr create `
-  -g $env:AZURE_RESOURCE_GROUP `
-  -n $env:APP_NAME `
-  -l $env:AZURE_LOCATION `
-  --sku Preimium `
-  --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
-  --public-network-enabled false `
-  --allow-trusted-services true `
-  --default-action Deny `
-  --admin-enabled false;
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:APP_NAME `
+    -l $env:AZURE_LOCATION `
+    --sku Preimium `
+    --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
+    --public-network-enabled false `
+    --allow-trusted-services true `
+    --default-action Deny `
+    --admin-enabled false `
+    --zone-redundancy Enabled;
+
+az resource update `
+    --namespace Microsoft.ContainerRegistry `
+    --resource-type registries `
+    --name $env:APP_NAME `
+    --resource-group $env:AZURE_GROUP_DELIVERY `
+    --api-version 2025-06-01-preview `
+    --set properties.networkRuleBypassAllowedForTasks=true;
 
 # Attach ACR to AKS
 $env:CONTAINER_REGISTRY_ID = az acr show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
 $env:KUBERNETES_NAME = az aks list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES --query [0].name -o tsv;
 
 az aks update `
-  -n $env:KUBERNETES_NAME `
-  -g $env:AZURE_RESOURCE_GROUP_KUBERNETES `
-  --attach-acr $env:CONTAINER_REGISTRY_ID;
+    -n $env:KUBERNETES_NAME `
+    -g $env:AZURE_RESOURCE_GROUP_KUBERNETES `
+    --attach-acr $env:CONTAINER_REGISTRY_ID;
 
 # Network Rules.
 $env:PRIVATE_LINK = "privatelink.azurecr.io";

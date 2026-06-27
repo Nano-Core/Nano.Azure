@@ -81,7 +81,7 @@ jobs:
                   --memory $env:GITHUB_RUNNER_MEMORY `
                   --polling-interval $env:GITHUB_RUNNER_POLLING_INTERVAL `
                   --secrets "github-app-key-secret=$env:GITHUB_RUNNER_PRIVATE_KEY" `
-                  --env-vars "APP_ID=$env:GITHUB_RUNNER_APP_ID" "APP_PRIVATE_KEY=secretref:github-app-key-secret" "APP_LOGIN=$env:GITHUB_RUNNER_OWNER" "RUNNER_SCOPE=org" "ORG_NAME=$env:GITHUB_RUNNER_OWNER" "RUN_AS_ROOT=true" "EPHEMERAL=true" "RUNNER_LABELS=$env:GITHUB_RUNNER_ENV_LABEL";
+                  --env-vars "APP_ID=$env:GITHUB_RUNNER_APP_ID" "APP_PRIVATE_KEY=secretref:github-app-key-secret" "APP_LOGIN=$env:GITHUB_RUNNER_OWNER" "RUNNER_SCOPE=org" "ORG_NAME=$env:GITHUB_RUNNER_OWNER" "RUN_AS_ROOT=false" "EPHEMERAL=true" "RUNNER_LABELS=$env:GITHUB_RUNNER_ENV_LABEL";
           } 
           else 
           {
@@ -103,7 +103,7 @@ jobs:
                   --cpu $env:GITHUB_RUNNER_CPU `
                   --memory $env:GITHUB_RUNNER_MEMORY `
                   --polling-interval $env:GITHUB_RUNNER_POLLING_INTERVAL `
-                  --set-env-vars "APP_ID=$env:GITHUB_RUNNER_APP_ID" "APP_PRIVATE_KEY=secretref:github-app-key-secret" "APP_LOGIN=$env:GITHUB_RUNNER_OWNER" "RUNNER_SCOPE=org" "ORG_NAME=$env:GITHUB_RUNNER_OWNER" "RUN_AS_ROOT=true" "EPHEMERAL=true" "RUNNER_LABELS=$env:GITHUB_RUNNER_ENV_LABEL";
+                  --set-env-vars "APP_ID=$env:GITHUB_RUNNER_APP_ID" "APP_PRIVATE_KEY=secretref:github-app-key-secret" "APP_LOGIN=$env:GITHUB_RUNNER_OWNER" "RUNNER_SCOPE=org" "ORG_NAME=$env:GITHUB_RUNNER_OWNER" "RUN_AS_ROOT=false" "EPHEMERAL=true" "RUNNER_LABELS=$env:GITHUB_RUNNER_ENV_LABEL";
           }
 
       - name: GitHub Release
