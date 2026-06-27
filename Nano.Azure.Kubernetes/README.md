@@ -439,6 +439,8 @@ runs, preventing malware from pulling images from unknown sources.
 
 Exposed service ports are limited to `8080`. Any workload attempting to open a different port is denied, preventing malware from binding to arbitrary ports.  
 
+> ⚠️ Updating the policy affects all assignments, so ensure changes are patched/merged carefully and do not unintentionally overwrite existing settings.
+
 ## Get kubectl Credentials
 Once the cluster has been registered, retrieve the credentials using the following command.  
 

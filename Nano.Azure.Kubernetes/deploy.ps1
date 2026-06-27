@@ -5,7 +5,7 @@ $env:AZURE_RESOURCE_GROUP = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_ASSETS = "Nano-Kubernetes-Assets";
 $env:AZURE_RESOURCE_GROUP_DELIVERY = "Nano-Delivery";
-$env:KUBERNETES_VERSION = "1.35.0";
+$env:KUBERNETES_VERSION = "1.36.0";
 $env:KUBERNETES_TIER = "standard";
 $env:KUBERNETES_NODEPOOL_NAME = "default";
 $env:KUBERNETES_NODEPOOL_LABEL_COMPUTE = "cpu"
@@ -250,12 +250,23 @@ az aks nodepool add `
 
 # Maintenance
 az aks maintenanceconfiguration add `
-    -g $env:AZURE_RESOURCE_GROUP `
-    --cluster-name $env:APP_NAME `
-    --name default `
-    --weekday Sunday `
-    --start-hour 4 `
-    --duration 4;
+  -g $env:AZURE_RESOURCE_GROUP `
+  --cluster-name $env:APP_NAME `
+  --name aksManagedNodeOSUpgradeSchedule `
+  --weekday Monday
+  --start-hour 4 `
+  --duration 4
+
+az aks maintenanceconfiguration add `
+  -g $env:AZURE_RESOURCE_GROUP `
+  --cluster-name $env:APP_NAME `
+  --name aksManagedAutoUpgradeSchedule `
+  --schedule-type Weekly `
+  --day-of-week Sunday `
+  --interval-weeks 1 `
+  --start-time 00:00 `
+  --duration 4 `
+  --utc-offset +00:00
 
 # Monitoring (Container Insights)
 $env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
