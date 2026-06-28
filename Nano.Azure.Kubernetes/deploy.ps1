@@ -76,7 +76,7 @@ az network vnet subnet create `
 
 $env:ALB_IDENTITY_NAME = az identity list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query "[?contains(name, 'applicationloadbalancer')].name" -o tsv
 $env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:ALB_IDENTITY_NAME --query principalId -o tsv;
-$env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id --output tsv;
+$env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
 $env:AZURE_RESOURCE_GROUP_ASSETS_ID = az group show -n $env:AZURE_RESOURCE_GROUP_ASSETS --query id;
 
 az role assignment create `

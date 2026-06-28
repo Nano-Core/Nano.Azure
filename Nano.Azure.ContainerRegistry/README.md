@@ -7,6 +7,7 @@
 ## Table of Contents
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
+  * **[Agent Pool](#agent-pool)**  
   * **[Attach Registry to Kubernetes](#attach-registry-to-kubernetes)**  
   * **[Network Rules](#network-rules)**  
 * **[Dependencies](#dependencies)**  
@@ -32,6 +33,13 @@ then authenticate to the container registry using Azure CLI.
 az login
 az acr login -n $env:ACR_NAME
 ```
+
+### Agent Pool
+
+
+if you are building often, you might want to increase the replica count to avoi delays in build queues on ACR
+
+
 
 ### Attach Registry to Kubernetes
 The container registry is integrated directly with the Kubernetes cluster using AKS–ACR integration. This means workloads can pull images from the registry without requiring any manual 

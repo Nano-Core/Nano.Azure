@@ -1,4 +1,4 @@
-$env:ENVIRONMENT = "";
+$env:ENVIRONMENT = "Production";
 $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Delivery";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
@@ -31,6 +31,27 @@ az resource update `
     --resource-group $env:AZURE_GROUP_DELIVERY `
     --api-version 2025-06-01-preview `
     --set properties.networkRuleBypassAllowedForTasks=true;
+
+# Agent Pool
+$env:SUBNET_ACR_NAME = "aks-subnet-acr"; 
+$env:SUBNET_ADDRESS_PREFIXES = "10.234.0.0/24";
+$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].name -o tsv;
+
+az network vnet subnet create `
+    -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS `
+    -n $env:SUBNET_ACR_NAME `
+    --vnet-name $env:VNET_NAME `
+    --address-prefixes $env:SUBNET_ADDRESS_PREFIXES `
+    --delegations Microsoft.ContainerInstance/containerGroups;
+
+$env:SUBNET_ACR_ID = az network vnet subnet show -n $env:SUBNET_ACR_NAME -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
+
+az acr agentpool create `
+    -n buildpool `
+    -r $env:APP_NAME `
+    --tier S1 `
+    --count 1 `
+    --subnet-id $env:SUBNET_ACR_ID;
 
 # Attach ACR to AKS
 $env:CONTAINER_REGISTRY_ID = az acr show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
