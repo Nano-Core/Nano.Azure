@@ -19,7 +19,7 @@ Kubernetes can securely pull images without requiring additional image pull secr
 This deployment creates the registry and configures the integration with the existing Kubernetes environment.
 
 #### Azure Architecture
-![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-ContainerRegistry.jpg)
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-ContainerRegistry.jpg)
 
 ## Registration
 Start by registering the required Azure resource providers by executing the first part of the `deploy.ps1` script.

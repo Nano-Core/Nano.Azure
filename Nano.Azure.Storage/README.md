@@ -26,7 +26,7 @@ redundancy, and advanced security, Azure Storage ensures that data is protected 
 Create a storage account to host and provision Azure File Shares for Nano applications.  
 
 #### Azure Architecture
-![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Storage.jpg)
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Storage.jpg)
 
 > 📖 Learn more about **[Azure Storage](https://learn.microsoft.com/azure/storage)**.
 

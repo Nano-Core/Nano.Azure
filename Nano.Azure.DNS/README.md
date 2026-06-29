@@ -20,7 +20,7 @@ records, supporting services such as domain resolution, subdomain delegation, an
 Azure identity and security services, Azure DNS ensures fast, resilient, and secure name resolution for applications and infrastructure.  
 
 #### Azure Architecture
-![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Dns.jpg)
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Dns.jpg)
 
 > 📖 Learn more about **[Azure DNS](https://learn.microsoft.com/en-us/azure/dns/dns-overview)**.
 
