@@ -35,11 +35,10 @@ az acr login -n $env:ACR_NAME
 ```
 
 ### Agent Pool
+ACR Agent Pools allow you to run container image builds on dedicated compute inside your own virtual network, rather than on Microsoft's shared public infrastructure. This is essential when your 
+Container Registry has public network access disabled and is only reachable via a private endpoint — without it, build agents use public IPs that are blocked by the registry's network rules.
 
-
-if you are building often, you might want to increase the replica count to avoi delays in build queues on ACR
-
-
+Currently, only a single replica is configured. If you perform frequent builds, consider increasing the replica count to reduce build queue times and improve build throughput in ACR.  
 
 ### Attach Registry to Kubernetes
 The container registry is integrated directly with the Kubernetes cluster using AKS–ACR integration. This means workloads can pull images from the registry without requiring any manual 

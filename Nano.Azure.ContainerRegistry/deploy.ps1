@@ -24,14 +24,6 @@ az acr create `
     --admin-enabled false `
     --zone-redundancy Enabled;
 
-az resource update `
-    --namespace Microsoft.ContainerRegistry `
-    --resource-type registries `
-    --name $env:APP_NAME `
-    --resource-group $env:AZURE_GROUP_DELIVERY `
-    --api-version 2025-06-01-preview `
-    --set properties.networkRuleBypassAllowedForTasks=true;
-
 # Agent Pool
 $env:SUBNET_ACR_NAME = "aks-subnet-acr"; 
 $env:SUBNET_ADDRESS_PREFIXES = "10.234.0.0/24";
