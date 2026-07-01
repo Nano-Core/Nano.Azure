@@ -34,7 +34,12 @@ az network vnet subnet create `
     -n $env:SUBNET_ACR_NAME `
     --vnet-name $env:VNET_NAME `
     --address-prefixes $env:SUBNET_ADDRESS_PREFIXES `
-    --delegations Microsoft.ContainerInstance/containerGroups;
+    --delegations Microsoft.ContainerInstance/containerGroups `
+    --service-endpoints `
+        Microsoft.AzureActiveDirectory `
+        Microsoft.EventHub `
+        Microsoft.KeyVault `
+        Microsoft.Storage;
 
 $env:SUBNET_ACR_ID = az network vnet subnet show -n $env:SUBNET_ACR_NAME -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
 
