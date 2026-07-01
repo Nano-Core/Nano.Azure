@@ -441,6 +441,8 @@ Exposed service ports are limited to `8080`. Any workload attempting to open a d
 
 > ⚠️ Updating the policy affects all assignments, so ensure changes are patched/merged carefully and do not unintentionally overwrite existing settings.
 
+> ⚠️ Be aware that both tenant-scoped and subscription-scoped Azure Policy assignments are applied.
+
 ## Get kubectl Credentials
 Once the cluster has been registered, retrieve the credentials using the following command.  
 
