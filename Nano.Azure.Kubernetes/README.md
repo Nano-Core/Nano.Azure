@@ -39,7 +39,7 @@ AKS allows for easy scaling of applications and ensures high availability, makin
 
 Create an Azure Kubernetes Service (AKS) cluster to orchestrate Nano infrastructure components and deploy applications.  
 
-#### Azure Architecture
+#### Azure Kubernetes Architecture
 ![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Kubernetes.jpg)
 
 > 📖 Learn more about **[Azure Kubernetes (AKS)](https://learn.microsoft.com/en-us/azure/aks)**.

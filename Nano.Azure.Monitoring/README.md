@@ -27,8 +27,8 @@ and used for Prometheus-based metrics. An Azure Monitor Action Group is also pro
 
 To access the centralized logging for all resources, navigate to **[Azure Monitor](https://portal.azure.com/#view/Microsoft_Azure_Monitoring/AzureMonitoringBrowseBlade/~/overview)**.
 
-#### Azure Architecture
-![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Monitoring.jpg)
+#### Azure Monitoring Architecture
+![Nano Azure Monitoring Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Monitoring.jpg)
 
 > 📖 Learn more about **[Azure Log Analytics Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview)**.  
 > 📖 Learn more about **[Azure Monitor Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/overview)**.  

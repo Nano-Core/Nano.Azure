@@ -27,8 +27,8 @@ support and wide range of tools make it a preferred choice for developers and bu
 
 Create a MySQL Flexible Server to host databases used by Nano applications.  
 
-#### Azure Architecture
-![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Database-MySql.jpg)
+#### Azure MySQL Architecture
+![Nano Azure MySQL Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Database-MySql.jpg)
 
 > 📖 Learn more about **[Azure MySql](https://learn.microsoft.com/azure/mysql)**.
 
