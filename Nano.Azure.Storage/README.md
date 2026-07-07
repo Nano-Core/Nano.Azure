@@ -63,6 +63,8 @@ az storage sku list --query "[?kind=='StorageV2' && contains(locations, '$env:AZ
 
 > ⚠️ Finding a compatible `--kind` and `--sku` combination for the selected region can sometimes be challenging due to SKU availability and regional support limitations.  
 
+In addition to the Azure storage account setup, the required Kubernetes `storageClass` resource is also created.  
+
 ### Storage Security
 The storage account is configured with public network access disabled (`--public-network-access Disabled`), ensuring that all access to storage services is restricted to private 
 network connectivity through approved virtual networks and private endpoints. This prevents exposure of the storage account to the public internet and strengthens the overall network 
@@ -157,11 +159,12 @@ az storage account network-rule add `
 ### Managed Identity (Kubernetes)
 When public network access is disabled on the storage account, Kubernetes requires a secure way to authenticate and access the Azure File Shares mounted into the application containers. 
 This configuration uses a managed identity together with workload identity federation, allowing pods in the cluster to access the storage account without relying on storage account keys 
-or connection strings. The script creates the managed identity, assigns the required Azure Files permissions, and links the Kubernetes service account to the identity through the 
-cluster’s OIDC issuer. This ensures secure, keyless access to the file shares while keeping authentication fully managed through Azure AD.  
+or connection strings. 
 
-In addition to the Azure identity setup, the required Kubernetes resources are also created, including a service account, and a storage class for Azure File Shares. These are applied to 
-the `apps` namespace, where Nano applications are also deployed.  
+Applications themselves are responsible for creating the managed identity, assigning the required Azure Files permissions, and linking the identity to a Kubernetes service account through 
+the cluster's OIDC issuer.  
+
+This ensures secure, keyless access to the file shares while keeping authentication fully managed through Azure AD.  
 
 ### Microsoft Defender
 After successful registration, enable Microsoft Defender either directly on the storage resource or via the Defender for Cloud overview in the Azure Portal.  
