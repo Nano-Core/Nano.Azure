@@ -22,3 +22,13 @@ az role assignment create `
     --assignee $env:APP_ID `
     --role "Resource Policy Contributor" `
     --scope "/subscriptions/$env:AZURE_SUBSCRIPTION_ID_PRODUCTION";
+
+az role assignment create `
+    --assignee $env:APP_ID `
+    --role "User Access Administrator" `
+    --scope "/subscriptions/$env:AZURE_SUBSCRIPTION_ID_STAGING";
+
+az role assignment create `
+    --assignee $env:APP_ID `
+    --role "User Access Administrator" `
+    --scope "/subscriptions/$env:AZURE_SUBSCRIPTION_ID_PRODUCTION";
