@@ -29,6 +29,7 @@ az storage account create `
     --default-action Deny `
     --https-only true `
     --enable-large-file-share `
+    --enable-smb-oauth true `
     --public-network-access Disabled `
     --allow-blob-public-access false `
     --min-tls-version TLS1_2 `
