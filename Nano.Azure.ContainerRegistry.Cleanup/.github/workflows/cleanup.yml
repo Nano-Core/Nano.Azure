@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main 
+  workflow_dispatch:
 env:
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }} 
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }} 
