@@ -40,6 +40,9 @@ Container Registry has public network access disabled and is only reachable via 
 
 Currently, only a single replica is configured. If you perform frequent builds, consider increasing the replica count to reduce build queue times and improve build throughput in ACR.  
 
+> ⚠️ **Known issue:** Creating an agent pool with an associated subnet currently fails unexpectedly, requiring public access to be enabled. The issue has been reported to Microsoft and is ongoing 
+investigation.
+
 ### Attach Registry to Kubernetes
 The container registry is integrated directly with the Kubernetes cluster using AKS–ACR integration. This means workloads can pull images from the registry without requiring any manual 
 authentication setup in Kubernetes manifests.  
