@@ -1,0 +1,11 @@
+{
+  "Name": "%STORAGE_ROLE_NAME%",
+  "Description": "Allows assigning Storage File Data SMB Managed Identity Admin to service principals only",
+  "Actions": [
+    "Microsoft.Authorization/roleAssignments/write",
+    "Microsoft.Authorization/roleAssignments/read",
+    "Microsoft.Authorization/roleDefinitions/read"
+  ],
+  "NotActions": [],
+  "AssignableScopes": [%ASSIGNABLE_SCOPES%]
+}

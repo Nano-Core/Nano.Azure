@@ -91,10 +91,10 @@ az role assignment create `
     --scope $env:ALB_SUBNET_ID `
     --role "Network Contributor";
 
-$env:APPLICATION_LOAD_BALANCER_PATH = Join-Path $env:USERPROFILE "application-load-balancer.yaml";
 $env:KUBERNETES_NAMESPACE = "apps";
 $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
 $env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
+$env:APPLICATION_LOAD_BALANCER_PATH = Join-Path $env:USERPROFILE "application-load-balancer.yaml";
 
 Get-Content .kubernetes/application-load-balancer.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:APPLICATION_LOAD_BALANCER_PATH;
 
