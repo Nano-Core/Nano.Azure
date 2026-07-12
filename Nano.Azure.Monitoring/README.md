@@ -38,6 +38,12 @@ Start by registering the required Azure providers and creating the resource grou
 
 > ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
 
+Add the resource group name as GitHub organization variables.  
+
+| Secret                      | Type    | Description                                             |
+| --------------------------- | ------- |-------------------------------------------------------- |
+| `AZURE_RESOURCE_GROUP_LOGS` | vars    | The Azure resource group of the monitoring components.  |
+
 ### Log Analytics Workspace
 Execute the next part of the `deploy.ps1` to create the log-analytics workspace.    
 
