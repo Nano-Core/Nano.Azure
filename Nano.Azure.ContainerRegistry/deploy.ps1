@@ -45,7 +45,7 @@ $env:SUBNET_ACR_ID = az network vnet subnet show -n $env:SUBNET_ACR_NAME -g $env
 az acr agentpool create `
     -n buildpool `
     -r $env:APP_NAME `
-    --tier S1 `
+    --tier S2 `
     --count 1 `
     --subnet-id $env:SUBNET_ACR_ID;
 

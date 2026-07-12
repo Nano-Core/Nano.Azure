@@ -41,6 +41,8 @@ Container Registry has public network access disabled and is only reachable via 
 By default, the `--tier` is set to the `S1` the smallest, and `--count` is configured to two replicas. If you perform frequent builds, consider increasing the replica count to reduce build queue 
 times and improve build throughput in ACR.  
 
+> ⚠️ If you see `WARNING: Waiting for an agent...` in the build logs, the agent pool does not have enough available agents. Increase the `--count` value to provision additional agents.  
+
 ### Attach Registry to Kubernetes
 The container registry is integrated directly with the Kubernetes cluster using AKS–ACR integration. This means workloads can pull images from the registry without requiring any manual 
 authentication setup in Kubernetes manifests.  
