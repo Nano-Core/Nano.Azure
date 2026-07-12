@@ -38,8 +38,8 @@ az acr login -n $env:ACR_NAME
 ACR Agent Pools allow you to run container image builds on dedicated compute inside your own virtual network, rather than on Microsoft's shared public infrastructure. This is essential when your 
 Container Registry has public network access disabled and is only reachable via a private endpoint — without it, build agents use public IPs that are blocked by the registry's network rules.
 
-By default, the `--tier` is set to the `S1` the smallest, and `--count` is configured to two replicas. If you perform frequent builds, consider increasing the replica count to reduce build queue 
-times and improve build throughput in ACR.  
+By default, `--tier` is set to `S2` and `--count` is configured with a single replica. If you run frequent builds, consider increasing the replica count to reduce build queue times and 
+improve build throughput in ACR.
 
 > ⚠️ If you see `WARNING: Waiting for an agent...` in the build logs, the agent pool does not have enough available agents. Increase the `--count` value to provision additional agents.  
 
