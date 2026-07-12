@@ -1,4 +1,4 @@
-$env:ENVIRONMENT = "Production";
+$env:ENVIRONMENT = "";
 $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Delivery";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
@@ -34,7 +34,6 @@ az network vnet subnet create `
     -n $env:SUBNET_ACR_NAME `
     --vnet-name $env:VNET_NAME `
     --address-prefixes $env:SUBNET_ADDRESS_PREFIXES `
-    --delegations Microsoft.ContainerInstance/containerGroups `
     --service-endpoints `
         Microsoft.AzureActiveDirectory `
         Microsoft.EventHub `
