@@ -9,6 +9,7 @@
 * **[Registration](#registration)**  
   * **[Log Analytics Workspace](#log-analytics-workspace)**  
   * **[Monitor Workspace](#monitor-workspace)**  
+  * **[Application Insights](#application-insights)**  
   * **[Monitor Action Group](#monitor-action-group)**  
 * **[Dependencies](#dependencies)**  
 
@@ -52,6 +53,15 @@ Proceed to create the Azure Monitor workspace, which serves as the modern, recom
 
 This will also create a managed resource group (`MA_nano-monitor-workspace...`) that contains the data collection rules and endpoints associated with the Azure Monitor workspace. 
 This resource group is system-managed, cannot be modified or moved, and should be left as is.
+
+### Application Insights
+Creates an Azure Application Insights resource for the application.
+
+It provides the foundation for monitoring application availability and enables optional availability checks for exposed APIs in the system. This helps verify that the application remains 
+reachable and operational, with results integrated into the centralized monitoring platform.  
+
+In addition, a Smart Detection alert is configured automatically. It continuously analyzes the application's telemetry to identify unusual behavior, performance degradation, or increases
+in failures, and notifies operators when potential issues are detected without requiring manually defined alert rules.
 
 ### Monitor Action Group
 Continue the script to create the Azure Monitor Action Group.  

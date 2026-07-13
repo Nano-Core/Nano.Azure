@@ -1,4 +1,4 @@
-$env:ENVIRONMENT = "";
+$env:ENVIRONMENT = "Production";
 $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Logs";
 $env:APP_NAME_LOG_ANALYTCS = "nano-log-analytics-workspace-" + $env:ENVIRONMENT.ToLower();
@@ -29,6 +29,18 @@ az monitor account create `
     -g $env:AZURE_RESOURCE_GROUP `
     -l $env:AZURE_LOCATION `
     -n $env:APP_NAME_MONITOR;
+
+# Application Insights
+$env:APP_NAME_INSIGTHS = "app-insights-" + $env:ENVIRONMENT.ToLower();;
+$env:WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP --query [0].id -o tsv;
+
+az monitor app-insights component create `
+    -a $env:APP_NAME_INSIGTHS `
+    -l $env:AZURE_LOCATION `
+    -g $env:AZURE_RESOURCE_GROUP `
+    --query-access Disabled `
+    --ingestion-access Disabled `
+    --workspace $env:WORKSPACE_ID;
 
 # Monitor Action Group
 az monitor action-group create  `
