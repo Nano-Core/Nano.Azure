@@ -78,5 +78,11 @@ To ge the values to set for the variables use this command.
 
 > 💡 If you later need to retrieve information about the created service principal, you can find it in **[Azure App Registrations](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)**.
 
+The service principal is assigned the `Contributor` and `Resource Policy Contributor` roles to provide the permissions required for infrastructure provisioning. In addition, several custom 
+`Restricted User Access Administrator` roles are assigned, allowing the service principal to provision managed identities for applications and grant them access to resources such as Azure 
+Storage, Azure SQL, Azure DNS, and other supported Azure services.
+
+> ⚠️ The permissions will trigger a Defender (low) finding: _Service Principals should not be assigned with administrative roles at the subscription and resource group level._
+
 ## Dependencies
 The repository has no dependencies and must be the first component created when setting up the Nano infrastructure. All other deployments depend on it.

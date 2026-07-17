@@ -9,6 +9,7 @@
 * **[Registration](#registration)**  
   * **[Log Analytics Workspace](#log-analytics-workspace)**  
   * **[Monitor Workspace](#monitor-workspace)**  
+  * **[Application Insights](#application-insights)**  
   * **[Monitor Action Group](#monitor-action-group)**  
 * **[Dependencies](#dependencies)**  
 
@@ -25,13 +26,24 @@ access control, allowing you to isolate monitoring data per application, workloa
 Create a shared Log Analytics workspace to centralize logs and diagnostics across all Nano resources, alongside an Azure Monitor workspace aligned with modern monitoring practices 
 and used for Prometheus-based metrics. An Azure Monitor Action Group is also provisioned to route and dispatch alerts from Azure resources.
 
-> 📖 Learn more about **[Azure Log Analytics Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview)**.
-> 📖 Learn more about **[Azure Monitor Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/overview)**.
+To access the centralized logging for all resources, navigate to **[Azure Monitor](https://portal.azure.com/#view/Microsoft_Azure_Monitoring/AzureMonitoringBrowseBlade/~/overview)**.
+
+#### Azure Monitoring Architecture
+![Nano Azure Monitoring Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Monitoring.jpg)
+
+> 📖 Learn more about **[Azure Log Analytics Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-workspace-overview)**.  
+> 📖 Learn more about **[Azure Monitor Workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/overview)**.  
 
 ## Registration
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
 
 > ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
+
+Add the resource group name as GitHub organization variables.  
+
+| Secret                      | Type    | Description                                             |
+| --------------------------- | ------- |-------------------------------------------------------- |
+| `AZURE_RESOURCE_GROUP_LOGS` | vars    | The Azure resource group of the monitoring components.  |
 
 ### Log Analytics Workspace
 Execute the next part of the `deploy.ps1` to create the log-analytics workspace.    
@@ -41,6 +53,15 @@ Proceed to create the Azure Monitor workspace, which serves as the modern, recom
 
 This will also create a managed resource group (`MA_nano-monitor-workspace...`) that contains the data collection rules and endpoints associated with the Azure Monitor workspace. 
 This resource group is system-managed, cannot be modified or moved, and should be left as is.
+
+### Application Insights
+Creates an Azure Application Insights resource for the application.
+
+It provides the foundation for monitoring application availability and enables optional availability checks for exposed APIs in the system. This helps verify that the application remains 
+reachable and operational, with results integrated into the centralized monitoring platform.  
+
+In addition, a Smart Detection alert is configured automatically. It continuously analyzes the application's telemetry to identify unusual behavior, performance degradation, or increases
+in failures, and notifies operators when potential issues are detected without requiring manually defined alert rules.
 
 ### Monitor Action Group
 Continue the script to create the Azure Monitor Action Group.  

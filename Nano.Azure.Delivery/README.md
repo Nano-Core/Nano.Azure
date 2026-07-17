@@ -7,7 +7,7 @@
 ## Table of Contents
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
-  * **[Kubernete VNet Integration](#kubernete-vnet-integration)**  
+  * **[Kubernetes VNet Integration](#kubernetes-vnet-integration)**  
   * **[Log Analytics](#log-analytics)**  
 * **[Dependencies](#dependencies)**  
 
@@ -18,6 +18,9 @@ centralized observability.
 
 Finally, it creates an Azure Container Apps Environment configured for internal-only access and zone redundancy, providing a hardened and reliable execution layer for GitHub-based 
 CI/CD workloads.  
+
+#### Azure Delivery Architecture
+![Nano Azure Delivery Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Delivery.jpg)
 
 ## Registration
 Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
@@ -30,7 +33,9 @@ Add the resource group name as GitHub organization variables.
 | -------------------------------- | ------- |------------------------------------ |
 | `AZURE_RESOURCE_GROUP_DELIVERY`  | vars    | The Delivery Azure resource group.  |
 
-### Kubernete VNet Integration
+Continue with the `deploy.ps1` script.
+
+### Kubernetes VNet Integration
 The Azure Container Apps Environment is deployed into a dedicated subnet within an existing Virtual Network. This is required when the underlying Kubernetes cluster (AKS) is private 
 and not publicly accessible. By delegating a dedicated subnet to Container Apps, we ensure secure network-level isolation and enable controlled communication between the runner 
 infrastructure and the private AKS cluster.  

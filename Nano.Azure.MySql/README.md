@@ -27,6 +27,9 @@ support and wide range of tools make it a preferred choice for developers and bu
 
 Create a MySQL Flexible Server to host databases used by Nano applications.  
 
+#### Azure MySQL Architecture
+![Nano Azure MySQL Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Database-MySql.jpg)
+
 > 📖 Learn more about **[Azure MySql](https://learn.microsoft.com/azure/mysql)**.
 
 ## Registration
@@ -98,6 +101,11 @@ parameter in the create command.
 
 > ⚠️ MySQL database backups is not integrated with **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)**, 
 but has its own integrated configurable service.  
+
+Also, note that geo-redundant backups are not supported in all regions. If geo-redundant backup is not required, remove the `--geo-redundant-backup Enabled` parameter. Otherwise, ensure that 
+the selected region supports geo-redundant backups before deployment.
+
+For a list of supported regions, see: **[Supported Regions](https://learn.microsoft.com/en-us/azure/mysql/flexible-server/overview#azure-regions)**.
 
 ### IOPS Auto Scaling
 Furthermoe, IOPS is set to auto-grow, allowing flexible a scaled database server.  

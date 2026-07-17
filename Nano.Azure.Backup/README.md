@@ -21,6 +21,9 @@ your data is protected and recoverable in the event of a failure or loss.
 
 Create a Backup Vault used for file share and database backups, as well as other backup-enabled resources.  
 
+#### Azure Backup Architecture
+![Nano Azure Backup](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Backup.jpg)
+
 > 📖 Learn more about **[Azure Backup](https://learn.microsoft.com/azure/backup)**.
 
 ## Registration

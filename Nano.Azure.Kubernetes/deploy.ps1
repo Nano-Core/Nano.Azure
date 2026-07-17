@@ -4,7 +4,8 @@ $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_ASSETS = "Nano-Kubernetes-Assets";
-$env:KUBERNETES_VERSION = "1.35.0";
+$env:AZURE_RESOURCE_GROUP_DELIVERY = "Nano-Delivery";
+$env:KUBERNETES_VERSION = "1.36.0";
 $env:KUBERNETES_TIER = "standard";
 $env:KUBERNETES_NODEPOOL_NAME = "default";
 $env:KUBERNETES_NODEPOOL_LABEL_COMPUTE = "cpu"
@@ -75,7 +76,7 @@ az network vnet subnet create `
 
 $env:ALB_IDENTITY_NAME = az identity list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query "[?contains(name, 'applicationloadbalancer')].name" -o tsv
 $env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:ALB_IDENTITY_NAME --query principalId -o tsv;
-$env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id --output tsv;
+$env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
 $env:AZURE_RESOURCE_GROUP_ASSETS_ID = az group show -n $env:AZURE_RESOURCE_GROUP_ASSETS --query id;
 
 az role assignment create `
@@ -90,10 +91,10 @@ az role assignment create `
     --scope $env:ALB_SUBNET_ID `
     --role "Network Contributor";
 
-$env:APPLICATION_LOAD_BALANCER_PATH = Join-Path $env:USERPROFILE "application-load-balancer.yaml";
 $env:KUBERNETES_NAMESPACE = "apps";
 $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
 $env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
+$env:APPLICATION_LOAD_BALANCER_PATH = Join-Path $env:USERPROFILE "application-load-balancer.yaml";
 
 Get-Content .kubernetes/application-load-balancer.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:APPLICATION_LOAD_BALANCER_PATH;
 
@@ -150,7 +151,7 @@ $env:VNET_GATEWAY_NAME = $env:APP_NAME + "-vnet-vpn-gateway";
 $env:VNET_GATEWAY_IP_NAME = $env:APP_NAME + "-vnet-vpn-gateway-ip";
 $env:VNET_GATEWAY_VPN_CLIENT_ADDRESS_POOL = "['172.16.201.0/24']";
 $env:VNET_GATEWAY_ADD_TENANT = "https://login.microsoftonline.com/" + $env:AZURE_TENANT_ID;
-$env:VNET_GATEWAY_ADD_AUDIENCE = "41b23e61-6c1e-4545-b367-cd054e0ed4b4";
+$env:VNET_GATEWAY_ADD_AUDIENCE = "c632b3df-fb67-4d84-bdcf-b95ad541b5c8";
 $env:VNET_GATEWAY_ADD_ISSUER = "https://sts.windows.net/" + $env:AZURE_TENANT_ID + "/";
 $env:SUBNET_ADDRESS_PREFIXES = "10.231.0.0/24";
 
@@ -249,15 +250,26 @@ az aks nodepool add `
 
 # Maintenance
 az aks maintenanceconfiguration add `
-    -g $env:AZURE_RESOURCE_GROUP `
-    --cluster-name $env:APP_NAME `
-    --name default `
-    --weekday Sunday `
-    --start-hour 4 `
-    --duration 4;
+  -g $env:AZURE_RESOURCE_GROUP `
+  --cluster-name $env:APP_NAME `
+  --name aksManagedNodeOSUpgradeSchedule `
+  --weekday Monday
+  --start-hour 4 `
+  --duration 4
+
+az aks maintenanceconfiguration add `
+  -g $env:AZURE_RESOURCE_GROUP `
+  --cluster-name $env:APP_NAME `
+  --name aksManagedAutoUpgradeSchedule `
+  --schedule-type Weekly `
+  --day-of-week Sunday `
+  --interval-weeks 1 `
+  --start-time 00:00 `
+  --duration 4 `
+  --utc-offset +00:00
 
 # Monitoring (Container Insights)
-$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 
 az aks enable-addons `
     -g $env:AZURE_RESOURCE_GROUP `
@@ -271,7 +283,7 @@ az extension add -n amg;
 az config set extension.dynamic_install_allow_preview=true;
 
 $env:APP_NAME_GRAFANA = "grafana-" + (Get-Random -Maximum 999999).ToString("D6");
-$env:MONITOR_WORKSPACE_ID = az monitor account list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:MONITOR_WORKSPACE_ID = az monitor account list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 
 $env:GRAFANA_ID = az grafana create `
     -g $env:AZURE_RESOURCE_GROUP `
@@ -289,7 +301,7 @@ az aks update `
 # Alerts (Prometheus)
 az extension add -n alertsmanagement;
 
-$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 
 az alerts-management prometheus-rule-group create `
   --name 'Prometheus Alerts - Resource Saturation' `
@@ -339,7 +351,7 @@ az alerts-management prometheus-rule-group create `
 az extension add --name scheduled-query;
 
 $env:KUBERNETES_ID = az aks show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
-$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:ACTION_GROUP = az monitor action-group list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 
 az monitor metrics alert create `
   --name "Node CPU Rising (60)" `
@@ -522,7 +534,7 @@ az aks update `
     --image-cleaner-interval-hours 72;
 
 # Diagnostic Settings
-$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].[id] -o tsv;
+$env:LOG_ANALYTICS_WORKSPACE_ID = az monitor log-analytics workspace list -g $env:AZURE_RESOURCE_GROUP_LOGS --query [0].id -o tsv;
 $env:KUBERNETES_ID = az aks show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_NAME --query id -o tsv;
 $env:DIAGNOSTIC_SETTINGS_NAME = "diagnostics-" + $env:APP_NAME;
 
@@ -563,8 +575,23 @@ az aks update `
     --enable-defender `
     --defender-config=$env:DEFENDER_CONFIG_FILE_PATH;
 
-# Policy (Optional)
+# Policies
 az aks enable-addons `
     -n $env:APP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `
     --addons azure-policy;
+
+$env:AZURE_SUBSCRIPTION_ID = "";
+$env:ACR_HOST = (az acr list -g $env:AZURE_RESOURCE_GROUP_DELIVERY --query "[0].loginServer" -o tsv)
+
+$params = @{
+    allowedContainerImagesInKubernetesClusterRegex = @{ value = "^($env:ACR_HOST|docker.io|registry-1.docker.io|index.docker.io|mcr.microsoft.com|quay.io|ghcr.io)/.+" }
+    allowedContainerImagesInKubernetesClusterEffect = @{ value = "deny" }
+    allowedservicePortsInKubernetesClusterPorts = @{ value = @("8080") }
+    allowedservicePortsInKubernetesClusterEffect = @{ value = "deny" }
+} | ConvertTo-Json -Compress 
+
+az policy assignment update `
+    -n SecurityCenterBuiltIn `
+    --scope "/subscriptions/$env:AZURE_SUBSCRIPTION_ID" `
+    --params $params;

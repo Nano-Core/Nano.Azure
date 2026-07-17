@@ -17,7 +17,7 @@ az group create `
     -l $env:AZURE_LOCATION;
 
 # Container App Environment
-$env:SUBNET_NAME = "aks-subnet-ci"; 
+$env:SUBNET_NAME = "aks-subnet-delivery"; 
 $env:SUBNET_ADDRESS_PREFIXES = "10.232.0.0/24";
 $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].name -o tsv;
 

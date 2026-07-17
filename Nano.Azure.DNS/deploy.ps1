@@ -1,8 +1,7 @@
-$env:ENVIRONMENT = "";
 $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Dns";
 $env:APP_NAME = "dns-zone"; 
-$env:DOMAIN_NAME = ""; 
+$env:DOMAIN_NAME = "live.nano-ignite.com"; 
 
 # Register Providers
 az provider register --namespace Microsoft.Network;
@@ -16,6 +15,11 @@ az group create `
 az network dns zone create `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:DOMAIN_NAME;
+
+# DNSSEC
+az network dns dnssec-config create `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -z $env:DOMAIN_NAME;
 
 # Managed Identity (Kubernetes)
 $env:APP_NAME_IDENTITY = $env:APP_NAME + "-identity";

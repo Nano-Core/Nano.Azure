@@ -9,6 +9,7 @@
 * **[Registration](#registration)**  
   * **[Storage Account](#storage-account)**  
   * **[Storage Security](#storage-security)**  
+  * **[Soft Delete](#soft-delete)**  
   * **[Backup Policy](#backup-policy)**  
   * **[Alerts](#alerts)**  
   * **[Diagnostic Settings](#diagnostic-settings)**  
@@ -23,6 +24,9 @@ as Azure Blob Storage for unstructured data, Azure File Storage for managed file
 redundancy, and advanced security, Azure Storage ensures that data is protected and accessible from anywhere.  
 
 Create a storage account to host and provision Azure File Shares for Nano applications.  
+
+#### Azure Storage Architecture
+![Nano Azure Storage Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Storage.jpg)
 
 > 📖 Learn more about **[Azure Storage](https://learn.microsoft.com/azure/storage)**.
 
@@ -59,6 +63,8 @@ az storage sku list --query "[?kind=='StorageV2' && contains(locations, '$env:AZ
 
 > ⚠️ Finding a compatible `--kind` and `--sku` combination for the selected region can sometimes be challenging due to SKU availability and regional support limitations.  
 
+In addition to the Azure storage account setup, the required Kubernetes `storageClass` resource is also created.  
+
 ### Storage Security
 The storage account is configured with public network access disabled (`--public-network-access Disabled`), ensuring that all access to storage services is restricted to private 
 network connectivity through approved virtual networks and private endpoints. This prevents exposure of the storage account to the public internet and strengthens the overall network 
@@ -81,6 +87,9 @@ az storage account keys list --account-name $env:APP_NAME --resource-group $env:
 | `{{environment}}_STORAGE_CREDENTIALS_SECRET` | Secrets  | The account key used to authenticate with the storage account.   |
 
 > ⚠️ The GitHub secrets are only needed when shared access keys are enabled on the storage account.
+
+### Soft Delete
+Enables soft delete for blobs, containers, and file shares with a 7-day retention period, allowing recovery of accidentally deleted data.  
 
 ### Backup Policy
 Continue the script by registering the backup policy for the storage account.  
@@ -150,11 +159,12 @@ az storage account network-rule add `
 ### Managed Identity (Kubernetes)
 When public network access is disabled on the storage account, Kubernetes requires a secure way to authenticate and access the Azure File Shares mounted into the application containers. 
 This configuration uses a managed identity together with workload identity federation, allowing pods in the cluster to access the storage account without relying on storage account keys 
-or connection strings. The script creates the managed identity, assigns the required Azure Files permissions, and links the Kubernetes service account to the identity through the 
-cluster’s OIDC issuer. This ensures secure, keyless access to the file shares while keeping authentication fully managed through Azure AD.  
+or connection strings. 
 
-In addition to the Azure identity setup, the required Kubernetes resources are also created, including a service account, and a storage class for Azure File Shares. These are applied to 
-the `apps` namespace, where Nano applications are also deployed.  
+Applications themselves are responsible for creating the managed identity, assigning the required Azure Files permissions, and linking the identity to a Kubernetes service account through 
+the cluster's OIDC issuer.  
+
+This ensures secure, keyless access to the file shares while keeping authentication fully managed through Azure AD.  
 
 ### Microsoft Defender
 After successful registration, enable Microsoft Defender either directly on the storage resource or via the Defender for Cloud overview in the Azure Portal.  

@@ -25,10 +25,10 @@
   * **[Image Cleaner](#image-cleaner)**  
   * **[Diagnostic Settings](#diagnostic-settings)**  
   * **[Network Rules](#network-rules)**  
-  * **[Microsoft Defender](#m,icrosoft-defender)**  
-  * **[Policy](#policy)**  
-* **[Image Pull Secret](#image-pull-secret)**  
-* **[Configure kubectl Access](#configure-kubectl-access)**  
+  * **[Firewall](#firewall)**  
+  * **[Microsoft Defender](#microsoft-defender)**  
+  * **[Azure Policy](#azure-policy)**  
+* **[Get `kubectl` Credentials](#get-kubectl-credentials)**  
 * **[Common `kubectl` Commands](#common-kubectl-commands)**
 * **[Dependencies](#dependencies)**  
 
@@ -38,6 +38,9 @@ scaling, and upgrading clusters, reducing the operational burden on teams. It su
 AKS allows for easy scaling of applications and ensures high availability, making it ideal for running containerized workloads in production environments.  
 
 Create an Azure Kubernetes Service (AKS) cluster to orchestrate Nano infrastructure components and deploy applications.  
+
+#### Azure Kubernetes Architecture
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Kubernetes.jpg)
 
 > 📖 Learn more about **[Azure Kubernetes (AKS)](https://learn.microsoft.com/en-us/azure/aks)**.
 
@@ -52,6 +55,7 @@ Add the following GitHub organization variables.
 | ----------------------------------------- | ------- |------------------------------------------------------------------- |
 | `AZURE_RESOURCE_GROUP_KUBERNETES`         | vars    | The Azure resource group of the Kubernetes cluster (AKS).          |
 | `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS`  | vars    | The Azure resource group of the Kubernetes cluster (AKS) Asserts.  |
+| `KUBERNETES_NAMESPACE`                    | vars     | The Kubernetes namespace to use for all deployments.              |
 
 ### Kubernetes Cluster
 Execute the next part of the `deploy.ps1` to create a managed Kubernetes cluster (AKS) on Azure.  
@@ -72,13 +76,6 @@ az vm list-skus -l $env:AZURE_LOCATION --query "[?resourceType=='virtualMachines
 ```
 
 > ⚠️ For production-grade Azure Kubernetes Service (AKS) clusters, a minimum of three nodes is recommended, each with at least four vCPUs.
-
-Create the required secrets in GitHub for the Kubernetes cluster.    
-
-| Secret                                   | Type     | Description                                           |
-| ---------------------------------------- | -------- | ----------------------------------------------------- |
-| `AZURE_RESOURCE_GROUP_KUBERNETES`        | vars     | The Azure resource group of the Kubernetes cluster.   |
-| `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS` | vars     | The Azure resource group of the Kubernetes assets.    |
 
 ### Apps Namespace
 This step creates the default Kubernetes namespace used by all Nano applications and components. It provides a consistent isolation boundary and ensures Gateway API resources, 
@@ -142,6 +139,24 @@ Example: `2.100 * 80% / 700 * 100 = 240`
 The AKS cluster is configured with the Azure CNI network plugin in overlay mode to enable scalable pod networking while conserving virtual network IP space. By using `--network-plugin azure` 
 with `--network-plugin-mode=overlay`, pods receive IPs from an overlay network instead of the underlying VNet. The `--network-policy azure` setting enforces Azure Network Policies, 
 allowing fine-grained control over traffic flow between pods and services to improve cluster security and isolation.  
+
+By default, no ingress or egress network policies are defined. Network policies can be applied at the namespace or individual deployment level, allowing fine-grained and more restrictive 
+traffic control. Below is a simple example of restricting ingress.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-ingress-to-namespace
+  namespace: %KUBERNETES_NAMESPACE%
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+```
 
 ### Private API Server
 The AKS cluster is configured to use a private API server by integrating the control plane with the existing virtual network. By enabling private cluster mode and API server VNet integration, 
@@ -330,6 +345,9 @@ AKS Diagnostic Settings are used for Kubernetes control plane and platform-level
 
 > ⚠️ If Prometheus is not installed, enable `Microsoft-InsightsMetrics` and `AllMetrics`.
 
+By default, the `kube-audit` and `kube-audit-admin` categories are disabled due to their potentially high ingestion costs. If required for compliance or auditing purposes, enable them by 
+adding the categories to the `.diagnostic-settings/logs.json` file.
+
 You can retrieve the full list of supported metric and log categories for the Azure Kuberentes Cluster (AKS) resource using the following command.
 
 ```powershell
@@ -381,11 +399,13 @@ az aks updaate `
 
 > ⚠️ Whitelisting IP addresses can reduce the overall security posture and negatively impact the security score.  
 
-### Policy
-Adds the default Azure Policy assignment to the cluster, enabling built-in compliance monitoring and governance enforcement. This provides visibility into configuration drift, 
-security posture, and best-practice adherence, while continuously evaluating the cluster against Azure Policy definitions and initiatives.  
+### Firewall
+Azure Firewall has not been deployed due to its high baseline cost regardless of traffic, which is difficult to justify for this architecture.  
 
-> 📖 Learn more about **[Azure Policy](https://portal.azure.com/#view/Microsoft_Azure_Policy/PolicyMenuBlade.MenuView/~/Overview)**.
+The cluster is already well protected, the API server has no public endpoint, nodes carry no public IPs, and an approved registry policy controls what images can run.  
+
+The primary gaps without a firewall are egress control (a compromised pod can freely call external IPs) and east-west traffic between pods and internal VNET resources. These risks are mitigated 
+by Microsoft Defender for Containers, which provides runtime threat detection for suspicious pod behaviour at a fraction of the cost.  
 
 ### Microsoft Defender
 Microsoft Defender for Containers is used to enhance security monitoring and threat detection for the AKS cluster. It integrates with the Log Analytics workspace created via 
@@ -397,16 +417,36 @@ resource ID and is required during setup.
 
 However, Microsoft Defender for AKS must still be explicitly enabled in the Azure Portal after deployment to fully activate security protections for the cluster.
 
-## Image Pull Secret
-This step creates a Kubernetes image pull secret that allows the cluster to authenticate against the container registry and pull private images.  
+### Azure Policy
+Adds the default Azure Policy assignment to the cluster, enabling built-in compliance monitoring and governance enforcement. This provides visibility into configuration drift, 
+security posture, and best-practice adherence, while continuously evaluating the cluster against Azure Policy definitions and initiatives.  
 
-Execute the `image-pull-secret.ps1` script to create the required Docker registry secret in the cluster. The script provisions a `docker-registry` type secret that Kubernetes uses 
-when pulling container images. This secret is referenced by workloads that require access to images stored in the container registry.  
+> 📖 Learn more about **[Azure Policy](https://portal.azure.com/#view/Microsoft_Azure_Policy/PolicyMenuBlade.MenuView/~/Overview)**.
 
-📖 Learn how to configure access to **[GitHub Container Registry](https://github.com/Nano-Core/Nano.GitHub/tree/master/Nano.GitHub.ContainerRegistry)** to obtain the credentials needed to 
-create a Kubernetes image-pull secret for pulling private images during GitHub Actions deployments.
+Installs the Gatekeeper/OPA addon on the AKS cluster itself, which is the enforcement engine that actually blocks the pods. Without it, the policy exists in Azure but nothing enforces 
+it on the cluster.
 
-## Configure kubectl Access
+To get the names of all policies, execute the following command.
+
+```powershell
+$env:SUBSCRIPTION_ID = "";
+$env:POLICY_DEFINTION_ID = (az policy assignment show -n SecurityCenterBuiltIn --scope "/subscriptions/$env:SUBSCRIPTION_ID" --query policyDefinitionId -o tsv).Split('/')[-1];
+
+az policy set-definition show -n $env:POLICY_DEFINTION_ID --query "parameters | keys(@)" -o tsv;
+```
+
+The following policies are configured on the cluster to enforce security boundaries at admission time.  
+
+Container image pulls are restricted to a set of whitelisted registries (the cluster's own ACR, docker.io, mcr.microsoft.com, quay.io, and ghcr.io). Any pod referencing an unlisted registry is denied before it 
+runs, preventing malware from pulling images from unknown sources.  
+
+Exposed service ports are limited to `8080`. Any workload attempting to open a different port is denied, preventing malware from binding to arbitrary ports.  
+
+> ⚠️ Updating the policy affects all assignments, so ensure changes are patched/merged carefully and do not unintentionally overwrite existing settings.
+
+> ⚠️ Be aware that both tenant-scoped and subscription-scoped Azure Policy assignments are applied.
+
+## Get kubectl Credentials
 Once the cluster has been registered, retrieve the credentials using the following command.  
 
 ```powershell
