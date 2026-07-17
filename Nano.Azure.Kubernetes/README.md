@@ -345,6 +345,9 @@ AKS Diagnostic Settings are used for Kubernetes control plane and platform-level
 
 > ⚠️ If Prometheus is not installed, enable `Microsoft-InsightsMetrics` and `AllMetrics`.
 
+By default, the `kube-audit` and `kube-audit-admin` categories are disabled due to their potentially high ingestion costs. If required for compliance or auditing purposes, enable them by 
+adding the categories to the `.diagnostic-settings/logs.json` file.
+
 You can retrieve the full list of supported metric and log categories for the Azure Kuberentes Cluster (AKS) resource using the following command.
 
 ```powershell

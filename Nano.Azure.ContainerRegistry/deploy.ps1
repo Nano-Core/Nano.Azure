@@ -24,7 +24,7 @@ az acr create `
     --admin-enabled false `
     --zone-redundancy Enabled;
 
-# Agent Pool
+# Agent Pool (Optional)
 $env:SUBNET_ACR_NAME = "aks-subnet-acr"; 
 $env:SUBNET_ADDRESS_PREFIXES = "10.234.0.0/24";
 $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS --query [0].name -o tsv;

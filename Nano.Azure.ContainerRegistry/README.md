@@ -43,6 +43,9 @@ improve build throughput in ACR.
 
 > ⚠️ If you see `WARNING: Waiting for an agent...` in the build logs, the agent pool does not have enough available agents. Increase the `--count` value to provision additional agents.  
 
+Be aware that running a self-hosted agent pool currently requires manual scaling, with virtual machines running continuously regardless of workload. This results in unnecessary infrastructure 
+costs during idle periods and makes the solution difficult to scale efficiently. The agent pool may be omitted, but requires `--public-network-enabled True` when creating the ACR.
+
 ### Attach Registry to Kubernetes
 The container registry is integrated directly with the Kubernetes cluster using AKS–ACR integration. This means workloads can pull images from the registry without requiring any manual 
 authentication setup in Kubernetes manifests.  
