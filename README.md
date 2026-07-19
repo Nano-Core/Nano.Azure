@@ -1,6 +1,6 @@
 # Nano.Azure
 
-> _Cloud-native Azure services, infrastructure components, and deployment assets for Nano applications._
+> _Cloud-native Azure services, infrastructure components, and deployment assets for Nano applications._ 
 
 ***
 
