@@ -34,7 +34,7 @@ Authentication is handled through a GitHub App, which provides secure, scoped ac
 
 This is required for registering, claiming, and managing self-hosted runners.
 
-See **[Nano.GitHub.App](https://github.com/Nano-Core/Nano.GitHub/tree/master/Nano.GitHub.App/README.md#nanogithubapp)**.
+See **[Nano.GitHub.App](https://github.com/Nano-Core/Nano.GitHub/blob/master/Nano.GitHub.RunnerApp/README.md#nanogithubrunnerapp)**.
 
 ### Polling Interval
 The runner polls GitHub every 30 seconds, which is the minimum supported interval in Azure Container Apps.  
@@ -66,6 +66,6 @@ GitHub Runner has the following dependencies that must be deployed or otherwise 
 
 | Dependency                                                                                                                             | Description                                                                                  | 
 | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | 
-| **[Nano.GitHub.App](https://github.com/Nano-Core/Nano.GitHub/tree/master/Nano.GitHub.App/README.md#nanogithubapp)**                    | GitHub App used for the Container App job to authenticate when polling for workflows jobs.   |
-| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**   | The Azure Kubernetes Service (AKS).                                                          |
-| **[Nano.Azure.Delivery](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Delivery/README.md#nanoazuredelivery)**         | The Azure Kubernetes Delivery components.                                                    |
+| **[Nano.GitHub.App](https://github.com/Nano-Core/Nano.GitHub/blob/master/Nano.GitHub.RunnerApp/README.md#nanogithubrunnerapp)**        | GitHub App used for the Container App job to authenticate when polling for workflows jobs.   |
+| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**   | The Azure Kubernetes Service (AKS).                                                          |
+| **[Nano.Azure.Delivery](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Delivery/README.md#nanoazuredelivery)**         | The Azure Kubernetes Delivery components.                                                    |

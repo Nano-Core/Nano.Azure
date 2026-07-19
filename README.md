@@ -1,27 +1,27 @@
 # Nano.Azure
 
-> _Cloud-native Azure services, infrastructure components, and deployment assets for Nano applications._
+> _Cloud-native Azure services, infrastructure components, and deployment assets for Nano applications._ 
 
 ***
 
 ## Table of Contents
 &nbsp;&nbsp;&nbsp;&nbsp;📌 **[Summary](#-summary)**  
-&nbsp;&nbsp;&nbsp;&nbsp;⚙️ **[Required Tools](#-required-tools)**  
-&nbsp;&nbsp;&nbsp;&nbsp;⚖️ **[Licenses](#-licenses)**  
+&nbsp;&nbsp;&nbsp;&nbsp;⚙️ **[Required Tools](#%EF%B8%8F-required-tools)**  
+&nbsp;&nbsp;&nbsp;&nbsp;⚖️ **[Licenses](#%EF%B8%8F-licenses)**  
 
 ### Documentaion
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Delivery](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Delivery/README.md#nanoazuredelivery)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.GitHubRunner](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.GitHubRunner/README.md#nanoazurekubernetesgithubrunner)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Dns](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Dns/README.md#nanoazuredns)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Storage](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Storage/README.md#nanoazurestorage)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.ContainerRegistry](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.ContainerRegistry/README.md#nanoazurecontainerregistry)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.MySql](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.MySql/README.md#nanoazuremysql)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.PostgreSql](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.PostgreSql/README.md#nanoazurepostgresql)**  
-&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.SqlServer](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.SqlServer/README.md#nanoazuresqlserver)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Account/README.md#nanoazureaccount)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Delivery](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Delivery/README.md#nanoazuredelivery)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.GitHubRunner](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.GitHubRunner/README.md#nanoazuregithubrunner)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Dns](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.DNS/README.md#nanoazuredns)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Backup/README.md#nanoazurebackup)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.Storage](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Storage/README.md#nanoazurestorage)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.ContainerRegistry](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.ContainerRegistry/README.md#nanoazurecontainerregistry)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.MySql](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.MySql/README.md#nanoazuremysql)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.PostgreSql](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.PostgreSql/README.md#nanoazurepostgresql)**  
+&nbsp;&nbsp;&nbsp;&nbsp;🔹 **[Nano.Azure.SqlServer](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.SqlServer/README.md#nanoazuresqlserver)**  
 
 ## 📌 Summary
 Nano.Azure provides a curated set of Azure services, infrastructure components, and deployment scripts designed to support 
@@ -43,7 +43,7 @@ in the Nano infrastructure are.
 - Composable architecture – services can be combined or used independently  
 
 #### Azure Architecture
-![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/v10.0.0-ga/.assets/Nano-Azure.jpg)
+![Nano Kubernetes Architecture](https://raw.githubusercontent.com/Nano-Core/Nano.Azure/master/.assets/Nano-Azure.jpg)
 
 ## ⚙️ Required Tools
 Before continuing, make sure you have the following tools installed and configured.

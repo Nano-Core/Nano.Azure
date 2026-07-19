@@ -94,7 +94,7 @@ Enables soft delete for blobs, containers, and file shares with a 7-day retentio
 ### Backup Policy
 Continue the script by registering the backup policy for the storage account.  
 
-The backup policy is scheduled daily at 04:00 UTC and uses **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)** to 
+The backup policy is scheduled daily at 04:00 UTC and uses **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Backup/README.md#nanoazurebackup)** to 
 store file share backups. Daily backups are retained for 30 days. These retention settings can be adjusted to meet specific requirements. The policy can be configured either through the 
 Azure portal or by using a JSON definition similar to the one provided here.  
 
@@ -114,7 +114,7 @@ az lock delete --name AzureBackupProtectionLock --resource $env:STORAGE_ACCOUNT_
 Next, create the default alert rules to ensure baseline monitoring and early detection of common issues across the storage account.  
 
 The alerts have been configured for the storage account and are associated with the action group created in 
-**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**. These alerts monitor low availability, 
+**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**. These alerts monitor low availability, 
 high latency, elevated egress traffic, and excessive transaction counts.  
 
 ### Diagnostic Settings
@@ -176,6 +176,6 @@ Storage has the following dependencies that must be deployed or otherwise satisf
 
 | Dependency                                                                                                                            | Description                                                             | 
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
-| **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)**              | Backup and recovery services.                                           |
-| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                           |
+| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
+| **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Backup/README.md#nanoazurebackup)**              | Backup and recovery services.                                           |
+| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                           |
