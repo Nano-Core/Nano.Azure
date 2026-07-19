@@ -39,20 +39,17 @@ Add the resource group name as GitHub organization variables.
 Creates the Azure DNS zone for the application domain, which will host all DNS records for the delegated subdomain and enable cert-manager DNS-01 validation.  
 
 ### DNSSEC
-DNSSEC is enabled for the DNS zone.
+DNSSEC is enabled automatically when the DNS zone is created.
 
-After enabling DNSSEC, you may see a warning: _DNSSEC is not fully configured for the DNS zone.** This means the chain of trust is incomplete._  
+After enabling DNSSEC, Azure Portal displays the following warning under DNSSEC for the DNS zone:
 
-To complete setup, add the `DS` record at your domain registrar or parent zone using the DNSSEC details shown in the Azure Portal.  
+> **DNSSEC is not fully configured for the DNS zone.**
 
-### DNSSEC
-Is enabled for the DNS zone.
+This warning indicates that the DNSSEC chain of trust is not yet complete. Although DNSSEC has been enabled for the zone, the parent zone (typically managed by your domain registrar) has 
+not been configured to trust it. 
 
-After enabling DNSSEC a warning will show: DNSSEC is not fully configured for the DNS zone. For this zone to complete the chain of trust, the DS record must be updated in the parent zone/registrar.
-
-To establish a DNSSEC chain of trust, you must add a DS record to the parent zone or registrar using the DNSSEC information obtained from your zone that you can see in Azure Portal.
-
-
+To complete the chain of trust, you must create a **DS (Delegation Signer)** record in the parent zone or at your domain registrar. The required DS record values are available in Azure 
+Portal under the DNSSEC settings for the DNS zone. Once the DS record has been added and propagated, the warning will disappear and the DNSSEC chain of trust will be fully established.
 
 ### Managed Identity (Kubernetes)
 Creates a Managed Identity in Azure and assigns it the DNS Zone Contributor role on the DNS zone, allowing it to manage DNS records required for automated DNS-based operations such as domain 
@@ -83,4 +80,4 @@ DNS has the following dependencies that must be deployed or otherwise satisfied 
 
 | Dependency                                                                                                                   | Description                                                             | 
 | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure.Account](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Account/README.md#nanoazureaccount)**  | The is the foundation or prerequites of the Nano Azure infrastructure.  |
+| **[Nano.Azure.Account](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Account/README.md#nanoazureaccount)**  | The is the foundation or prerequites of the Nano Azure infrastructure.  |

@@ -69,11 +69,11 @@ az monitor diagnostic-settings categories list --resource $env:BACKUP_ID;
 The alerts used are the default Azure Backup alerts.  
 
 An Alert Processing Rule is configured to route these alert notifications through the Action Group created as part of
-**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**.  
+**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**.  
 
 ## Dependencies
 Backup has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
 
 | Dependency                                                                                                                            | Description                                                             | 
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging                       |
+| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging                       |

@@ -25,4 +25,4 @@ Container Registry has the following dependencies that must be deployed or other
 
 | Dependency                                                                                                                                                  | Description                                                             | 
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure.ContainerRegistry](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.ContainerRegistry/README.md#nanoazureContainerregistry)**   | The Azure Container Regsitry (ACR) .                                    |
+| **[Nano.Azure.ContainerRegistry](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.ContainerRegistry/README.md#nanoazureContainerregistry)**   | The Azure Container Regsitry (ACR) .                                    |

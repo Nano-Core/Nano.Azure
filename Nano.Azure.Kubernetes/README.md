@@ -23,7 +23,7 @@
   * **[Alerts](#alerts)**  
   * **[Site Recovery](#site-recovery)**  
   * **[Image Cleaner](#image-cleaner)**  
-  * **[Diagnostic Settings](#diagnostic-settings)**  
+  * **[Diagnostics Settings](#diagnostics-settings)**  
   * **[Network Rules](#network-rules)**  
   * **[Firewall](#firewall)**  
   * **[Microsoft Defender](#microsoft-defender)**  
@@ -337,7 +337,7 @@ are no longer referenced by running workloads.
 The cleanup interval is configured using `--image-cleaner-interval-hours`, which defines how frequently the process runs (e.g. every 72 hours). The value can be adjusted based on 
 operational requirements.  
 
-### Diagnostic Settings
+### Diagnostics Settings
 Next, create the diagnostic settings for the Kubernetes (AKS) cluster.
 
 AKS Diagnostic Settings are used for Kubernetes control plane and platform-level logs such as API server, audit, scheduler, autoscaler, and controller manager logs. Diagnostic metrics 
@@ -409,7 +409,7 @@ by Microsoft Defender for Containers, which provides runtime threat detection fo
 
 ### Microsoft Defender
 Microsoft Defender for Containers is used to enhance security monitoring and threat detection for the AKS cluster. It integrates with the Log Analytics workspace created via 
-**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)** to centralize security telemetry and enable 
+**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)** to centralize security telemetry and enable 
 vulnerability and runtime threat detection for container workloads.  
 
 The Defender configuration is minimal and primarily used to link the cluster to the Log Analytics workspace through a generated configuration file. This file contains the workspace 
@@ -525,4 +525,4 @@ Kubernetes has the following dependencies that must be deployed or otherwise sat
 
 | Dependency                                                                                                                            | Description                                                             | 
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
+| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |

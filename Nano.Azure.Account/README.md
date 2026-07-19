@@ -7,7 +7,8 @@
 ## Table of Contents
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
-  * **[Account And Subscription](#account-and-subscription)**  
+  * **[Account](#account)**  
+  * **[Subscription](#subscription)**  
   * **[Service Principal](#service-principal)**  
 * **[Dependencies](#dependencies)**  
 
@@ -19,7 +20,7 @@ This is the foundation of the Nano Azure infrastructure. It prepares the Azure e
 - Deployment identity (service principal)
 - Secure configuration of CI/CD secrets
 
-This component must be deployed first, as all other **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/tree/master/README.md#nanoazure)** components depend on it.
+This component must be deployed first, as all other **[Nano.Azure](https://github.com/Nano-Core/Nano.Azure/blob/master/README.md#nanoazure)** components depend on it.
 
 > 📖 Learn more about **[Microsoft Azure](https://azure.microsoft.com)**.
 

@@ -14,7 +14,7 @@
   * **[Maintenance](#maintenance)**  
   * **[Transaction Isolation Level](#transaction-isolation-level)**  
   * **[Alerts](#alerts)**  
-  * **[Diagnostic Settings](#diagnostic-settings)**  
+  * **[Diagnostics Settings](#diagnostics-settings)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#microsoft-defender)**  
 * **[Dependencies](#dependencies)**  
@@ -99,7 +99,7 @@ Server={server};Port={{port}};Database={database};Uid={username};Pwd={password};
 Database backups have also been configured to run every 24 hours, with a maximum retention period of 35 days. To enable geo-redundant backups, uncomment the `--geo-redundant-backup` 
 parameter in the create command.  
 
-> ⚠️ MySQL database backups is not integrated with **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Backup/README.md#nanoazurebackup)**, 
+> ⚠️ MySQL database backups is not integrated with **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Backup/README.md#nanoazurebackup)**, 
 but has its own integrated configurable service.  
 
 Also, note that geo-redundant backups are not supported in all regions. If geo-redundant backup is not required, remove the `--geo-redundant-backup Enabled` parameter. Otherwise, ensure that 
@@ -124,7 +124,7 @@ reads and less consistent query results in some applications.
 
 ### Alerts
 Last, a couple of default alerts have been configured for the MySQL server and are associated with the action group created in 
-**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**. These alerts monitor High CPU Usage, 
+**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**. These alerts monitor High CPU Usage, 
 High Memory Usage, High Number Of Connections, High Storage IO, and High Storage Percent.
 
 ### Diagnostics Settings
@@ -177,5 +177,5 @@ MySQL has the following dependencies that must be deployed or otherwise satisfie
 
 | Dependency                                                                                                                            | Description                                                             | 
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging                       |
-| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                           |
+| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging                       |
+| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                           |

@@ -82,5 +82,5 @@ Container Registry has the following dependencies that must be deployed or other
 
 | Dependency                                                                                                                            | Description                                                             | 
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure.Delivery](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Delivery/README.md#nanoazuredelivery)**        | The Azure Kubernetes Delivery components.                                                    |
-| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/tree/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                           |
+| **[Nano.Azure.Delivery](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Delivery/README.md#nanoazuredelivery)**        | The Azure Kubernetes Delivery components.                               |
+| **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                     |
