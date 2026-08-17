@@ -1,0 +1,10 @@
+[
+  {
+    "category": "QueryStoreRuntimeStatistics",
+    "enabled": true
+  },
+  {
+    "category": "SQLSecurityAuditEvents",
+    "enabled": true
+  }
+]
