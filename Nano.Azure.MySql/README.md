@@ -9,6 +9,7 @@
 * **[Registration](#registration)**  
   * **[MySQL Flexble Server](#mysql-flexble-server)**  
   * **[Database Backup](#database-backup)**
+  * **[Storage Auto Growth](#storage-auto-growth)**
   * **[IOPS Auto Scaling](#iops-auto-scaling)**
   * **[High Availability](#high-availability)**
   * **[Maintenance](#maintenance)**  
@@ -87,7 +88,7 @@ Create the required secrets in GitHub for the MySQL server. They will be used la
 
 | Secret                                  | Type     | Description                                                                    |
 | --------------------------------------- | -------- | ------------------------------------------------------------------------------ |
-| `{{environment}}_SQL_ADMIN_PASSWORD `   | Secret   | The MySQL admin password, used when applying EF migrations during deployment.  |
+| `{{environment}}_SQL_ADMIN_PASSWORD`    | Secret   | The MySQL admin password, used when applying EF migrations during deployment.  |
 
 The MySQL connection string has this format.  
 
@@ -107,13 +108,17 @@ the selected region supports geo-redundant backups before deployment.
 
 For a list of supported regions, see: **[Supported Regions](https://learn.microsoft.com/en-us/azure/mysql/flexible-server/overview#azure-regions)**.
 
+### Storage Auto Growth
+Storage is set to auto-grow, allowing a flexible scaled database server as data grows. 
+
 ### IOPS Auto Scaling
 Furthermoe, IOPS is set to auto-grow, allowing flexible a scaled database server.  
 
 ### High Availability
-Optionally, you can enable high availability for the MySQL server. In Azure Database for MySQL Flexible Server, high availability provides automatic failover between zones to 
-improve resilience and reduce downtime in case of infrastructure or zone-level failures. To enable it, simply uncomment the `--high-availability`, `--zone`, and `--standby-zone` 
-parameters in the `deploy.ps1` script’s create command.  
+High availability is enabled by default for the MySQL server. In Azure Database for MySQL Flexible Server, high availability provides automatic failover between zones to 
+improve resilience and reduce downtime in case of infrastructure or zone-level failures.  
+
+To disable high availability, simply comment out the `--high-availability`, `--zone`, and `--standby-zone` parameters in the `deploy.ps1` script’s create command.
 
 ### Maintenance
 The Azure maintainance window is set to sunday at 04:00.
@@ -140,7 +145,7 @@ The MySQL flexible server has no public access by default.
 
 A Private Endpoint is created for the Kubernetes virtual network, enabling applications running in Kubernetes to securely access the MySQL server over a private connection.
 
-To get the avaiable `group-id`, run the following command.  
+To get the available `group-id`, run the following command.  
 
 ```powershell
 az network private-link-resource list --id $env:MYSQL_ID;

@@ -10,6 +10,7 @@
   * **[PostgreSQL Flexible Server](#postgresql-flexible-server)**  
   * **[Database Backup](#database-backup)**
   * **[Storage Auto Growth](#storage-auto-growth)**
+  * **[IOPS Auto Scaling](#iops-auto-scaling)**
   * **[High Availability](#high-availability)**
   * **[Maintenance](#maintenance)**  
   * **[Transaction Isolation Level](#transaction-isolation-level)**  
@@ -85,7 +86,7 @@ Create the required secrets in GitHub for the PostgreSQL server. They will be us
 
 | Secret                                  | Type     | Description                                                                          |
 | --------------------------------------- | -------- | ------------------------------------------------------------------------------------ |
-| `{{environment}}_SQL_ADMIN_PASSWORD `   | Secret   | The PostgreSQL admin password, used when applying EF migrations during deployment.   |
+| `{{environment}}_SQL_ADMIN_PASSWORD`    | Secret   | The PostgreSQL admin password, used when applying EF migrations during deployment.   |
 
 The PostgreSQL connection string has this format.  
 
@@ -106,13 +107,16 @@ the selected region supports geo-redundant backups before deployment.
 For a list of supported regions, see: **[Supported Regions](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/overview#azure-regions)**.
 
 ### Storage Auto Growth
-Storage is set to auto-grow, allowing a flexible scaled database server as data grows. Note that, unlike MySQL Flexible Server, PostgreSQL Flexible Server does not expose a separate 
-IOPS auto-scaling setting — IOPS scale automatically together with the provisioned storage tier.  
+Storage is set to auto-grow, allowing a flexible scaled database server as data grows. 
+
+### IOPS Auto Scaling
+PostgreSQL Flexible Server does not expose a separate IOPS auto-scaling setting. IOPS scale automatically together with the provisioned storage tier.  
 
 ### High Availability
-Optionally, you can enable high availability for the PostgreSQL server. In Azure Database for PostgreSQL Flexible Server, high availability provides automatic failover between zones to 
-improve resilience and reduce downtime in case of infrastructure or zone-level failures. To enable it, simply uncomment the `--high-availability`, `--zone`, and `--standby-zone` 
-parameters in the `deploy.ps1` script’s create command.  
+High availability is enabled by default for the PostgreSQL server. In Azure Database for PostgreSQL Flexible Server, high availability provides automatic failover between zones to 
+improve resilience and reduce downtime in case of infrastructure or zone-level failures.  
+
+To disable high availability, simply comment out the `--high-availability`, `--zone`, and `--standby-zone` parameters in the `deploy.ps1` script's create command.
 
 ### Maintenance
 The Azure maintainance window is set to sunday at 04:00.
@@ -126,9 +130,9 @@ Last, a couple of default alerts have been configured for the PostgreSQL server 
 High Memory Usage, High Number Of Connections, High Storage IO, and High Storage Percent.
 
 ### Diagnostics Settings
-The diagnostic settings for PostgreSQL includes both `AllMetrics` for metrics, and `PostgreSQLLogs` for logs, and the time-grain is set to a 1-minute aggregation interval. Unlike 
-MySQL, PostgreSQL Flexible Server does not split logs into separate slow-query and audit categories — `PostgreSQLLogs` covers all server log output. This value can be adjusted if 
-needed. You can retrieve the full list of supported metric and log categories for the PostgreSQL resource using the following command.  
+The diagnostic settings for PostgreSQL includes both `AllMetrics` for metrics, and `PostgreSQLLogs` for logs, and the time-grain is set to a 1-minute aggregation interval. 
+`PostgreSQLLogs` is a single consolidated category covering all server log output. This value can be adjusted if needed. You can retrieve the full list of supported metric and log 
+categories for the PostgreSQL resource using the following command.
 
 ```powershell
 az monitor diagnostic-settings categories list --resource $env:POSTGRESQL_ID;
@@ -139,7 +143,7 @@ The PostgreSQL flexible server has no public access by default.
 
 A Private Endpoint is created for the Kubernetes virtual network, enabling applications running in Kubernetes to securely access the PostgreSQL server over a private connection.
 
-To get the avaiable `group-id`, run the following command.  
+To get the available `group-id`, run the following command.  
 
 ```powershell
 az network private-link-resource list --id $env:POSTGRESQL_ID;
@@ -177,5 +181,4 @@ PostgreSQL has the following dependencies that must be deployed or otherwise sat
 | Dependency                                                                                                                            | Description                                                             | 
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
 | **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging                       |
-| **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Backup/README.md#nanoazurebackup)**              | Backup and recovery services.                                           |
 | **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                     |
