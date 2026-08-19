@@ -61,7 +61,9 @@ Server={server};Database={database};User Id={username};Password={password};Encry
 Databases are not created as part of this deploy script.  
 
 Each application creates and owns its own database, as a dedicated step in its own CI/CD pipeline, against the shared server provisioned here. This includes the database's SKU, storage, 
-backup retention, high availability, maintenance, diagnostics settings, and alerts — all configured as part of that pipeline step.
+backup retention, high availability, maintenance, diagnostics settings, and alerts — all configured as part of that pipeline step.  
+
+Transaction isolation defaults to `read committed snapshot` (RCSI), Azure SQL Database's own default, and is not explicitly configured as part of this.
 
 ### Network Rules
 The SQL Server has no public access by default. 

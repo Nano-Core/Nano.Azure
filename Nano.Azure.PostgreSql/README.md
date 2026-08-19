@@ -122,7 +122,7 @@ To disable high availability, simply comment out the `--high-availability`, `--z
 The Azure maintainance window is set to sunday at 04:00.
 
 ### Transaction Isolation Level
-The default transaction isolation level is set to `read committed`, which is already PostgreSQL's own default.  
+Transaction isolation defaults to `read committed`, PostgreSQL's own default, and is not explicitly configured here.
 
 ### Alerts
 Last, a couple of default alerts have been configured for the PostgreSQL server and are associated with the action group created in 
