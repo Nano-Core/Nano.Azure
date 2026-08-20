@@ -1,0 +1,6 @@
+[
+  {
+    "category": "PostgreSQLLogs",
+    "enabled": true
+  }
+]

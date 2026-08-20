@@ -7,6 +7,17 @@
 ## Table of Contents
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
+  * **[PostgreSQL Flexible Server](#postgresql-flexible-server)**  
+  * **[Database Backup](#database-backup)**
+  * **[Storage Auto Growth](#storage-auto-growth)**
+  * **[IOPS Auto Scaling](#iops-auto-scaling)**
+  * **[High Availability](#high-availability)**
+  * **[Maintenance](#maintenance)**  
+  * **[Transaction Isolation Level](#transaction-isolation-level)**  
+  * **[Alerts](#alerts)**  
+  * **[Diagnostics Settings](#diagnostics-settings)**  
+  * **[Network Rules](#network-rules)**  
+  * **[Microsoft Defender](#microsoft-defender)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -20,10 +31,149 @@ Create a PostgreSQL Flexible Server to host databases used by Nano applications.
 
 > 📖 Learn more about **[Azure PostgreSQL](https://learn.microsoft.com/en-us/azure/postgresql/overview)**.
 
-After successful registration, enable Defender directly on the PostgreSQL resource in the Azure Portal. This setting is not currently configurable via the Azure CLI.  
-
 ## Registration
-Coming...
+Start by registering the required Azure providers and creating the resource group, by executing the top part of the `deploy.ps1`.
+
+> ⚠️ Ensure all required variables are specified in the PowerShell script before execution.  
+
+Add the following GitHub organization variables.  
+
+| Secret                           | Type    | Description                                     |
+| -------------------------------- | ------- |------------------------------------------------ |
+| `AZURE_RESOURCE_GROUP_DATABASE`  | vars    | The Azure resource group of the SQL Database.   |
+
+### PostgreSQL Flexible Server
+Execute the next part of the `deploy.ps1` to create a managed flexible PostgreSQL database server on Azure.  
+
+The default SKU is set to: `Standard_D2ads_v5`, but other SKUs can also be used depending on workload requirements and the availability in Azure regions.  
+
+Azure virtual machine SKUs follow this general format: `[Family][Size][Features][Generation]`.  
+
+The virtual machine familiy types is listed below.  
+
+| Family | Meaning            | Typical use                                                                                             |
+| ------ | ------------------ | ------------------------------------------------------------------------------------------------------- |
+| B      | Burstable          | Dev, low-cost, light workloads. ⚠️ Be aware that you cannot later upgrade to a different family type.   |
+| D      | General Purpose    | Most apps, balanced CPU/memory                                                                          |
+| E      | Memory Optimized   | Databases, in-memory workloads                                                                          |
+| F      | Compute Optimized  | High CPU workloads                                                                                      |
+
+And the SKU feature letters.  
+
+| Letter | Meaning                                            |
+| ------ | -------------------------------------------------- |
+| a      | AMD CPU                                            |
+| i      | Intel CPU                                          |
+| d      | Local temporary SSD                                |
+| s      | Premium SSD support                                |
+| e      | Extra memory (memory optimized variants)           |
+| z      | High memory / special variants                     |
+| l      | Low latency / local disk optimized (older series)  |
+
+> ⚠️ Be aware that the chosen tier must match the chosen SKU. e.g. Family=B, Tier=Burstable.
+
+To see all available SKUs for a specific region use the command below.  
+
+```powershell
+az postgres flexible-server list-skus -l $env:AZURE_LOCATION -o table;
+```
+
+You can also check out the official list of available SKUs on the **[PostgreSQL Compute and Storage](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-compute-storage)** page.
+
+> ⚠️ Make sure to store the information returned during creation. The _admin password_ for instance cannot be retrieved later.  
+
+Create the required secrets in GitHub for the PostgreSQL server. They will be used later to securely connect your applications to the database.  
+
+| Secret                                  | Type     | Description                                                                          |
+| --------------------------------------- | -------- | ------------------------------------------------------------------------------------ |
+| `{{environment}}_SQL_ADMIN_PASSWORD`    | Secret   | The PostgreSQL admin password, used when applying EF migrations during deployment.   |
+
+The PostgreSQL connection string has this format.  
+
+```
+Host={server};Port={port};Database={database};Username={username};Password={password};Ssl Mode=Require;  
+```
+
+### Database Backup
+Database backups are handled automatically by the managed service, with a maximum retention period of 35 days. Unlike some other engines, the backup interval itself is not 
+configurable for PostgreSQL Flexible Server. To enable geo-redundant backups, uncomment the `--geo-redundant-backup` parameter in the create command.  
+
+> ⚠️ PostgreSQL database backups is not integrated with **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Backup/README.md#nanoazurebackup)**, 
+but has its own integrated configurable service.  
+
+Also, note that geo-redundant backups are not supported in all regions. If geo-redundant backup is not required, remove the `--geo-redundant-backup Enabled` parameter. Otherwise, ensure that 
+the selected region supports geo-redundant backups before deployment.
+
+For a list of supported regions, see: **[Supported Regions](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/overview#azure-regions)**.
+
+### Storage Auto Growth
+Storage is set to auto-grow, allowing a flexible scaled database server as data grows. 
+
+### IOPS Auto Scaling
+PostgreSQL Flexible Server does not expose a separate IOPS auto-scaling setting. IOPS scale automatically together with the provisioned storage tier.  
+
+### High Availability
+High availability is enabled by default for the PostgreSQL server. In Azure Database for PostgreSQL Flexible Server, high availability provides automatic failover between zones to 
+improve resilience and reduce downtime in case of infrastructure or zone-level failures.  
+
+To disable high availability, simply comment out the `--high-availability`, `--zone`, and `--standby-zone` parameters in the `deploy.ps1` script's create command.
+
+### Maintenance
+The Azure maintainance window is set to sunday at 04:00.
+
+### Transaction Isolation Level
+Transaction isolation defaults to `read committed`, PostgreSQL's own default, and is not explicitly configured here.
+
+### Alerts
+Last, a couple of default alerts have been configured for the PostgreSQL server and are associated with the action group created in 
+**[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**. These alerts monitor High CPU Usage, 
+High Memory Usage, High Number Of Connections, High Storage IO, and High Storage Percent.
+
+### Diagnostics Settings
+The diagnostic settings for PostgreSQL includes both `AllMetrics` for metrics, and `PostgreSQLLogs` for logs, and the time-grain is set to a 1-minute aggregation interval. 
+`PostgreSQLLogs` is a single consolidated category covering all server log output. This value can be adjusted if needed. You can retrieve the full list of supported metric and log 
+categories for the PostgreSQL resource using the following command.
+
+```powershell
+az monitor diagnostic-settings categories list --resource $env:POSTGRESQL_ID;
+```
+
+### Network Rules
+The PostgreSQL flexible server has no public access by default. 
+
+A Private Endpoint is created for the Kubernetes virtual network, enabling applications running in Kubernetes to securely access the PostgreSQL server over a private connection.
+
+To get the available `group-id`, run the following command.  
+
+```powershell
+az network private-link-resource list --id $env:POSTGRESQL_ID;
+```
+
+> ⚠️ The private endpoint must be deployed in the same Azure region as the virtual network (VNet) it is associated with.
+
+Optionally, IP address whitelisting can be configured to allow access to the PostgreSQL server. By default, access is fully restricted, and no external connections are permitted. The 
+Nano system does not depend on IP whitelisting for connectivity, and using it is generally discouraged as it can negatively impact the overall cloud security score. If IP 
+whitelisting is required, it can be configured using the following command.  
+
+```powershell
+$env:NETWORK_RULE_NAME = "";
+$env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_START = "0.0.0.0";
+$env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_END = "255.255.255.255";
+
+az postgres flexible-server firewall-rule create `
+    -n $env:APP_NAME `
+    -g $env:AZURE_RESOURCE_GROUP `
+    --rule-name $env:NETWORK_RULE_NAME `
+    --start-ip-address $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_START `
+    --end-ip-address $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS_END;
+```
+
+> ⚠️ Whitelisting IP addresses can reduce the overall security posture and negatively impact the security score.  
+
+### Microsoft Defender
+After successful registration, enable Defender directly on the PostgreSQL resource in the Azure Portal. 
+
+> ⚠️ This setting is not currently configurable via the Azure CLI.  
 
 ## Dependencies
 PostgreSQL has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
@@ -31,5 +181,4 @@ PostgreSQL has the following dependencies that must be deployed or otherwise sat
 | Dependency                                                                                                                            | Description                                                             | 
 | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
 | **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging                       |
-| **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Backup/README.md#nanoazurebackup)**              | Backup and recovery services.                                           |
 | **[Nano.Azure.Kubernetes](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Kubernetes/README.md#nanoazurekubernetes)**  | The Azure Kubernetes Service (AKS).                                     |
