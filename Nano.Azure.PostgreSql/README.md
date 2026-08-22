@@ -96,7 +96,7 @@ Host={server};Port={port};Database={database};Username={username};Password={pass
 
 ### Database Backup
 Database backups are handled automatically by the managed service, with a maximum retention period of 35 days. Unlike some other engines, the backup interval itself is not 
-configurable for PostgreSQL Flexible Server. To enable geo-redundant backups, uncomment the `--geo-redundant-backup` parameter in the create command.  
+configurable for PostgreSQL Flexible Server.    
 
 > ⚠️ PostgreSQL database backups is not integrated with **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Backup/README.md#nanoazurebackup)**, 
 but has its own integrated configurable service.  

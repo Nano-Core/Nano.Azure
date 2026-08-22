@@ -97,8 +97,7 @@ Server={server};Port={{port}};Database={database};Uid={username};Pwd={password};
 ```
 
 ### Database Backup
-Database backups have also been configured to run every 24 hours, with a maximum retention period of 35 days. To enable geo-redundant backups, uncomment the `--geo-redundant-backup` 
-parameter in the create command.  
+Database backups have also been configured to run every 24 hours, with a maximum retention period of 35 days.  
 
 > ⚠️ MySQL database backups is not integrated with **[Nano.Azure.Backup](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Backup/README.md#nanoazurebackup)**, 
 but has its own integrated configurable service.  
