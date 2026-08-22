@@ -40,6 +40,9 @@ Add the resource group name as GitHub organization variables.
 ### Backup Vault
 Execute the next part of the `deploy.ps1` to create the backup vault on Azure.  
 
+The vault is configured for geo-redundant storage (GRS), meaning backup data is replicated to a paired Azure region in addition to the primary region. This provides resilience against 
+regional outages and ensures backups remain recoverable even if the primary region becomes unavailable.
+
 By default, the Backup Vault is configured with `--soft-delete-feature-state` enabled and `--soft-delete-duration` set to 14 days. Use `az backup vault backup-properties set` to 
 customize these settings. This also means that backup items created from protected Azure resources can prevent the vault from being deleted until the configured soft-delete 
 retention period has expired or the source has been unregistered.

@@ -27,7 +27,7 @@ az backup vault create `
 az backup vault backup-properties set `
     -n $env:APP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `
-    --backup-storage-redundancy ZoneRedundant;
+    --backup-storage-redundancy GeoRedundant;
 
 # Immutability State (Optional)
 az backup vault update `
