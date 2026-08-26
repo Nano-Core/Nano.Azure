@@ -16,7 +16,7 @@ az acr create `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:APP_NAME `
     -l $env:AZURE_LOCATION `
-    --sku Preimium `
+    --sku Premium `
     --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
     --public-network-enabled false `
     --allow-trusted-services true `
