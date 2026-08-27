@@ -8,13 +8,12 @@
 * **[Summary](#summary)**  
 * **[Registration](#registration)**  
   * **[Storage Account](#storage-account)**  
-  * **[Storage Security](#storage-security)**  
+  * **[Managed Identity](#managed-identity)**  
   * **[Soft Delete](#soft-delete)**  
   * **[Backup Policy](#backup-policy)**  
   * **[Alerts](#alerts)**  
   * **[Diagnostic Settings](#diagnostic-settings)**  
   * **[Network Rules](#network-rules)**  
-  * **[Managed Identity (Kubernetes)](#managed-identity-kubernetes)**  
   * **[Microsoft Defender](#microsoft-defender)**  
 * **[Dependencies](#dependencies)**  
 
@@ -65,28 +64,24 @@ az storage sku list --query "[?kind=='StorageV2' && contains(locations, '$env:AZ
 
 In addition to the Azure storage account setup, the required Kubernetes `storageClass` resource is also created.  
 
-### Storage Security
-The storage account is configured with public network access disabled (`--public-network-access Disabled`), ensuring that all access to storage services is restricted to private 
-network connectivity through approved virtual networks and private endpoints. This prevents exposure of the storage account to the public internet and strengthens the overall network 
-security posture.  
-
+### Managed Identity
 Shared key access is also disabled (`--allow-shared-key-access false`), preventing authentication through storage account access keys. As a result, access to the storage account must use 
 Microsoft Entra ID–based authentication and Azure role-based access control (RBAC), reducing the risk associated with long-lived shared secrets and supporting a more secure, identity-based 
 access model.  
 
-Alternatively, shared key access can be enabled on the storage account and the storage account credentials stored as GitHub secrets. These credentials can later be used to mount Azure File 
-shares into Kubernetes applications. Run the command below to retrieve the access key for the newly created storage account.
+> ⚠️ Executing the script requires User Access Administrator on the subscription.
 
-```powershell
-az storage account keys list --account-name $env:APP_NAME --resource-group $env:AZURE_RESOURCE_GROUP --query "[].value" -o tsv;
-```
+Kubernetes requires a secure way to authenticate and access the Azure File Shares mounted into the application containers. This configuration uses a managed identity together with workload 
+identity federation, allowing pods in the cluster to access the storage account without relying on storage account keys or connection strings. Applications themselves are responsible for 
+linking the managed identity to a Kubernetes service account through the cluster's OIDC issuer.
 
-| Secret                                       | Type     | Description                                                      |
-| -------------------------------------------- | -------- | ---------------------------------------------------------------- |
-| `{{environment}}_STORAGE_CREDENTIALS_ID`     | Secrets  | The name of the storage account.                                 |
-| `{{environment}}_STORAGE_CREDENTIALS_SECRET` | Secrets  | The account key used to authenticate with the storage account.   |
+This ensures secure, keyless access to the file shares while keeping authentication fully managed through Microsoft Entra ID.
 
-> ⚠️ The GitHub secrets are only needed when shared access keys are enabled on the storage account.
+The service principal used for deployments is responsible for provisioning managed identities for applications and granting them access to Azure Storage. It is granted 
+`Restricted User Access Administrator (Storage)`, a custom role that grants `Microsoft.Authorization/roleAssignments/write`, restricted by condition to only allow assigning the 
+`Storage File Data SMB Share Contributor` role, and only to principals of type `ServicePrincipal`.
+
+> ⚠️ The permissions will trigger a Defender (low) finding: _Service Principals should not be assigned with administrative roles at the subscription and resource group level._
 
 ### Soft Delete
 Enables soft delete for blobs, containers, and file shares with a 7-day retention period, allowing recovery of accidentally deleted data.  
@@ -129,7 +124,9 @@ az monitor diagnostic-settings categories list --resource $env:STORAGE_ACCOUNT_I
 ```
 
 ## Network Rules
-The storage account has public network access disabled by default.
+The storage account is configured with public network access disabled (`--public-network-access Disabled`), ensuring that all access to storage services is restricted to private 
+network connectivity through approved virtual networks and private endpoints. This prevents exposure of the storage account to the public internet and strengthens the overall network 
+security posture.  
 
 A Private Endpoint is created within the Kubernetes virtual network, enabling applications running in the cluster to securely access the Storage Account file shares over a private 
 connection. Nano defaults to creating a Private Endpoint for the file shares component of the storage account by using `--group-id file`.
@@ -155,16 +152,6 @@ az storage account network-rule add `
 ```
 
 > ⚠️ Whitelisting IP addresses can reduce the overall security posture and negatively impact the security score.  
-
-### Managed Identity (Kubernetes)
-When public network access is disabled on the storage account, Kubernetes requires a secure way to authenticate and access the Azure File Shares mounted into the application containers. 
-This configuration uses a managed identity together with workload identity federation, allowing pods in the cluster to access the storage account without relying on storage account keys 
-or connection strings. 
-
-Applications themselves are responsible for creating the managed identity, assigning the required Azure Files permissions, and linking the identity to a Kubernetes service account through 
-the cluster's OIDC issuer.  
-
-This ensures secure, keyless access to the file shares while keeping authentication fully managed through Azure AD.  
 
 ### Microsoft Defender
 After successful registration, enable Microsoft Defender either directly on the storage resource or via the Defender for Cloud overview in the Azure Portal.  
