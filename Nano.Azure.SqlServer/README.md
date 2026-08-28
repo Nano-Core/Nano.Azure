@@ -9,6 +9,7 @@
 * **[Registration](#registration)**  
   * **[SQL Server](#sql-server)**  
   * **[Database Creation](#database-creation)**
+  * **[Managed Idenity](#managed-idenity)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#microsoft-defender)**  
 * **[Dependencies](#dependencies)**  
@@ -64,6 +65,48 @@ Each application creates and owns its own database, as a dedicated step in its o
 backup retention, high availability, maintenance, diagnostics settings, and alerts — all configured as part of that pipeline step.  
 
 Transaction isolation defaults to `read committed snapshot` (RCSI), Azure SQL Database's own default, and is not explicitly configured as part of this.
+
+### Managed Identity
+Native SQL Server password authentication is disabled for this server. Access is instead handled through Microsoft Entra ID authentication, removing long-lived shared secrets (admin username/password) 
+in favor of short-lived, identity-based tokens.
+
+> ⚠️ Executing the script requires Groups Administrator, and either Privileged Role Administrator or Global Administrator, in Microsoft Entra ID.
+
+An admin username and password are still required to create the server, but the value is randomly generated and discarded — the login is disabled once Entra-only authentication is enabled.
+
+A dedicated user-assigned managed identity is created and attached to the SQL Server. The server uses this identity to query Microsoft Graph and validate Entra ID logins (users, groups, 
+and service principals). It's not itself used to log in.
+
+Two Entra ID groups control access to the database:
+
+| Group           | Purpose                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `-admins`       | Full admin access (DDL — create / alter / drop).                                                |
+| `-developers`   | Connect access to all databases. Read/write access (DML only) must be granted per database.     |
+
+To grant access, add the relevant user or identity to the appropriate group in Entra ID. No changes to the database or this script are needed.
+
+Unlike MySQL and PostgreSQL, SQL Server has no server-wide grant for read/write access — the `-developers` group must be added as a database user and granted `db_datareader`/`db_datawriter` in each 
+database individually. Run the following when a new database is created:
+
+```sql
+CREATE USER [%DEVELOPER_GROUP_NAME%] FROM EXTERNAL PROVIDER;
+ALTER ROLE db_datareader ADD MEMBER [%DEVELOPER_GROUP_NAME%];
+ALTER ROLE db_datawriter ADD MEMBER [%DEVELOPER_GROUP_NAME%];
+```
+
+Before acquiring an access token, confirm the membership is visible by running the following command. If this returns `false`, wait a few minutes and check again.
+
+```powershell
+az ad group member check --group $env:ADMIN_GROUP_NAME --member-id $env:USER_OBJECT_ID --query value -o tsv;
+```
+
+> ⚠️ Entra ID/Graph changes can take a few minutes to propagate.
+
+When running `az account get-access-token`, if the token doesn't reflect a recent group change, even after propagation completes, re-authenticate with `az account clear && az login` to get 
+a fresh one.
+
+> ⚠️ Access tokens are cached locally by the Azure CLI.
 
 ### Network Rules
 The SQL Server has no public access by default. 
