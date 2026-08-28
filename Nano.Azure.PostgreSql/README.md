@@ -12,6 +12,7 @@
   * **[Storage Auto Growth](#storage-auto-growth)**
   * **[IOPS Auto Scaling](#iops-auto-scaling)**
   * **[High Availability](#high-availability)**
+  * **[Managed Idenity](#managed-idenity)**  
   * **[Maintenance](#maintenance)**  
   * **[Transaction Isolation Level](#transaction-isolation-level)**  
   * **[Alerts](#alerts)**  
@@ -117,6 +118,37 @@ High availability is enabled by default for the PostgreSQL server. In Azure Data
 improve resilience and reduce downtime in case of infrastructure or zone-level failures.  
 
 To disable high availability, simply comment out the `--high-availability`, `--zone`, and `--standby-zone` parameters in the `deploy.ps1` script's create command.
+
+### Managed Identity
+Native PostgreSQL password authentication is disabled for this server. Access is instead handled through Microsoft Entra ID authentication, removing long-lived shared secrets (admin username/password) 
+in favor of short-lived, identity-based tokens.
+
+> ⚠️ Executing the script requires Groups Administrator, and either Privileged Role Administrator or Global Administrator, in Microsoft Entra ID.
+
+A dedicated user-assigned managed identity is created and attached to the PostgreSQL Flexible Server. The server uses this identity to query Microsoft Graph and validate Entra ID logins (users, groups, 
+and service principals). It's not itself used to log in.
+
+Two Entra ID groups control access to the database:
+
+| Group           | Purpose                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `-admins`       | Full admin access (DDL — create / alter / drop).                                                |
+| `-developers`   | Read/write access (DML only — select / insert / update / delete), no schema change permissions. |
+
+To grant access, add the relevant user or identity to the appropriate group in Entra ID. No changes to the database or this script are needed.
+
+Before acquiring an access token, confirm the membership is visible by running the following command. If this returns `false`, wait a few minutes and check again.
+
+```powershell
+az ad group member check --group $env:ADMIN_GROUP_NAME --member-id $env:USER_OBJECT_ID --query value -o tsv;
+```
+
+> ⚠️ Entra ID/Graph changes can take a few minutes to propagate.
+
+When running `az account get-access-token`, if the token doesn't reflect a recent group change, even after propagation completes, re-authenticate with `az account clear && az login` to get 
+a fresh one.
+
+> ⚠️ Access tokens are cached locally by the Azure CLI.
 
 ### Maintenance
 The Azure maintainance window is set to sunday at 04:00.
