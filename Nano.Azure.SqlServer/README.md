@@ -67,8 +67,9 @@ backup retention, high availability, maintenance, diagnostics settings, and aler
 Transaction isolation defaults to `read committed snapshot` (RCSI), Azure SQL Database's own default, and is not explicitly configured as part of this.
 
 ### Managed Identity
-Native SQL Server password authentication is disabled for this server. Access is instead handled through Microsoft Entra ID authentication, removing long-lived shared secrets (admin username/password) 
-in favor of short-lived, identity-based tokens.
+Both native SQL Server password authentication and Microsoft Entra ID authentication are enabled for this server (dual auth). Entra ID is used for all Entra-capable identities via 
+short-lived tokens instead of shared secrets. Native auth stays enabled only because the self-hosted Grafana Helm chart has no Entra support for its own database connection, so it uses 4
+a dedicated, least-privilege SQL login instead.
 
 > ⚠️ Executing the script requires Groups Administrator, and either Privileged Role Administrator or Global Administrator, in Microsoft Entra ID.
 
@@ -88,8 +89,10 @@ The `nano-deploy-service-principal` service principal is added to the `-admins` 
 
 To grant access, add the relevant user or identity to the appropriate group in Entra ID. No changes to the database or this script are needed.
 
-Unlike MySQL and PostgreSQL, SQL Server has no server-wide grant for read/write access — the `-developers` group must be added as a database user and granted `db_datareader`/`db_datawriter` in each 
-database individually. Run the following when a new database is created:
+> ⚠️ SQL Server has no server-wide grant for read/write access — the `-developers` group must be added as a database user and granted `db_datareader`/`db_datawriter` in each database 
+individually. 
+
+Run the following when a new database is created:
 
 ```sql
 CREATE USER [%DEVELOPER_GROUP_NAME%] FROM EXTERNAL PROVIDER;

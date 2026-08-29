@@ -97,7 +97,7 @@ az mysql flexible-server parameter set `
     -g $env:AZURE_RESOURCE_GROUP `
     -s $env:APP_NAME `
     -n aad_auth_only `
-    -v ON;
+    -v OFF;
 
 $env:USER_OBJECT_ID = az ad signed-in-user show --query id -o tsv;
 

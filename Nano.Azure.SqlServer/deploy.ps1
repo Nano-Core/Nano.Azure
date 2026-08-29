@@ -74,7 +74,7 @@ az sql server ad-admin create `
     --display-name $env:ADMIN_GROUP_NAME `
     --object-id $env:ADMIN_GROUP_ID;
 
-az sql server ad-only-auth enable `
+az sql server ad-only-auth disable `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:APP_NAME;
 

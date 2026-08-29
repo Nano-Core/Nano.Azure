@@ -121,8 +121,9 @@ improve resilience and reduce downtime in case of infrastructure or zone-level f
 To disable high availability, simply comment out the `--high-availability`, `--zone`, and `--standby-zone` parameters in the `deploy.ps1` script’s create command.
 
 ### Managed Identity
-Native MySQL password authentication is disabled for this server. Access is instead handled through Microsoft Entra ID authentication, removing long-lived shared secrets (admin username/password) 
-in favor of short-lived, identity-based tokens.
+Both native MySQL password authentication and Microsoft Entra ID authentication are enabled for this server (dual auth). Entra ID is used for all Entra-capable identities via short-lived 
+tokens instead of shared secrets. Native auth stays enabled only because the self-hosted Grafana Helm chart has no Entra support for its own database connection, so it uses a dedicated, 
+least-privilege SQL user instead.
 
 > ⚠️ Executing the script requires Groups Administrator, and either Privileged Role Administrator or Global Administrator, in Microsoft Entra ID.
 

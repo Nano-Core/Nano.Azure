@@ -88,7 +88,7 @@ az postgres flexible-server ad-admin create `
 az postgres flexible-server update `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:APP_NAME `
-    --password-auth Disabled;
+    --password-auth Enabled;
 
 $env:USER_OBJECT_ID = az ad signed-in-user show --query id -o tsv;
 
