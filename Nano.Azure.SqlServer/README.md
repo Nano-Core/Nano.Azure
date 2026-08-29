@@ -84,6 +84,8 @@ Two Entra ID groups control access to the database:
 | `-admins`       | Full admin access (DDL — create / alter / drop).                                                |
 | `-developers`   | Connect access to all databases. Read/write access (DML only) must be granted per database.     |
 
+The `nano-deploy-service-principal` service principal is added to the `-admins` group, granting it full admin access across all databases on this server so CI/CD can run migrations.
+
 To grant access, add the relevant user or identity to the appropriate group in Entra ID. No changes to the database or this script are needed.
 
 Unlike MySQL and PostgreSQL, SQL Server has no server-wide grant for read/write access — the `-developers` group must be added as a database user and granted `db_datareader`/`db_datawriter` in each 

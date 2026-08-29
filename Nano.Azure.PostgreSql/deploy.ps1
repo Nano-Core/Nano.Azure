@@ -71,6 +71,13 @@ az ad group member add `
     --group $env:ADMIN_GROUP_NAME `
     --member-id $env:IDENTITY_PRINCIPAL_ID;
 
+$env:SERVICE_PRINCIPAL_NAME = "nano-deploy-service-principal";
+$env:SERVICE_PRINCIPAL_OBJECT_ID = az ad sp list --display-name $env:SERVICE_PRINCIPAL_NAME --query "[0].id" -o tsv;
+
+az ad group member add `
+    --group $env:ADMIN_GROUP_NAME `
+    --member-id $env:SERVICE_PRINCIPAL_OBJECT_ID;
+
 az postgres flexible-server ad-admin create `
     -g $env:AZURE_RESOURCE_GROUP `
     -s $env:APP_NAME `

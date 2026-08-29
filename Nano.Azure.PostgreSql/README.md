@@ -135,6 +135,8 @@ Two Entra ID groups control access to the database:
 | `-admins`       | Full admin access (DDL — create / alter / drop).                                                |
 | `-developers`   | Read/write access (DML only — select / insert / update / delete), no schema change permissions. |
 
+The `nano-deploy-service-principal` service principal is added to the `-admins` group, granting it full admin access across all databases on this server so CI/CD can run migrations.
+
 To grant access, add the relevant user or identity to the appropriate group in Entra ID. No changes to the database or this script are needed.
 
 Before acquiring an access token, confirm the membership is visible by running the following command. If this returns `false`, wait a few minutes and check again.
