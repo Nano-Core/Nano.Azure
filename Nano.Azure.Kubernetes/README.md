@@ -523,6 +523,7 @@ kubectl port-forward pod/<pod-name> 8080:80 -n {{namespace}}
 ## Dependencies
 Kubernetes has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
 
-| Dependency                                                                                                                            | Description                                                             | 
-| ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | 
-| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.                      |
+| Dependency                                                                                                                            | Description                                          | 
+| ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | 
+| **[Nano.Azure.DNS](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.DNS/README.md#nanoazuredns)**                       | Components for DNS.                                  |
+| **[Nano.Azure.Monitoring](https://github.com/Nano-Core/Nano.Azure/blob/master/Nano.Azure.Monitoring/README.md#nanoazuremonitoring)**  | Components for centralized monitoring and logging.   |
