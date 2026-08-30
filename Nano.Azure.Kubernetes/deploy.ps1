@@ -13,7 +13,9 @@ $env:KUBERNETES_NODE_SIZE = "standard_d4as_v6";
 $env:KUBERNETES_NODE_COUNT = 3;
 $env:KUBERNETES_NODES_MIN = 3;
 $env:KUBERNETES_NODES_MAX = 6;
+$env:KUBERNETES_NAMESPACE = "apps";
 $env:APP_NAME = $env:ENVIRONMENT.ToLower() + "-cluster";
+$env:ALB_SUBNET_NAME = "aks-subnet-alb"; 
 
 # Register Providers
 az provider register --namespace Microsoft.PolicyInsights;
@@ -62,22 +64,26 @@ az aks create `
     --ssh-access Disabled `
     --zones 1 2 3;
 
+az aks command invoke `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:APP_NAME `
+    -c "kubectl create namespace $env:KUBERNETES_NAMESPACE --dry-run=client -o yaml | kubectl apply -f -";
+
 # Load Balancer
-$env:SUBNET_ALB_NAME = "aks-subnet-alb"; 
-$env:SUBNET_ADDRESS_PREFIXES = "10.230.0.0/24";
+$env:ALB_SUBNET_ADDRESS_PREFIX = "10.230.0.0/24";
 $env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
 
 az network vnet subnet create `
     -g $env:AZURE_RESOURCE_GROUP_ASSETS `
-    -n $env:SUBNET_ALB_NAME `
+    -n $env:ALB_SUBNET_NAME `
     --vnet-name $env:VNET_NAME `
-    --address-prefixes $env:SUBNET_ADDRESS_PREFIXES `
+    --address-prefixes $env:ALB_SUBNET_ADDRESS_PREFIX `
     --delegations 'Microsoft.ServiceNetworking/trafficControllers';
 
-$env:ALB_IDENTITY_NAME = az identity list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query "[?contains(name, 'applicationloadbalancer')].name" -o tsv
-$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:ALB_IDENTITY_NAME --query principalId -o tsv;
-$env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
 $env:AZURE_RESOURCE_GROUP_ASSETS_ID = az group show -n $env:AZURE_RESOURCE_GROUP_ASSETS --query id;
+$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:ALB_IDENTITY_NAME --query principalId -o tsv;
+$env:ALB_IDENTITY_NAME = az identity list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query "[?contains(name, 'applicationloadbalancer')].name" -o tsv
+$env:ALB_SUBNET_ID = az network vnet subnet show -n $env:ALB_SUBNET_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
 
 az role assignment create `
     --assignee-object-id $env:PRINCIPAL_ID `
@@ -91,11 +97,7 @@ az role assignment create `
     --scope $env:ALB_SUBNET_ID `
     --role "Network Contributor";
 
-$env:KUBERNETES_NAMESPACE = "apps";
-$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
-$env:ALB_SUBNET_ID = az network vnet subnet show -n $env:SUBNET_ALB_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
 $env:APPLICATION_LOAD_BALANCER_PATH = Join-Path $env:USERPROFILE "application-load-balancer.yaml";
-
 Get-Content .kubernetes/application-load-balancer.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:APPLICATION_LOAD_BALANCER_PATH;
 
 az aks command invoke `
@@ -575,7 +577,7 @@ az aks update `
     --enable-defender `
     --defender-config=$env:DEFENDER_CONFIG_FILE_PATH;
 
-# Policies
+# Network Policies
 az aks enable-addons `
     -n $env:APP_NAME `
     -g $env:AZURE_RESOURCE_GROUP `
@@ -595,3 +597,16 @@ az policy assignment update `
     -n SecurityCenterBuiltIn `
     --scope "/subscriptions/$env:AZURE_SUBSCRIPTION_ID" `
     --params $params;
+
+$env:VNET_NAME = az network vnet list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query [0].name -o tsv;
+$env:ALB_SUBNET_CIDR = az network vnet subnet show -n $env:ALB_SUBNET_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query addressPrefix -o tsv;
+$env:NETWORK_POLICY_PATH = Join-Path $env:USERPROFILE "network-policy.yaml";
+
+Get-Content .kubernetes/network-policy.yaml | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:NETWORK_POLICY_PATH;
+
+az aks command invoke `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:APP_NAME `
+    --file $env:NETWORK_POLICY_PATH `
+    --command "kubectl apply -f network-policy.yaml" `
+    --output json | ConvertFrom-Json;

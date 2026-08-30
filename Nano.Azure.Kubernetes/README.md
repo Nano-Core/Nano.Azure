@@ -54,8 +54,8 @@ Add the following GitHub organization variables.
 | Secret                                    | Type    | Description                                                        |
 | ----------------------------------------- | ------- |------------------------------------------------------------------- |
 | `AZURE_RESOURCE_GROUP_KUBERNETES`         | vars    | The Azure resource group of the Kubernetes cluster (AKS).          |
-| `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS`  | vars    | The Azure resource group of the Kubernetes cluster (AKS) Asserts.  |
-| `KUBERNETES_NAMESPACE`                    | vars     | The Kubernetes namespace to use for all deployments.              |
+| `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS`  | vars    | The Azure resource group of the Kubernetes cluster (AKS) Assets.   |
+| `KUBERNETES_NAMESPACE`                    | vars    | The Kubernetes namespace to use for all deployments.               |
 
 > 💡 AKS automatically creates `DefaultResourceGroup-<REGION>` for monitoring, even with a Workspace ID specified. It can be safely deleted.
 
@@ -85,8 +85,6 @@ services, and supporting objects such as secrets and config maps are grouped tog
 
 It is created during cluster bootstrap and is safe to reapply in CI/CD pipelines. All application resources should target this namespace unless a specific multi-namespace design 
 is explicitly required.  
-
-Execute the `namespace.ps1` script to create the Kubernetes namespace.  
 
 ### Gateway Load Balancer
 Application Gateway API support is enabled in the AKS cluster through `--enable-gateway-api`, adding the Kubernetes Gateway API custom resource definitions (CRDs) required for 
@@ -140,10 +138,14 @@ Example: `2.100 * 80% / 700 * 100 = 240`
 ### Network Policy
 The AKS cluster is configured with the Azure CNI network plugin in overlay mode to enable scalable pod networking while conserving virtual network IP space. By using `--network-plugin azure` 
 with `--network-plugin-mode=overlay`, pods receive IPs from an overlay network instead of the underlying VNet. The `--network-policy azure` setting enforces Azure Network Policies, 
-allowing fine-grained control over traffic flow between pods and services to improve cluster security and isolation.  
+allowing fine-grained control over traffic flow between pods and services to improve cluster security and isolation.
 
-By default, no ingress or egress network policies are defined. Network policies can be applied at the namespace or individual deployment level, allowing fine-grained and more restrictive 
-traffic control. Below is a simple example of restricting ingress.
+A default network policy is applied to the chosen namespace, scoping ingress to traffic originating from within the namespace itself and from the Application Load Balancer subnet, so 
+that external traffic can only reach pods through the gateway. This means pods in the namespace can freely talk to each other, while traffic from other namespaces or directly from outside
+the ALB subnet is denied by default.
+
+No egress policies are defined by default, so pods can reach any destination outside the cluster without restriction. Additional network policies, for both ingress and egress, can be
+applied at the namespace or individual deployment level for more restrictive traffic control where needed.
 
 ```yaml
 apiVersion: networking.k8s.io/v1
