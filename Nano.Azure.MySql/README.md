@@ -125,6 +125,8 @@ Both native MySQL password authentication and Microsoft Entra ID authentication 
 tokens instead of shared secrets. Native auth stays enabled only because the self-hosted Grafana Helm chart has no Entra support for its own database connection, so it uses a dedicated, 
 least-privilege SQL user instead.
 
+> 💡 The `aad_auth_only` parameter can be switched to `ON` via the `az mysql flexible-server parameter set` command if no username/password integrations are needed for this server.
+
 > ⚠️ Executing the script requires Groups Administrator, and either Privileged Role Administrator or Global Administrator, in Microsoft Entra ID.
 
 A dedicated user-assigned managed identity is created and attached to the MySQL Flexible Server. The server uses this identity to query Microsoft Graph and validate Entra ID logins (users, groups, 

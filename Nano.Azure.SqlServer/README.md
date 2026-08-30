@@ -71,6 +71,8 @@ Both native SQL Server password authentication and Microsoft Entra ID authentica
 short-lived tokens instead of shared secrets. Native auth stays enabled only because the self-hosted Grafana Helm chart has no Entra support for its own database connection, so it uses 4
 a dedicated, least-privilege SQL login instead.
 
+> 💡 Native SQL Server authentication can be disabled again via the `az sql server ad-only-auth enable` command if no username/password integrations are needed for this server.
+
 > ⚠️ Executing the script requires Groups Administrator, and either Privileged Role Administrator or Global Administrator, in Microsoft Entra ID.
 
 An admin username and password are still required to create the server, but the value is randomly generated and discarded — the login is disabled once Entra-only authentication is enabled.

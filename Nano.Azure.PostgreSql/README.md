@@ -124,6 +124,8 @@ Both native PostgreSQL password authentication and Microsoft Entra ID authentica
 short-lived tokens instead of shared secrets. Native auth stays enabled only because the self-hosted Grafana Helm chart has no Entra support for its own database connection, so it uses a 
 dedicated, least-privilege role instead.
 
+> 💡 The `--password-auth` flag can be switched to `Disabled` via the `az postgres flexible-server update` command if no username/password integrations are needed for this server.
+
 > ⚠️ Executing the script requires Groups Administrator, and either Privileged Role Administrator or Global Administrator, in Microsoft Entra ID.
 
 A dedicated user-assigned managed identity is created and attached to the PostgreSQL Flexible Server. The server uses this identity to query Microsoft Graph and validate Entra ID logins (users, groups, 
