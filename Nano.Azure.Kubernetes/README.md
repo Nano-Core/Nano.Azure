@@ -57,7 +57,7 @@ Add the following GitHub organization variables.
 | `AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS`  | vars    | The Azure resource group of the Kubernetes cluster (AKS) Assets.   |
 | `KUBERNETES_NAMESPACE`                    | vars    | The Kubernetes namespace to use for all deployments.               |
 
-> 💡 AKS automatically creates `DefaultResourceGroup-<REGION>` for monitoring, even with a Workspace ID specified. It can be safely deleted.
+> ⚠️ AKS automatically creates `DefaultResourceGroup-<REGION>` for monitoring related to Defnder, even with a Workspace ID specified. Don't delete it.
 
 ### Kubernetes Cluster
 Execute the next part of the `deploy.ps1` to create a managed Kubernetes cluster (AKS) on Azure.  
