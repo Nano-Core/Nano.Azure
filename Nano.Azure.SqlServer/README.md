@@ -12,6 +12,7 @@
   * **[Managed Idenity](#managed-idenity)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#microsoft-defender)**  
+* **[Connecting Locally](#connecting-locally)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -151,6 +152,20 @@ az sql server firewall-rule create `
 After successful registration, enable Defender directly on the SQL Server resource in the Azure Portal. 
 
 > ⚠️ This setting is not currently configurable via the Azure CLI.  
+
+## Connecting Locally
+To connect to the database locally (e.g. via SQL Server Management Studio or Azure Data Studio), use the following:
+
+| Field    | Value                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------ |
+| Host     | `az sql server list -g $env:AZURE_GROUP_DATABASE --query [0].fullyQualifiedDomainName -o tsv`    |
+| Port     | `1433`                                                                                            |
+| Username | The `-admins` or `-developers` group you're a member of                                          |
+| Password | `az account get-access-token --resource "https://database.windows.net/" --query accessToken -o tsv` |
+
+> ⚠️ In SSMS/Azure Data Studio, choose **Azure Active Directory - Universal with MFA** or, for token-based login, **Azure Active Directory - Access Token** as the authentication method.
+
+Tokens expire after roughly 60–90 minutes; if the connection fails after being idle, fetch a new token and reconnect.
 
 ## Dependencies
 SQL Server has the following dependencies that must be deployed or otherwise satisfied prior to setup.  

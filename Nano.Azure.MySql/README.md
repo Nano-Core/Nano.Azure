@@ -19,6 +19,7 @@
   * **[Diagnostics Settings](#diagnostics-settings)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#microsoft-defender)**  
+* **[Connecting Locally](#connecting-locally)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -212,6 +213,20 @@ az mysql flexible-server firewall-rule create `
 After successful registration, enable Defender directly on the MySQL resource in the Azure Portal. 
 
 > ⚠️ This setting is not currently configurable via the Azure CLI.  
+
+## Connecting Locally
+To connect to the database locally (e.g. via MySQL Workbench), use the following:
+
+| Field     | Value                                                                                                     |
+| --------- | --------------------------------------------------------------------------------------------------------- |
+| Host      | `az mysql flexible-server list -g $env:AZURE_GROUP_DATABASE --query [0].fullyQualifiedDomainName -o tsv`  |
+| Port      | `3306`                                                                                                    |
+| Username  | The `-admins` or `-developers` group you're a member of                                                   |
+| Password  | `az account get-access-token --resource-type oss-rdbms --query accessToken -o tsv`                        |
+
+> ⚠️ In Workbench, enable **Enable Cleartext Authentication Plugin** under the connection's Advanced tab — required for token-based login.
+
+Tokens expire after roughly 60–90 minutes; if the connection fails after being idle, fetch a new token and reconnect.
 
 ## Dependencies
 MySQL has the following dependencies that must be deployed or otherwise satisfied prior to setup.  

@@ -19,6 +19,7 @@
   * **[Diagnostics Settings](#diagnostics-settings)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#microsoft-defender)**  
+* **[Connecting Locally](#connecting-locally)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -211,6 +212,20 @@ az postgres flexible-server firewall-rule create `
 After successful registration, enable Defender directly on the PostgreSQL resource in the Azure Portal. 
 
 > ⚠️ This setting is not currently configurable via the Azure CLI.  
+
+## Connecting Locally
+To connect to the database locally (e.g. via pgAdmin or `psql`), use the following:
+
+| Field     | Value                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------ |
+| Host      | `az postgres flexible-server list -g $env:AZURE_GROUP_DATABASE --query [0].fullyQualifiedDomainName -o tsv`  |
+| Port      | `5432`                                                                                                       |
+| Username  | The `-admins` or `-developers` group you're a member of                                                      |
+| Password  | `az account get-access-token --resource-type oss-rdbms --query accessToken -o tsv`                           |
+
+> ⚠️ SSL/TLS is required for the connection.
+
+Tokens expire after roughly 60–90 minutes; if the connection fails after being idle, fetch a new token and reconnect.
 
 ## Dependencies
 PostgreSQL has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
