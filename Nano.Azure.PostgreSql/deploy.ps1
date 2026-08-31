@@ -1,5 +1,5 @@
 $env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "North Europe";
+$env:AZURE_LOCATION = "Sweden Central";
 $env:AZURE_RESOURCE_GROUP = "Nano-Database";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
@@ -9,12 +9,15 @@ $env:POSTGRESQL_STORAGE_SIZE = "64";
 $env:POSTGRESQL_TIER = "GeneralPurpose";
 $env:POSTGRESQL_BACKUP_INTERVAL = 24
 $env:POSTGRESQL_BACKUP_RETENTION = 35
-$env:POSTGRESQL_ADMIN_USERNAME = "adminuser";
-$env:POSTGRESQL_ADMIN_PASSWORD = "";
 $env:APP_NAME = "nano-postgresql-" + $env:ENVIRONMENT.ToLower();
+$env:IDENTITY_NAME = $env:APP_NAME + "-identity";
+$env:ADMIN_GROUP_NAME = $env:APP_NAME + "-admins";
+$env:DEVELOPER_GROUP_NAME = $env:APP_NAME + "-developers";
 
 # Register Providers
 az provider register -n Microsoft.DBforPostgreSQL;
+
+az extension add --name rdbms-connect
 
 # Resource Group
 az group create `
@@ -35,8 +38,10 @@ az postgres flexible-server create `
     --public-access Disabled `
     --zone 1 `
     --geo-redundant-backup Enabled `
-    --high-availability ZoneRedundant `
+    --zonal-resiliency Enabled `
     --standby-zone 2 `
+    --password-auth Enabled `
+    --microsoft-entra-auth Enabled `
     -y;
 
 # Managed Identity
@@ -78,17 +83,12 @@ az ad group member add `
     --group $env:ADMIN_GROUP_NAME `
     --member-id $env:SERVICE_PRINCIPAL_OBJECT_ID;
 
-az postgres flexible-server ad-admin create `
+az postgres flexible-server microsoft-entra-admin create `
     -g $env:AZURE_RESOURCE_GROUP `
     -s $env:APP_NAME `
     --display-name $env:ADMIN_GROUP_NAME `
     --object-id $env:ADMIN_GROUP_ID `
     --type Group;
-
-az postgres flexible-server update `
-    -g $env:AZURE_RESOURCE_GROUP `
-    -n $env:APP_NAME `
-    --password-auth Enabled;
 
 $env:USER_OBJECT_ID = az ad signed-in-user show --query id -o tsv;
 

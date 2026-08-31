@@ -1,12 +1,17 @@
 $env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "North Europe";
+$env:AZURE_LOCATION = "Sweden Central";
 $env:AZURE_RESOURCE_GROUP = "Nano-Database";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
 $env:APP_NAME = "nano-sqlserver-" + $env:ENVIRONMENT.ToLower();
+$env:IDENTITY_NAME = $env:APP_NAME + "-identity";
+$env:ADMIN_GROUP_NAME = $env:APP_NAME + "-admins";
+$env:DEVELOPER_GROUP_NAME = $env:APP_NAME + "-developers";
 
 # Register Providers
 az provider register -n Microsoft.Sql;
+
+az extension add --name rdbms-connect
 
 # Resource Group
 az group create `
