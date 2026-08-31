@@ -46,6 +46,8 @@ improve build throughput in ACR.
 Be aware that running a self-hosted agent pool currently requires manual scaling, with virtual machines running continuously regardless of workload. This results in unnecessary infrastructure 
 costs during idle periods and makes the solution difficult to scale efficiently. The agent pool may be omitted, but requires `--public-network-enabled True` when creating the ACR.
 
+> 💡 Using `az acr build` requires the `--agent-pool buildpool` parameter to build Docker images on the decicated agentpool.
+
 ### Attach Registry to Kubernetes
 The container registry is integrated directly with the Kubernetes cluster using AKS–ACR integration. This means workloads can pull images from the registry without requiring any manual 
 authentication setup in Kubernetes manifests.  
@@ -58,7 +60,7 @@ imagePullSecrets:
 ```
 
 ## Network Rules
-The container registry has public network access disabled by default.
+The container registry has public network access enabled by default. If using a dedicated [Agent Pool](#agent-pool) is used, the public access can safely be disabled.
 
 A Private Endpoint is created within the Kubernetes virtual network, enabling applications running in the cluster to securely access the Storage Account file shares over a private 
 connection.

@@ -18,7 +18,7 @@ az acr create `
     -l $env:AZURE_LOCATION `
     --sku Premium `
     --workspace $env:LOG_ANALYTICS_WORKSPACE_ID `
-    --public-network-enabled false `
+    --public-network-enabled true `
     --allow-trusted-services true `
     --default-action Deny `
     --admin-enabled false `
