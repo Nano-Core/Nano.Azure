@@ -20,7 +20,7 @@ az group create `
 
 # Create SQL Server
 $env:SQL_ADMIN_USERNAME = "sqladmin";
-$env:SQL_ADMIN_PASSWORD = -join ((33..126) | Get-Random -Count 24 | ForEach-Object { [char]$_ });
+$env:SQL_ADMIN_PASSWORD = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 24 | ForEach-Object { [char]$_ });
 
 az sql server create `
     -n $env:APP_NAME `
@@ -46,7 +46,7 @@ az rest --method POST `
 az sql server update `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:APP_NAME `
-    --assign-identity `
+    --assign_identity `
     --identity-type UserAssigned `
     --user-assigned-identity-id $env:IDENTITY_ID `
     --primary-user-assigned-identity-id $env:IDENTITY_ID;
@@ -59,7 +59,6 @@ az ad group create `
     --display-name $env:DEVELOPER_GROUP_NAME `
     --mail-nickname $env:DEVELOPER_GROUP_NAME;
 
-$env:ADMIN_GROUP_ID = az ad group show -g $env:ADMIN_GROUP_NAME --query id -o tsv;
 $env:IDENTITY_PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP -n $env:IDENTITY_NAME --query principalId -o tsv;
 
 az ad group member add `
@@ -72,6 +71,8 @@ $env:SERVICE_PRINCIPAL_OBJECT_ID = az ad sp list --display-name $env:SERVICE_PRI
 az ad group member add `
     --group $env:ADMIN_GROUP_NAME `
     --member-id $env:SERVICE_PRINCIPAL_OBJECT_ID;
+
+$env:ADMIN_GROUP_ID = az ad group show -g $env:ADMIN_GROUP_NAME --query id -o tsv;
 
 az sql server ad-admin create `
     -g $env:AZURE_RESOURCE_GROUP `
@@ -94,13 +95,13 @@ $env:DEVELOPER_GROUP_SQL_PATH = Join-Path $env:USERPROFILE "developer-group-user
 
 Get-Content .sql/developer-group-user.sql | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:DEVELOPER_GROUP_SQL_PATH;
 
-Install-Module -Name SqlServer -Scope CurrentUser;
+winget install sqlcmd
 
-Invoke-Sqlcmd `
-    -ServerInstance "$env:APP_NAME.database.windows.net" `
-    -Database "master" `
-    -AccessToken $env:SQL_TOKEN `
-    -InputFile $env:DEVELOPER_GROUP_SQL_PATH;
+& "C:\Program Files\sqlcmd\sqlcmd.exe" `
+    -S "$env:APP_NAME.database.windows.net" `
+    -d master `
+    --authentication-method ActiveDirectoryDefault `
+    -i $env:DEVELOPER_GROUP_SQL_PATH;
 
 az ad group member remove `
     --group $env:ADMIN_GROUP_NAME `

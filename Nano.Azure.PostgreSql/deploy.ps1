@@ -75,7 +75,6 @@ az ad group create `
     --display-name $env:DEVELOPER_GROUP_NAME `
     --mail-nickname $env:DEVELOPER_GROUP_NAME;
 
-$env:ADMIN_GROUP_ID = az ad group show -g $env:ADMIN_GROUP_NAME --query id -o tsv;
 $env:IDENTITY_PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP -n $env:IDENTITY_NAME --query principalId -o tsv;
 
 az ad group member add `
@@ -88,6 +87,8 @@ $env:SERVICE_PRINCIPAL_OBJECT_ID = az ad sp list --display-name $env:SERVICE_PRI
 az ad group member add `
     --group $env:ADMIN_GROUP_NAME `
     --member-id $env:SERVICE_PRINCIPAL_OBJECT_ID;
+
+$env:ADMIN_GROUP_ID = az ad group show -g $env:ADMIN_GROUP_NAME --query id -o tsv;
 
 az postgres flexible-server microsoft-entra-admin create `
     -g $env:AZURE_RESOURCE_GROUP `
