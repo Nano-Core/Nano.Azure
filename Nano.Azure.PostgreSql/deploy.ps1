@@ -48,7 +48,7 @@ az postgres flexible-server parameter set `
     -g $env:AZURE_RESOURCE_GROUP `
     -s $env:APP_NAME `
     -n azure.extensions `
-    --value POSTGIS,VECTOR;
+    --value POSTGIS;
 
 # Managed Identity
 az identity create `

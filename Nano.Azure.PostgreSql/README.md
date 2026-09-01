@@ -83,7 +83,7 @@ az postgres flexible-server list-skus -l $env:AZURE_LOCATION -o table;
 You can also check out the official list of available SKUs on the **[PostgreSQL Compute and Storage](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-compute-storage)** page.
 
 PostgreSQL extensions must be explicitly allow-listed via the `azure.extensions` server parameter before they can be created with `CREATE EXTENSION` — availability alone isn't enough. Setting 
-this parameter replaces the full list rather than appending to it, so every required extension must be included together. Currently enabled: `postgis`, `vector`.
+this parameter replaces the full list rather than appending to it, so every required extension must be included together. Currently enabled: `postgis`.
 
 The PostgreSQL connection string has this format.  
 
