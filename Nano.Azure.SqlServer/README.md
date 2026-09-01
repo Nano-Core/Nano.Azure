@@ -87,14 +87,6 @@ To grant access, add the relevant user or identity to the appropriate group in E
 > ⚠️ SQL Server has no server-wide grant for read/write access — the `-developers` group must be added as a database user and granted `db_datareader`/`db_datawriter` in each database 
 individually. 
 
-Run the following when a new database is created:
-
-```sql
-CREATE USER [%DEVELOPER_GROUP_NAME%] FROM EXTERNAL PROVIDER;
-ALTER ROLE db_datareader ADD MEMBER [%DEVELOPER_GROUP_NAME%];
-ALTER ROLE db_datawriter ADD MEMBER [%DEVELOPER_GROUP_NAME%];
-```
-
 Before acquiring an access token, confirm the membership is visible by running the following command. If this returns `false`, wait a few minutes and check again.
 
 ```powershell
@@ -148,16 +140,14 @@ After successful registration, enable Defender directly on the SQL Server resour
 ## Connecting Locally
 To connect to the database locally (e.g. via SQL Server Management Studio or Azure Data Studio), use the following:
 
-| Field    | Value                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------ |
-| Host     | `az sql server list -g $env:AZURE_GROUP_DATABASE --query [0].fullyQualifiedDomainName -o tsv`    |
-| Port     | `1433`                                                                                            |
-| Username | The `-admins` or `-developers` group you're a member of                                          |
-| Password | `az account get-access-token --resource "https://database.windows.net/" --query accessToken -o tsv` |
+| Field           | Value                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------ |
+| Host            | `az sql server list -g $env:AZURE_GROUP_DATABASE --query [0].fullyQualifiedDomainName -o tsv`    |
+| Port            | `1433`                                                                                           |
+| Authentication  | Microsoft Entra MFA (Universal with MFA)                                                         |
+| Username        | The `-admins` or `-developers` group you're a member of                                          |
 
-> ⚠️ In SSMS/Azure Data Studio, choose **Azure Active Directory - Universal with MFA** or, for token-based login, **Azure Active Directory - Access Token** as the authentication method.
-
-Tokens expire after roughly 60–90 minutes; if the connection fails after being idle, fetch a new token and reconnect.
+No password is entered, after selecting the authentication method and entering the group name as the username, a browser sign-in prompt appears to verify your own Entra identity.
 
 ## Dependencies
 SQL Server has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
