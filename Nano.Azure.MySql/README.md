@@ -84,14 +84,6 @@ az mysql flexible-server list-skus -l $env:AZURE_LOCATION -o table;
 
 You can also check out the official list of available SKUs on the **[MySQL Service Tiers](https://learn.microsoft.com/en-us/azure/mysql/flexible-server/concepts-service-tiers-storage)** page.
 
-> ⚠️ Make sure to store the information returned during creation. The _admin password_ for instance cannot be retrieved later.  
-
-Create the required secrets in GitHub for the MySQL server. They will be used later to securely connect your applications to the database.  
-
-| Secret                                  | Type     | Description                                                                    |
-| --------------------------------------- | -------- | ------------------------------------------------------------------------------ |
-| `{{environment}}_SQL_ADMIN_PASSWORD`    | Secret   | The MySQL admin password, used when applying EF migrations during deployment.  |
-
 The MySQL connection string has this format.  
 
 ```

@@ -45,14 +45,6 @@ Execute the next part of the `deploy.ps1` to create a logical SQL Server on Azur
 The SQL Server resource itself has no SKU, storage, or tier. It is only an authentication and networking wrapper. Compute, storage, and scaling are all configured per-database, at 
 the point each application creates its own database. See **[Database Creation](#database-creation)** below.
 
-> ⚠️ Make sure to store the information returned during creation. The _admin password_ for instance cannot be retrieved later.  
-
-Create the required secrets in GitHub for the SQL Server. They will be used later to securely connect your applications to the database.  
-
-| Secret                                  | Type     | Description                                                                    |
-| --------------------------------------- | -------- | ------------------------------------------------------------------------------ |
-| `{{environment}}_SQL_ADMIN_PASSWORD`    | Secret   | The SQL Server admin password, used when applying EF migrations during deployment.  |
-
 The SQL Server connection string has this format.  
 
 ```

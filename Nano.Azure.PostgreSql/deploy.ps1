@@ -44,6 +44,12 @@ az postgres flexible-server create `
     --microsoft-entra-auth Enabled `
     -y;
 
+az postgres flexible-server parameter set `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -s $env:APP_NAME `
+    -n azure.extensions `
+    --value POSTGIS,VECTOR;
+
 # Managed Identity
 az identity create `
     -g $env:AZURE_RESOURCE_GROUP `
