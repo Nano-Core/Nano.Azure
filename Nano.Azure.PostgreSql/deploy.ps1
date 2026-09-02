@@ -11,6 +11,7 @@ $env:POSTGRESQL_BACKUP_INTERVAL = 24
 $env:POSTGRESQL_BACKUP_RETENTION = 35
 $env:APP_NAME = "nano-postgresql-" + $env:ENVIRONMENT.ToLower();
 $env:IDENTITY_NAME = $env:APP_NAME + "-identity";
+$env:SERVICE_PRINCIPAL_NAME = "nano-deploy-service-principal";
 $env:ADMIN_GROUP_NAME = $env:APP_NAME + "-admins";
 $env:DEVELOPER_GROUP_NAME = $env:APP_NAME + "-developers";
 
@@ -81,7 +82,6 @@ az ad group member add `
     --group $env:ADMIN_GROUP_NAME `
     --member-id $env:IDENTITY_PRINCIPAL_ID;
 
-$env:SERVICE_PRINCIPAL_NAME = "nano-deploy-service-principal";
 $env:SERVICE_PRINCIPAL_OBJECT_ID = az ad sp list --display-name $env:SERVICE_PRINCIPAL_NAME --query "[0].id" -o tsv;
 
 az ad group member add `

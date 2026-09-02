@@ -13,6 +13,7 @@ $env:MYSQL_BACKUP_RETENTION = 35
 $env:MYSQL_PORT = 3306;
 $env:APP_NAME = "nano-mysql-" + $env:ENVIRONMENT.ToLower();
 $env:IDENTITY_NAME = $env:APP_NAME + "-identity";
+$env:SERVICE_PRINCIPAL_NAME = "nano-deploy-service-principal";
 $env:ADMIN_GROUP_NAME = $env:APP_NAME + "-admins";
 $env:DEVELOPER_GROUP_NAME = $env:APP_NAME + "-developers";
 
@@ -78,7 +79,6 @@ az ad group member add `
     --group $env:ADMIN_GROUP_NAME `
     --member-id $env:IDENTITY_PRINCIPAL_ID;
 
-$env:SERVICE_PRINCIPAL_NAME = "nano-deploy-service-principal";
 $env:SERVICE_PRINCIPAL_OBJECT_ID = az ad sp list --display-name $env:SERVICE_PRINCIPAL_NAME --query "[0].id" -o tsv;
 
 az ad group member add `
