@@ -1,5 +1,5 @@
 $env:ENVIRONMENT = "";
-$env:AZURE_LOCATION = "North Europe";
+$env:AZURE_LOCATION = "Sweden Central";
 $env:AZURE_RESOURCE_GROUP = "Nano-Database";
 $env:AZURE_RESOURCE_GROUP_LOGS = "Nano-Logs";
 $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
@@ -9,12 +9,16 @@ $env:POSTGRESQL_STORAGE_SIZE = "64";
 $env:POSTGRESQL_TIER = "GeneralPurpose";
 $env:POSTGRESQL_BACKUP_INTERVAL = 24
 $env:POSTGRESQL_BACKUP_RETENTION = 35
-$env:POSTGRESQL_ADMIN_USERNAME = "adminuser";
-$env:POSTGRESQL_ADMIN_PASSWORD = "";
 $env:APP_NAME = "nano-postgresql-" + $env:ENVIRONMENT.ToLower();
+$env:IDENTITY_NAME = $env:APP_NAME + "-identity";
+$env:SERVICE_PRINCIPAL_NAME = "nano-deploy-service-principal";
+$env:ADMIN_GROUP_NAME = $env:APP_NAME + "-admins";
+$env:DEVELOPER_GROUP_NAME = $env:APP_NAME + "-developers";
 
 # Register Providers
 az provider register -n Microsoft.DBforPostgreSQL;
+
+az extension add --name rdbms-connect
 
 # Resource Group
 az group create `
@@ -31,16 +35,91 @@ az postgres flexible-server create `
     --version $env:POSTGRESQL_VERSION `
     --storage-auto-grow Enabled `
     --storage-size $env:POSTGRESQL_STORAGE_SIZE `
-    --auto-grow Enabled `
     --backup-retention $env:POSTGRESQL_BACKUP_RETENTION `
-    --admin-user $env:POSTGRESQL_ADMIN_USERNAME `
-    --admin-password $env:POSTGRESQL_ADMIN_PASSWORD `
     --public-access Disabled `
     --zone 1 `
     --geo-redundant-backup Enabled `
-    --high-availability ZoneRedundant `
+    --zonal-resiliency Enabled `
     --standby-zone 2 `
+    --password-auth Enabled `
+    --microsoft-entra-auth Enabled `
     -y;
+
+az postgres flexible-server parameter set `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -s $env:APP_NAME `
+    -n azure.extensions `
+    --value POSTGIS;
+
+# Managed Identity
+az identity create `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -n $env:IDENTITY_NAME;
+
+$env:IDENTITY_PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP -n $env:IDENTITY_NAME --query principalId -o tsv;
+$env:DIRECTORY_READERS_ROLE_ID = "88d8e3e3-8f55-4a1e-953a-9b9898b8876b";
+
+az rest --method POST `
+    --uri "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" `
+    --body "{ \`"principalId\`": \`"$env:IDENTITY_PRINCIPAL_ID\`", \`"roleDefinitionId\`": \`"$env:DIRECTORY_READERS_ROLE_ID\`", \`"directoryScopeId\`": \`"/\`" }";
+
+az postgres flexible-server identity assign `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -s $env:APP_NAME `
+    --identity $env:IDENTITY_NAME;
+
+az ad group create `
+    --display-name $env:ADMIN_GROUP_NAME `
+    --mail-nickname $env:ADMIN_GROUP_NAME;
+
+az ad group create `
+    --display-name $env:DEVELOPER_GROUP_NAME `
+    --mail-nickname $env:DEVELOPER_GROUP_NAME;
+
+$env:IDENTITY_PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP -n $env:IDENTITY_NAME --query principalId -o tsv;
+
+az ad group member add `
+    --group $env:ADMIN_GROUP_NAME `
+    --member-id $env:IDENTITY_PRINCIPAL_ID;
+
+$env:SERVICE_PRINCIPAL_OBJECT_ID = az ad sp list --display-name $env:SERVICE_PRINCIPAL_NAME --query "[0].id" -o tsv;
+
+az ad group member add `
+    --group $env:ADMIN_GROUP_NAME `
+    --member-id $env:SERVICE_PRINCIPAL_OBJECT_ID;
+
+$env:ADMIN_GROUP_ID = az ad group show -g $env:ADMIN_GROUP_NAME --query id -o tsv;
+
+az postgres flexible-server microsoft-entra-admin create `
+    -g $env:AZURE_RESOURCE_GROUP `
+    -s $env:APP_NAME `
+    --display-name $env:ADMIN_GROUP_NAME `
+    --object-id $env:ADMIN_GROUP_ID `
+    --type Group;
+
+$env:USER_OBJECT_ID = az ad signed-in-user show --query id -o tsv;
+
+az ad group member add `
+    --group $env:ADMIN_GROUP_NAME `
+    --member-id $env:USER_OBJECT_ID;
+
+$env:POSTGRESQL_USER = az ad signed-in-user show --query userPrincipalName -o tsv;
+$env:POSTGRESQL_TOKEN = az account get-access-token --resource-type oss-rdbms --query accessToken -o tsv;
+$env:DEVELOPER_GROUP_ID = az ad group show -g $env:DEVELOPER_GROUP_NAME --query id -o tsv;
+$env:DEVELOPER_GROUP_SQL_PATH = Join-Path $env:USERPROFILE "developer-group-user.sql";
+
+Get-Content .sql/developer-group-user.sql | foreach { [Environment]::ExpandEnvironmentVariables($_) } | Set-Content $env:DEVELOPER_GROUP_SQL_PATH;
+
+az postgres flexible-server execute `
+    -n $env:APP_NAME `
+    -u $env:ADMIN_GROUP_NAME `
+    -p $env:POSTGRESQL_TOKEN `
+    -d postgres `
+    --file-path $env:DEVELOPER_GROUP_SQL_PATH;
+
+az ad group member remove `
+    --group $env:ADMIN_GROUP_NAME `
+    --member-id $env:USER_OBJECT_ID;
 
 # Maintenance
 az postgres flexible-server update `

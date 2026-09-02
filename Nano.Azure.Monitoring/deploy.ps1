@@ -1,4 +1,4 @@
-$env:ENVIRONMENT = "Production";
+$env:ENVIRONMENT = "";
 $env:AZURE_LOCATION = "North Europe";
 $env:AZURE_RESOURCE_GROUP = "Nano-Logs";
 $env:APP_NAME_LOG_ANALYTCS = "nano-log-analytics-workspace-" + $env:ENVIRONMENT.ToLower();

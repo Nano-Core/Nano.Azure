@@ -9,8 +9,10 @@
 * **[Registration](#registration)**  
   * **[SQL Server](#sql-server)**  
   * **[Database Creation](#database-creation)**
+  * **[Managed Idenity](#managed-idenity)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#microsoft-defender)**  
+* **[Connecting Locally](#connecting-locally)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -43,14 +45,6 @@ Execute the next part of the `deploy.ps1` to create a logical SQL Server on Azur
 The SQL Server resource itself has no SKU, storage, or tier. It is only an authentication and networking wrapper. Compute, storage, and scaling are all configured per-database, at 
 the point each application creates its own database. See **[Database Creation](#database-creation)** below.
 
-> ⚠️ Make sure to store the information returned during creation. The _admin password_ for instance cannot be retrieved later.  
-
-Create the required secrets in GitHub for the SQL Server. They will be used later to securely connect your applications to the database.  
-
-| Secret                                  | Type     | Description                                                                    |
-| --------------------------------------- | -------- | ------------------------------------------------------------------------------ |
-| `{{environment}}_SQL_ADMIN_PASSWORD`    | Secret   | The SQL Server admin password, used when applying EF migrations during deployment.  |
-
 The SQL Server connection string has this format.  
 
 ```
@@ -64,6 +58,47 @@ Each application creates and owns its own database, as a dedicated step in its o
 backup retention, high availability, maintenance, diagnostics settings, and alerts — all configured as part of that pipeline step.  
 
 Transaction isolation defaults to `read committed snapshot` (RCSI), Azure SQL Database's own default, and is not explicitly configured as part of this.
+
+### Managed Identity
+Both native SQL Server password authentication and Microsoft Entra ID authentication are enabled for this server (dual auth). Entra ID is used for all Entra-capable identities via 
+short-lived tokens instead of shared secrets. Native auth stays enabled only because the self-hosted Grafana Helm chart has no Entra support for its own database connection, so it uses 4
+a dedicated, least-privilege SQL login instead.
+
+> 💡 Native SQL Server authentication can be disabled again via the `az sql server ad-only-auth enable` command if no username/password integrations are needed for this server.
+
+> ⚠️ Executing the script requires Groups Administrator, and either Privileged Role Administrator or Global Administrator, in Microsoft Entra ID.
+
+An admin username and password are still required to create the server, but the value is randomly generated and discarded — the login is disabled once Entra-only authentication is enabled.
+
+A dedicated user-assigned managed identity is created and attached to the SQL Server. The server uses this identity to query Microsoft Graph and validate Entra ID logins (users, groups, 
+and service principals). It's not itself used to log in.
+
+Two Entra ID groups control access to the database:
+
+| Group           | Purpose                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `-admins`       | Full admin access (DDL — create / alter / drop).                                                |
+| `-developers`   | Connect access to all databases. Read/write access (DML only) must be granted per database.     |
+
+The `nano-deploy-service-principal` service principal is added to the `-admins` group, granting it full admin access across all databases on this server so CI/CD can run migrations.
+
+To grant access, add the relevant user or identity to the appropriate group in Entra ID. No changes to the database or this script are needed.
+
+> ⚠️ SQL Server has no server-wide grant for read/write access — the `-developers` group must be added as a database user and granted `db_datareader`/`db_datawriter` in each database 
+individually. 
+
+Before acquiring an access token, confirm the membership is visible by running the following command. If this returns `false`, wait a few minutes and check again.
+
+```powershell
+az ad group member check --group $env:ADMIN_GROUP_NAME --member-id $env:USER_OBJECT_ID --query value -o tsv;
+```
+
+> ⚠️ Entra ID/Graph changes can take a few minutes to propagate.
+
+When running `az account get-access-token`, if the token doesn't reflect a recent group change, even after propagation completes, re-authenticate with `az account clear && az login` to get 
+a fresh one.
+
+> ⚠️ Access tokens are cached locally by the Azure CLI.
 
 ### Network Rules
 The SQL Server has no public access by default. 
@@ -101,6 +136,18 @@ az sql server firewall-rule create `
 After successful registration, enable Defender directly on the SQL Server resource in the Azure Portal. 
 
 > ⚠️ This setting is not currently configurable via the Azure CLI.  
+
+## Connecting Locally
+To connect to the database locally (e.g. via SQL Server Management Studio or Azure Data Studio), use the following:
+
+| Field           | Value                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------ |
+| Host            | `az sql server list -g $env:AZURE_GROUP_DATABASE --query [0].fullyQualifiedDomainName -o tsv`    |
+| Port            | `1433`                                                                                           |
+| Authentication  | Microsoft Entra MFA (Universal with MFA)                                                         |
+| Username        | The `-admins` or `-developers` group you're a member of                                          |
+
+No password is entered, after selecting the authentication method and entering the group name as the username, a browser sign-in prompt appears to verify your own Entra identity.
 
 ## Dependencies
 SQL Server has the following dependencies that must be deployed or otherwise satisfied prior to setup.  

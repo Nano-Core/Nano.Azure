@@ -12,12 +12,14 @@
   * **[Storage Auto Growth](#storage-auto-growth)**
   * **[IOPS Auto Scaling](#iops-auto-scaling)**
   * **[High Availability](#high-availability)**
+  * **[Managed Idenity](#managed-idenity)**  
   * **[Maintenance](#maintenance)**  
   * **[Transaction Isolation Level](#transaction-isolation-level)**  
   * **[Alerts](#alerts)**  
   * **[Diagnostics Settings](#diagnostics-settings)**  
   * **[Network Rules](#network-rules)**  
   * **[Microsoft Defender](#microsoft-defender)**  
+* **[Connecting Locally](#connecting-locally)**  
 * **[Dependencies](#dependencies)**  
 
 ## Summary
@@ -80,13 +82,8 @@ az postgres flexible-server list-skus -l $env:AZURE_LOCATION -o table;
 
 You can also check out the official list of available SKUs on the **[PostgreSQL Compute and Storage](https://learn.microsoft.com/en-us/azure/postgresql/flexible-server/concepts-compute-storage)** page.
 
-> ⚠️ Make sure to store the information returned during creation. The _admin password_ for instance cannot be retrieved later.  
-
-Create the required secrets in GitHub for the PostgreSQL server. They will be used later to securely connect your applications to the database.  
-
-| Secret                                  | Type     | Description                                                                          |
-| --------------------------------------- | -------- | ------------------------------------------------------------------------------------ |
-| `{{environment}}_SQL_ADMIN_PASSWORD`    | Secret   | The PostgreSQL admin password, used when applying EF migrations during deployment.   |
+PostgreSQL extensions must be explicitly allow-listed via the `azure.extensions` server parameter before they can be created with `CREATE EXTENSION` — availability alone isn't enough. Setting 
+this parameter replaces the full list rather than appending to it, so every required extension must be included together. Currently enabled: `postgis`.
 
 The PostgreSQL connection string has this format.  
 
@@ -117,6 +114,42 @@ High availability is enabled by default for the PostgreSQL server. In Azure Data
 improve resilience and reduce downtime in case of infrastructure or zone-level failures.  
 
 To disable high availability, simply comment out the `--high-availability`, `--zone`, and `--standby-zone` parameters in the `deploy.ps1` script's create command.
+
+### Managed Identity
+Both native PostgreSQL password authentication and Microsoft Entra ID authentication are enabled for this server (dual auth). Entra ID is used for all Entra-capable identities via 
+short-lived tokens instead of shared secrets. Native auth stays enabled only because the self-hosted Grafana Helm chart has no Entra support for its own database connection, so it uses a 
+dedicated, least-privilege role instead.
+
+> 💡 The `--password-auth` flag can be switched to `Disabled` via the `az postgres flexible-server update` command if no username/password integrations are needed for this server.
+
+> ⚠️ Executing the script requires Groups Administrator, and either Privileged Role Administrator or Global Administrator, in Microsoft Entra ID.
+
+A dedicated user-assigned managed identity is created and attached to the PostgreSQL Flexible Server. The server uses this identity to query Microsoft Graph and validate Entra ID logins (users, groups, 
+and service principals). It's not itself used to log in.
+
+Two Entra ID groups control access to the database:
+
+| Group           | Purpose                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `-admins`       | Full admin access (DDL — create / alter / drop).                                                |
+| `-developers`   | Read/write access (DML only — select / insert / update / delete), no schema change permissions. |
+
+The `nano-deploy-service-principal` service principal is added to the `-admins` group, granting it full admin access across all databases on this server so CI/CD can run migrations.
+
+To grant access, add the relevant user or identity to the appropriate group in Entra ID. No changes to the database or this script are needed.
+
+Before acquiring an access token, confirm the membership is visible by running the following command. If this returns `false`, wait a few minutes and check again.
+
+```powershell
+az ad group member check --group $env:ADMIN_GROUP_NAME --member-id $env:USER_OBJECT_ID --query value -o tsv;
+```
+
+> ⚠️ Entra ID/Graph changes can take a few minutes to propagate.
+
+When running `az account get-access-token`, if the token doesn't reflect a recent group change, even after propagation completes, re-authenticate with `az account clear && az login` to get 
+a fresh one.
+
+> ⚠️ Access tokens are cached locally by the Azure CLI.
 
 ### Maintenance
 The Azure maintainance window is set to sunday at 04:00.
@@ -174,6 +207,20 @@ az postgres flexible-server firewall-rule create `
 After successful registration, enable Defender directly on the PostgreSQL resource in the Azure Portal. 
 
 > ⚠️ This setting is not currently configurable via the Azure CLI.  
+
+## Connecting Locally
+To connect to the database locally (e.g. via pgAdmin or `psql`), use the following:
+
+| Field     | Value                                                                                                        |
+| --------- | ------------------------------------------------------------------------------------------------------------ |
+| Host      | `az postgres flexible-server list -g $env:AZURE_GROUP_DATABASE --query [0].fullyQualifiedDomainName -o tsv`  |
+| Port      | `5432`                                                                                                       |
+| Username  | The `-admins` or `-developers` group you're a member of                                                      |
+| Password  | `az account get-access-token --resource-type oss-rdbms --query accessToken -o tsv`                           |
+
+> ⚠️ SSL/TLS is required for the connection.
+
+Tokens expire after roughly 60–90 minutes; if the connection fails after being idle, fetch a new token and reconnect.
 
 ## Dependencies
 PostgreSQL has the following dependencies that must be deployed or otherwise satisfied prior to setup.  
