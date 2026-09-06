@@ -87,6 +87,9 @@ To grant access, add the relevant user or identity to the appropriate group in E
 > ⚠️ SQL Server has no server-wide grant for read/write access — the `-developers` group must be added as a database user and granted `db_datareader`/`db_datawriter` in each database 
 individually. 
 
+> ⚠️ Creating the `-developers` group's SQL login runs via `sqlcmd` (installed through `winget`), unlike the MySQL/PostgreSQL modules which use the cross-platform 
+`az <db> flexible-server execute` command — this step in `deploy.ps1` only runs on Windows.
+
 Before acquiring an access token, confirm the membership is visible by running the following command. If this returns `false`, wait a few minutes and check again.
 
 ```powershell

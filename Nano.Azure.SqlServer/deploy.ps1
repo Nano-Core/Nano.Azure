@@ -47,7 +47,7 @@ az rest --method POST `
 az sql server update `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:APP_NAME `
-    --assign_identity `
+    --assign-identity `
     --identity-type UserAssigned `
     --user-assigned-identity-id $env:IDENTITY_ID `
     --primary-user-assigned-identity-id $env:IDENTITY_ID;

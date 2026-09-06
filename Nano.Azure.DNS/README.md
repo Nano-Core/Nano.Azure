@@ -39,7 +39,7 @@ Add the resource group name as GitHub organization variables.
 Creates the Azure DNS zone for the application domain, which will host all DNS records for the delegated subdomain and enable cert-manager DNS-01 validation.  
 
 ### DNSSEC
-DNSSEC is enabled automatically when the DNS zone is created.
+DNSSEC is enabled as a separate step right after the DNS zone is created.
 
 After enabling DNSSEC, Azure Portal displays the following warning under DNSSEC for the DNS zone:
 
@@ -62,14 +62,14 @@ resolution for the subdomain is handled by Azure DNS instead of the external pro
 Run the following command to get the Azure name servers. 
 
 ```powershell
-az network dns zone show -g $env:AZURE_RESOURCE_GROUP -n $env:APP_DOMAIN_NAME --query nameServers -o tsv;
+az network dns zone show -g $env:AZURE_RESOURCE_GROUP -n $env:DOMAIN_NAME --query nameServers -o tsv;
 ```
 
 For each returned name server, add an NS record for the delegated subdomain.  
 
-| Type | Host / Name           | Value             |
-| ---- |---------------------- | ----------------- |
-| NS   | $env:APP_DOMAIN_NAME  | {{name-server}}   |
+| Type | Host / Name       | Value             |
+| ---- |------------------ | ----------------- |
+| NS   | $env:DOMAIN_NAME  | {{name-server}}   |
 
 ## Multiple DNS Zone
 Creating multiple DNS zones for different domain names is fully supported. Create each additional DNS zone as needed, but reuse the existing Managed Identity rather than creating a 

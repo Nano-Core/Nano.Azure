@@ -7,7 +7,6 @@ $env:POSTGRESQL_VERSION = "16";
 $env:POSTGRESQL_SKU = "Standard_D2ads_v5";
 $env:POSTGRESQL_STORAGE_SIZE = "64";
 $env:POSTGRESQL_TIER = "GeneralPurpose";
-$env:POSTGRESQL_BACKUP_INTERVAL = 24
 $env:POSTGRESQL_BACKUP_RETENTION = 35
 $env:APP_NAME = "nano-postgresql-" + $env:ENVIRONMENT.ToLower();
 $env:IDENTITY_NAME = $env:APP_NAME + "-identity";

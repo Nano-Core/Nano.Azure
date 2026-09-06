@@ -6,7 +6,7 @@ $env:AZURE_RESOURCE_GROUP_BACKUP = "Nano-Backup";
 $env:AZURE_RESOURCE_GROUP_KUBERNETES = "Nano-Kubernetes";
 $env:AZURE_RESOURCE_GROUP_KUBERNETES_ASSETS = "Nano-Kubernetes-Assets";
 $env:KUBERNETES_NAMESPACE = "apps";
-$env:ACCESS_TIR = "Hot";
+$env:ACCESS_TIER = "Hot";
 $env:STORAGE_SKU = "Standard_ZRS";
 $env:APP_NAME = "nanostorage" + $env:ENVIRONMENT.ToLower();
 
@@ -25,7 +25,7 @@ az storage account create `
     -l $env:AZURE_LOCATION `
     --sku $env:STORAGE_SKU `
     --kind StorageV2 `
-    --access-tier $env:ACCESS_TIR `
+    --access-tier $env:ACCESS_TIER `
     --default-action Deny `
     --https-only true `
     --enable-large-file-share `
@@ -46,6 +46,8 @@ $subscriptions = @(
     $env:AZURE_SUBSCRIPTION_ID_STAGING,
     $env:AZURE_SUBSCRIPTION_ID_PRODUCTION
 ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) };
+
+$env:ASSIGNABLE_SCOPES = ($subscriptions | ForEach-Object { "`"/subscriptions/$_`"" }) -join ',';
 
 $env:APP_ID = az ad sp list --display-name $env:SERVICE_PRINCIPAL_NAME --query "[0].appId" -o tsv;
 $env:STORAGE_ROLE_NAME = "Restricted User Access Administrator (Storage)";
