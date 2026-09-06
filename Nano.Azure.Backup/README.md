@@ -48,9 +48,9 @@ customize these settings. This also means that backup items created from protect
 retention period has expired or the source has been unregistered.
 
 ### Data Redundancy
-The `--backup-storage-redundancy` parameter defines how backup data is replicated for durability. In this case, it is set to `ZoneRedundant`, meaning data is replicated across 
-multiple availability zones within the same region to protect against zonal failures. Other options are `LocallyRedundant`, which stores copies within a single region, and 
-`GeoRedundant`, which replicates data to a secondary region for broader disaster recovery protection.  
+The `--backup-storage-redundancy` parameter defines how backup data is replicated for durability. In this case, it is set to `GeoRedundant`, meaning data is replicated to a 
+secondary region for broader disaster recovery protection. Other options are `LocallyRedundant`, which stores copies within a single region, and `ZoneRedundant`, which replicates 
+data across multiple availability zones within the same region to protect against zonal failures.  
 
 ### Immutability State
 By default, immutability is set to `Unlocked`, meaning it is enabled but can still be modified or disabled at a later stage. It is recommended to set the value to `Locked`. In 
@@ -61,7 +61,7 @@ retention period.
 Next, execute the script section that configures diagnostic settings for the backup vault.  
 
 The diagnostic settings for backup metrics are configured to `AllMetrics` with a 1-minute aggregation interval, which can be adjusted if required. This ensures high-resolution 
-monitoring of backup performance data. The logs configuration includes all Backup-related logs, while Site Recovery logs are excluded as they are not used by Nano. The full list 
+monitoring of backup performance data. The logs configuration includes all Backup-related logs, as well as Site Recovery logs. The full list 
 of supported metric categories for the backup resource can be retrieved using the following command.  
 
 ```powershell

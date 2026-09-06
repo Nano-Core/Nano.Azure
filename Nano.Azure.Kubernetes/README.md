@@ -244,8 +244,9 @@ enabled to secure data at rest on GPU nodes, and GPU instance profiling is confi
 The GPU node pool is deployed across three availability zones to improve resiliency, fault tolerance, and workload availability within the cluster.  
 
 ### Maintenance Window
-The maintenance window is configured to run on Sunday at 04:00 UTC, but can be adjusted to any time during the week based on operational requirements. This is done by modifying the 
-`--weekday` and `--start-hour` parameters in the `deploy.ps1` script. The `--duration` parameter should be set to a minimum of 4 hours.
+Two maintenance windows are configured: `aksManagedNodeOSUpgradeSchedule` runs weekly on Monday at 04:00, and `aksManagedAutoUpgradeSchedule` runs weekly on Sunday at 00:00 UTC. Both 
+can be adjusted to any time during the week based on operational requirements, by modifying the `--weekday`/`--day-of-week` and `--start-hour`/`--start-time` parameters in the 
+`deploy.ps1` script. The `--duration` parameter should be set to a minimum of 4 hours.
 
 > ⚠️ Note that the Azure Portal does not display the default maintenance schedule unless custom update schedules are explicitly configured for the different maintenance controls.
 
@@ -394,7 +395,7 @@ whitelisting is required, it can be configured using the following command.
 ```powershell
 $env:NETWORK_RULE_WHITE_LISTED_IP_ADDRESS = "";
 
-az aks updaate `
+az aks update `
     -g $env:AZURE_RESOURCE_GROUP `
     -n $env:APP_NAME `
     -l $env:AZURE_LOCATION `

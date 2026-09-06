@@ -81,8 +81,8 @@ az network vnet subnet create `
     --delegations 'Microsoft.ServiceNetworking/trafficControllers';
 
 $env:AZURE_RESOURCE_GROUP_ASSETS_ID = az group show -n $env:AZURE_RESOURCE_GROUP_ASSETS --query id;
-$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:ALB_IDENTITY_NAME --query principalId -o tsv;
 $env:ALB_IDENTITY_NAME = az identity list -g $env:AZURE_RESOURCE_GROUP_ASSETS --query "[?contains(name, 'applicationloadbalancer')].name" -o tsv
+$env:PRINCIPAL_ID = az identity show -g $env:AZURE_RESOURCE_GROUP_ASSETS -n $env:ALB_IDENTITY_NAME --query principalId -o tsv;
 $env:ALB_SUBNET_ID = az network vnet subnet show -n $env:ALB_SUBNET_NAME -g $env:AZURE_RESOURCE_GROUP_ASSETS --vnet-name $env:VNET_NAME --query id -o tsv;
 
 az role assignment create `
@@ -255,7 +255,7 @@ az aks maintenanceconfiguration add `
   -g $env:AZURE_RESOURCE_GROUP `
   --cluster-name $env:APP_NAME `
   --name aksManagedNodeOSUpgradeSchedule `
-  --weekday Monday
+  --weekday Monday `
   --start-hour 4 `
   --duration 4
 
